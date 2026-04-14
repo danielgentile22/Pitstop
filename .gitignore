@@ -1,0 +1,35 @@
+# Xcode build products
+build/
+DerivedData/
+*.xccheckout
+*.xcscmblueprint
+
+# User-specific Xcode settings
+xcuserdata/
+*.xcuserstate
+
+# Swift Package Manager
+.build/
+.swiftpm/
+GeoPoop/GeoPoop.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# CocoaPods (not used, but common)
+Pods/
+Podfile.lock
+
+# Credentials — never commit secrets
+*.env
+secrets.plist
+
+# Simulator state
+*.moved-aside
+
+# Claude Code local config and memory
+.claude/
+
+# Personal notes — not part of the project
+FUTURE_IDEAS.md
