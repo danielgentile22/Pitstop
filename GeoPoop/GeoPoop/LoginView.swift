@@ -25,6 +25,7 @@
 //  the user never accidentally submits a sign-in with a blank password.
 //
 
+import AuthenticationServices
 import SwiftUI
 
 struct LoginView: View {
@@ -36,16 +37,17 @@ struct LoginView: View {
     // MARK: - Environment
 
     @Environment(SupabaseService.self) private var service
+    @Environment(\.colorScheme)        private var colorScheme
 
     // MARK: - State
 
     @State private var mode: Mode = .signIn
-    @State private var email      = ""
-    @State private var password   = ""
-    @State private var isLoading  = false
-    @State private var errorMsg   = ""
-    @State private var resetSent  = false   // true after a reset email is dispatched
-    @State private var appeared   = false   // drives entrance animation
+    @State private var email        = ""
+    @State private var password     = ""
+    @State private var isLoading    = false
+    @State private var errorMsg     = ""
+    @State private var resetSent    = false   // true after a reset email is dispatched
+    @State private var appeared     = false   // drives entrance animation
 
     @FocusState private var focused: Field?
     private enum Field { case email, password }
@@ -58,74 +60,83 @@ struct LoginView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        // GeometryReader + ScrollView: the VStack fills the screen on tall phones
+        // (Spacers work normally) but becomes scrollable on small phones so the
+        // Apple button is never clipped off the bottom.
+        GeometryReader { geo in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 24)
 
-            // ── App Icon + Title ─────────────────────────────────────────
-            VStack(spacing: 10) {
-                Image(systemName: "toilet.fill")
-                    .font(.system(size: 56))
-                    .foregroundStyle(.white)
-                    .frame(width: 96, height: 96)
-                    .background(
-                        LinearGradient(
-                            colors: [Color(red: 0.18, green: 0.44, blue: 0.92),
-                                     Color(red: 0.09, green: 0.26, blue: 0.72)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
-                    .scaleEffect(appeared ? 1 : 0.55)
-                    .opacity(appeared ? 1 : 0)
+                    // ── App Icon + Title ─────────────────────────────────────────
+                    VStack(spacing: 10) {
+                        Image(systemName: "toilet.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(.white)
+                            .frame(width: 96, height: 96)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color(red: 0.18, green: 0.44, blue: 0.92),
+                                             Color(red: 0.09, green: 0.26, blue: 0.72)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
+                            .scaleEffect(appeared ? 1 : 0.55)
+                            .opacity(appeared ? 1 : 0)
 
-                Text("GeoPoop")
-                    .font(.largeTitle.bold())
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 10)
+                        Text("GeoPoop")
+                            .font(.largeTitle.bold())
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 10)
 
-                Text("Find and share the world's best bathrooms")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 10)
-            }
-            .onAppear {
-                withAnimation(.spring(response: 0.65, dampingFraction: 0.72)) {
-                    appeared = true
+                        Text("Find and share the world's best bathrooms")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 10)
+                    }
+                    .onAppear {
+                        withAnimation(.spring(response: 0.65, dampingFraction: 0.72)) {
+                            appeared = true
+                        }
+                    }
+
+                    Spacer(minLength: 32).frame(maxHeight: 40)
+
+                    // ── Form ─────────────────────────────────────────────────────
+                    Group {
+                        if isForgot {
+                            forgotPasswordForm
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .scale(scale: 0.96, anchor: .top)),
+                                    removal:   .opacity
+                                ))
+                        } else {
+                            mainForm
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .scale(scale: 0.96, anchor: .top)),
+                                    removal:   .opacity
+                                ))
+                        }
+                    }
+                    .animation(.spring(response: 0.42, dampingFraction: 0.85), value: isForgot)
+
+                    Spacer(minLength: 16)
+
+                    Text("By signing in you agree to use GeoPoop\nfor its intended purpose.")
+                        .font(.caption2)
+                        .foregroundStyle(Color(.systemGray4))
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 16)
                 }
+                // minHeight ensures Spacers fill the screen on large phones
+                .frame(minHeight: geo.size.height)
             }
-
-            Spacer().frame(height: 40)
-
-            // ── Form ─────────────────────────────────────────────────────
-            Group {
-                if isForgot {
-                    forgotPasswordForm
-                        .transition(.asymmetric(
-                            insertion: .opacity.combined(with: .scale(scale: 0.96, anchor: .top)),
-                            removal:   .opacity
-                        ))
-                } else {
-                    mainForm
-                        .transition(.asymmetric(
-                            insertion: .opacity.combined(with: .scale(scale: 0.96, anchor: .top)),
-                            removal:   .opacity
-                        ))
-                }
-            }
-            .animation(.spring(response: 0.42, dampingFraction: 0.85), value: isForgot)
-
-            Spacer()
-
-            Text("By signing in you agree to use GeoPoop\nfor its intended purpose.")
-                .font(.caption2)
-                .foregroundStyle(Color(.systemGray4))
-                .multilineTextAlignment(.center)
-                .padding(.bottom, 16)
         }
     }
 
@@ -202,6 +213,50 @@ struct LoginView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             }
+
+            // ── Apple Sign-In ─────────────────────────────────────────
+            orDivider.padding(.horizontal, 24)
+
+            // ASAuthorizationAppleIDButton (UIKit) wrapped via UIViewRepresentable.
+            // Explicitly permitted by Apple HIG alongside SwiftUI's variant.
+            AppleSignInButtonView(
+                style: colorScheme == .dark ? .white : .black,
+                onSuccess: { credential, rawNonce in
+                    guard
+                        let tokenData = credential.identityToken,
+                        let idToken   = String(data: tokenData, encoding: .utf8)
+                    else {
+                        withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                            errorMsg = "Sign in with Apple failed. Please try again."
+                        }
+                        return
+                    }
+                    Task {
+                        isLoading = true
+                        defer { isLoading = false }
+                        do {
+                            try await service.signInWithApple(
+                                idToken:     idToken,
+                                rawNonce:    rawNonce,
+                                appleUserID: credential.user,
+                                fullName:    credential.fullName
+                            )
+                        } catch {
+                            withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                                errorMsg = error.localizedDescription
+                            }
+                        }
+                    }
+                },
+                onFailure: { error in
+                    withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                        errorMsg = error.localizedDescription
+                    }
+                }
+            )
+            .frame(height: 50)
+            .disabled(isLoading)
+            .padding(.horizontal, 24)
         }
     }
 
@@ -267,6 +322,22 @@ struct LoginView: View {
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - "or" Divider
+
+    private var orDivider: some View {
+        HStack(spacing: 12) {
+            Rectangle()
+                .fill(Color(.separator))
+                .frame(height: 0.5)
+            Text("or")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Rectangle()
+                .fill(Color(.separator))
+                .frame(height: 0.5)
         }
     }
 

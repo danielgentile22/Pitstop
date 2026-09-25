@@ -45,6 +45,7 @@
 //  fragile 600ms sleep that previously guarded against trigger lag.
 //
 
+import AuthenticationServices
 import CoreLocation
 import Foundation
 import Observation
@@ -113,6 +114,10 @@ final class SupabaseService {
     private let client = SupabaseConfig.client
     private let bucket = "bathroom-photos"
 
+    // UserDefaults key for the stable Apple user ID (used for credential-state checks).
+    // Not sensitive — just an opaque string issued by Apple.
+    private let appleUserIDKey = "geo.poop.appleUserID"
+
     // MARK: - Init
 
     init() {
@@ -169,6 +174,93 @@ final class SupabaseService {
         try await client.auth.resetPasswordForEmail(email)
     }
 
+    // MARK: - Auth: Apple Sign-In
+
+    /// Exchanges an Apple identity token for a Supabase session.
+    ///
+    /// Apple only returns `fullName` on the FIRST authorization. The caller
+    /// must pass it immediately — it is nil on subsequent sign-ins.
+    ///
+    /// Account linking: if a user with the same email already exists (e.g.
+    /// via email/password), Supabase merges the Apple identity into that
+    /// account automatically when "Allow manual linking" is enabled in the
+    /// Supabase dashboard. No extra code required here.
+    func signInWithApple(
+        idToken: String,
+        rawNonce: String,
+        appleUserID: String,
+        fullName: PersonNameComponents?
+    ) async throws {
+        authError = nil
+
+        let session = try await client.auth.signInWithIdToken(
+            credentials: OpenIDConnectCredentials(
+                provider: .apple,
+                idToken: idToken,
+                nonce: rawNonce
+            )
+        )
+
+        currentUser              = session.user
+        pendingConfirmationEmail = nil
+
+        // Persist the stable Apple user ID so we can check credential state
+        // on future launches without needing to go through a full sign-in.
+        UserDefaults.standard.set(appleUserID, forKey: appleUserIDKey)
+
+        // Determine if this is a brand-new user before we create a profile row.
+        await fetchProfile(for: session.user.id)
+        let isNewUser = userProfile == nil
+
+        if isNewUser {
+            try? await createProfile(for: session.user.id, email: session.user.email ?? "")
+            await fetchProfile(for: session.user.id)
+        }
+
+        // Apply Apple-provided name only for new users — never overwrite a name
+        // the user may have customised. Apple only sends fullName on first auth,
+        // so we must handle it here rather than deferring to a profile-edit step.
+        if isNewUser, let name = fullName {
+            let displayName = [name.givenName, name.familyName]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            if !displayName.isEmpty {
+                try? await updateDisplayName(displayName)
+            }
+        }
+    }
+
+    /// Checks whether the saved Apple credential is still valid on launch.
+    ///
+    /// Call this once when the app becomes active. If Apple revokes the
+    /// credential (user disables the app in Settings → Apple ID →
+    /// Sign in with Apple), this will sign the user out locally so they
+    /// are prompted to re-authenticate rather than reaching a broken state.
+    func checkAppleCredentialState() async {
+        guard currentUser != nil,
+              let appleUserID = UserDefaults.standard.string(forKey: appleUserIDKey)
+        else { return }
+
+        let provider = ASAuthorizationAppleIDProvider()
+        do {
+            let state = try await provider.credentialState(forUserID: appleUserID)
+            switch state {
+            case .authorized:
+                break   // All good — nothing to do
+            case .revoked, .notFound:
+                // Credential revoked or not found — force sign-out
+                try? await signOut()
+            case .transferred:
+                break   // App-transfer scenario — no action needed
+            @unknown default:
+                break
+            }
+        } catch {
+            // Cannot determine state (e.g. no network) — leave user signed in
+        }
+    }
+
     // MARK: - Auth: Sign Out
 
     /// Signs out the current user and clears all locally cached data.
@@ -187,6 +279,7 @@ final class SupabaseService {
         pendingConfirmationEmail = nil
         lastSyncError            = nil
         clearLastSyncedAt()
+        UserDefaults.standard.removeObject(forKey: appleUserIDKey)
 
         syncQueue?.clear()
 

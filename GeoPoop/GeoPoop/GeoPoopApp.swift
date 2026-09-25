@@ -99,6 +99,12 @@ struct GeoPoopApp: App {
                     await syncQueue.drain(supabase: supabaseService, context: context)
                 }
             }
+            .task {
+                // Check whether the user's Apple credential is still valid.
+                // If they revoked the app in Settings → Apple ID → Sign in with
+                // Apple, this will sign them out locally before the app loads.
+                await supabaseService.checkAppleCredentialState()
+            }
         }
     }
 }
