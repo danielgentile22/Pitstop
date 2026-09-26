@@ -1,42 +1,20 @@
-//
-//  RemoteBathroom.swift
-//  Pitstop
-//
-//  Codable Data Transfer Object (DTO) that mirrors the `bathrooms` table in
-//  Supabase. Used exclusively for encoding outbound upserts and decoding
-//  inbound SELECT results.
-//
-//  Why a separate struct instead of making Bathroom itself Codable?
-//    The SwiftData `Bathroom` model uses camelCase Swift property names, while
-//    Postgres uses snake_case column names. CodingKeys handles that translation
-//    here. Keeping the DTO separate also means the cloud schema can evolve
-//    independently from the local model without breaking SwiftData migrations.
-//
-//  Data flow:
-//    Upload:  Bathroom (SwiftData) → RemoteBathroom.init(bathroom:ownerID:) → Supabase upsert
-//    Download: Supabase SELECT → Decodable init → SupabaseService.upsertLocal() → Bathroom
-//
-//  Date columns:
-//    The Supabase table uses `created_at` / `updated_at` (Postgres convention).
-//    These map to `dateCreated` / `dateModified` on the local Bathroom model.
-//    supabase-swift decodes TIMESTAMPTZ columns as Swift Date automatically.
-//
-
 import Foundation
 
+/// Wire format for the backend `bathrooms` table. Kept separate from the SwiftData model so the
+/// server schema can change without forcing a local migration.
 struct RemoteBathroom: Codable {
 
     // MARK: - Identity
 
-    var id:      UUID   // Primary key — same UUID as the local SwiftData record
-    var ownerID: UUID   // auth.users.id of the person who created this entry
+    var id:      UUID   // same UUID as the local record
+    var ownerID: UUID
 
     // MARK: - Location
 
     var name:      String
     var latitude:  Double
     var longitude: Double
-    var address:   String?  // May be nil if reverse geocoding failed
+    var address:   String?
 
     // MARK: - Rating & Notes
 
@@ -45,14 +23,14 @@ struct RemoteBathroom: Codable {
 
     // MARK: - Access & Hours
 
-    var accessType:          String  // Raw value of BathroomAccess enum
+    var accessType:          String
     var requiresReceiptCode: Bool
     var isOpen24Hours:       Bool
 
     // MARK: - Layout
 
-    var stallType:              String  // Raw value of StallType enum
-    var genderType:             String  // Raw value of GenderType enum
+    var stallType:              String
+    var genderType:             String
     var isIndoor:               Bool
     var isWheelchairAccessible: Bool
 
@@ -60,42 +38,39 @@ struct RemoteBathroom: Codable {
 
     var hasToiletPaper:      Bool
     var hasExtraToiletPaper: Bool
-    var dispenserRating:     Int     // 0 = no dispenser; 1–5 = quality rating
+    var dispenserRating:     Int     // 0 = no dispenser, 1-5 = rating
 
     // MARK: - Fixtures
 
     var hasHeatedSeat:   Bool
-    var bidetType:       String  // Raw value of BidetType enum
+    var bidetType:       String
     var hasChangingTable: Bool
 
     // MARK: - Hygiene
 
     var hasSoap:        Bool
     var hasDryingOption: Bool
-    var waitTime:        String  // Raw value of WaitTime enum
+    var waitTime:        String
 
     // MARK: - Photos & Privacy
 
-    var photoPaths: [String]  // File names of photos in Supabase Storage
-    var isPrivate:  Bool      // If true, only the owner sees this in the cloud
+    var photoPaths: [String]  // storage object names
+    var isPrivate:  Bool
 
     // MARK: - Community Verification
 
-    /// Number of users who confirmed this bathroom still exists.
-    /// Optional so rows created before this column was added decode to nil → 0.
+    /// Optional because rows that predate this column decode it as nil.
     var verificationCount: Int?
 
-    /// When this bathroom was last verified by any user.
     var lastVerifiedAt: Date?
 
     // MARK: - Dates
 
-    var dateVisited: Date   // When the user visited the bathroom
-    var createdAt:   Date   // Row creation timestamp (set by Postgres default)
-    var updatedAt:   Date   // Last modification timestamp (sent by the app on upsert)
+    var dateVisited: Date
+    var createdAt:   Date
+    var updatedAt:   Date
 
     // MARK: - CodingKeys
-    // Maps Swift camelCase properties to Postgres snake_case column names.
 
     enum CodingKeys: String, CodingKey {
         case id, name, latitude, longitude, address, rating, notes
@@ -127,10 +102,6 @@ struct RemoteBathroom: Codable {
 
     // MARK: - Convenience Init
 
-    /// Builds a remote DTO from a local SwiftData bathroom, ready to upsert.
-    ///
-    /// All enum values are sent as their raw String values so Postgres stores
-    /// them as TEXT columns (e.g. `"free"`, `"single"`, `"none"`).
     init(bathroom b: Bathroom, ownerID: UUID) {
         self.id                     = b.id
         self.ownerID                = ownerID
@@ -162,6 +133,6 @@ struct RemoteBathroom: Codable {
         self.lastVerifiedAt         = b.lastVerifiedAt
         self.dateVisited            = b.dateVisited
         self.createdAt              = b.dateCreated
-        self.updatedAt              = b.dateModified  // Sends current mod time so server stays in sync
+        self.updatedAt              = b.dateModified
     }
 }

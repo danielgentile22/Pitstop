@@ -1,23 +1,3 @@
-//
-//  MapTabView.swift
-//  Pitstop
-//
-//  The primary map view. Shows saved bathrooms as color-coded pins,
-//  the user's live location, and a banner when location access is denied.
-//
-//  Architecture notes:
-//  - Camera position is owned by ContentView (@Binding) so it survives
-//    Map ↔ List view switches without resetting.
-//  - Bathroom records are queried live from SwiftData via @Query.
-//  - The active BathroomFilter is applied in the view layer (not in the
-//    @Query predicate) because distance-based filtering needs a live
-//    CLLocation that a SwiftData predicate cannot provide.
-//  - Pin selection is tracked locally and drives the detail sheet.
-//  - fitCameraToSavedBathrooms() constrains the zoom-to-fit to bathrooms
-//    within ~50 km of the user to avoid bizarre wide-angle fits when a
-//    handful of pins are scattered globally.
-//
-
 import MapKit
 import SwiftUI
 import SwiftData
@@ -26,42 +6,29 @@ struct MapTabView: View {
 
     // MARK: - Dependencies
 
-    /// Provides authorization status and the user's live coordinate.
     var locationManager: LocationManager
 
-    /// Map camera position, lifted to ContentView so it survives view switches.
     @Binding var cameraPosition: MapCameraPosition
 
-    /// Active filter criteria, owned by ContentView.
     var filter: BathroomFilter
 
     // MARK: - Data
 
-    /// All saved bathrooms, live-synced from SwiftData. Newest entries first.
     @Query(sort: \Bathroom.dateCreated, order: .reverse) private var allBathrooms: [Bathroom]
 
     // MARK: - State
 
-    /// The bathroom whose pin was most recently tapped. Non-nil → detail sheet shows.
     @State private var selectedBathroom: Bathroom?
 
     // MARK: - Derived
 
-    /// Bathrooms that pass the active filter criteria.
-    ///
-    /// Distance filtering (maxDistance) is intentionally excluded here because
-    /// it changes continuously as the user moves, which would cause pins to
-    /// appear/disappear during panning and is confusing on a map. Distance
-    /// filtering is only applied in the List view where the user explicitly
-    /// expects proximity-sorted, distance-limited results.
+    /// Skips the max-distance filter: pins appearing and disappearing as the user moves is confusing on a map.
     private var filteredBathrooms: [Bathroom] {
         guard filter.isActive else { return allBathrooms }
         return allBathrooms.filter { filter.applies(to: $0) }
     }
 
-    /// Bathrooms within 50 km of the user, used to constrain the zoom-to-fit
-    /// camera calculation. Falls back to all filtered bathrooms if no user
-    /// location is available.
+    /// Within 50 km of the user, so zoom-to-fit ignores pins saved in other cities.
     private var nearbyBathrooms: [Bathroom] {
         guard let userCoord = locationManager.userLocation else {
             return filteredBathrooms
@@ -75,13 +42,10 @@ struct MapTabView: View {
     var body: some View {
         ZStack(alignment: .top) {
 
-            // ── Map ────────────────────────────────────────────────────────────
             Map(position: $cameraPosition) {
 
-                // Blue pulsing dot at the user's live position
                 UserAnnotation()
 
-                // One custom pin per filtered bathroom
                 ForEach(filteredBathrooms) { bathroom in
                     Annotation(
                         bathroom.name,
@@ -99,14 +63,13 @@ struct MapTabView: View {
                 }
             }
             .mapControls {
-                MapUserLocationButton()  // Re-center on user
+                MapUserLocationButton()
                 MapCompass()
                 MapScaleView()
             }
             .mapStyle(.standard(pointsOfInterest: .including([.restroom])))
             .ignoresSafeArea(edges: .bottom)
 
-            // ── Location Denied Banner ─────────────────────────────────────────
             if locationManager.isLocationDenied {
                 LocationDeniedBanner()
                     .padding(.horizontal, 16)
@@ -116,17 +79,14 @@ struct MapTabView: View {
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: locationManager.isLocationDenied)
 
-        // ── Camera Initialization ──────────────────────────────────────────────
-        // Zoom to fit nearby bathrooms on first appear; no-op if none exist.
         .onAppear {
             fitCameraToNearbyBathrooms()
         }
-        // Re-fit only when the list transitions between empty and non-empty.
+        // Re-fit only when the list goes between empty and non-empty.
         .onChange(of: allBathrooms.isEmpty) {
             fitCameraToNearbyBathrooms()
         }
 
-        // ── Detail Sheet ───────────────────────────────────────────────────────
         .sheet(item: $selectedBathroom) { bathroom in
             DetailView(
                 bathroom: bathroom,
@@ -147,15 +107,7 @@ struct MapTabView: View {
 
     // MARK: - Camera Logic
 
-    /// Zooms the camera to fit bathrooms within 50 km of the user.
-    ///
-    /// Using nearby bathrooms rather than all bathrooms prevents the map
-    /// from zooming out to country-level when the user has saved pins spread
-    /// across multiple cities or countries. The 50 km threshold is generous
-    /// enough to capture a reasonable driving radius around the user.
-    ///
-    /// Falls back to all filtered bathrooms when no user location is available
-    /// (simulator, location permission not yet granted).
+    /// Fits the camera to nearby bathrooms, or to all filtered ones when none are nearby or location is unknown.
     private func fitCameraToNearbyBathrooms() {
         let candidates = nearbyBathrooms.isEmpty ? filteredBathrooms : nearbyBathrooms
         guard !candidates.isEmpty else { return }
@@ -206,12 +158,7 @@ private struct LocationDeniedBanner: View {
 
 extension MKCoordinateRegion {
 
-    /// Builds a region that comfortably contains all given coordinates.
-    ///
-    /// Adds 30% padding on each axis so pins don't sit flush against the edges.
-    /// The minimum span of ~500m prevents over-zooming on a single pin.
-    ///
-    /// - Parameter coordinates: The coordinates to fit. Must not be empty.
+    /// Pads each axis by 30%, with a minimum span of about 500 m so a single pin is not over-zoomed.
     init(fittingCoordinates coordinates: [CLLocationCoordinate2D]) {
         guard !coordinates.isEmpty else {
             self = .unitedStates
@@ -233,7 +180,6 @@ extension MKCoordinateRegion {
         )
     }
 
-    /// Fallback region: continental United States, country-level zoom.
     static let unitedStates = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 39.5, longitude: -98.35),
         span: MKCoordinateSpan(latitudeDelta: 60, longitudeDelta: 60)

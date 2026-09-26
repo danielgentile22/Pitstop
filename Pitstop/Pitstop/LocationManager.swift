@@ -1,39 +1,21 @@
-//
-//  LocationManager.swift
-//  Pitstop
-//
-//  @Observable wrapper around CLLocationManager that exposes the user's
-//  live GPS coordinate and authorization status to the SwiftUI view tree.
-//
-
 import CoreLocation
 import SwiftUI
 
-/// Manages GPS permissions and streams the user's live coordinate.
-///
-/// Create one instance and pass it through the view hierarchy.
-/// Views access `userLocation`, `hasLocationPermission`, and `isLocationDenied`
-/// to react to changes automatically.
 @Observable
 final class LocationManager: NSObject, CLLocationManagerDelegate {
 
-    // MARK: - Published State
+    // MARK: - State
 
-    /// The user's most recently received GPS coordinate.
-    /// Nil until the first fix arrives (usually within a second of authorization).
     var userLocation: CLLocationCoordinate2D?
 
-    /// The current Core Location authorization status.
     var authorizationStatus: CLAuthorizationStatus = .notDetermined
 
-    /// A human-readable error string set when location fails.
     var locationError: String?
 
     // MARK: - Private
 
     private let manager = CLLocationManager()
 
-    /// Guards against calling startUpdatingLocation() when already active.
     private var isUpdatingLocation = false
 
     // MARK: - Init
@@ -41,15 +23,13 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         manager.delegate = self
-        // NearestTenMeters is more than precise enough to find a nearby bathroom
-        // and significantly better for battery life than kCLLocationAccuracyBest.
+        // Ten meters is enough to find a bathroom and much cheaper on battery than Best.
         manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
     }
 
-    // MARK: - Public Methods
+    // MARK: - Permission
 
-    /// Call once on app launch. Shows the permission prompt if not yet determined;
-    /// otherwise immediately starts location updates if already authorized.
+    /// Prompts if undetermined, otherwise starts updates when already authorized.
     func requestPermission() {
         if manager.authorizationStatus == .notDetermined {
             manager.requestWhenInUseAuthorization()
@@ -58,12 +38,10 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    /// True if the user has granted location access (either WhenInUse or Always).
     var hasLocationPermission: Bool {
         authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
     }
 
-    /// True if the user has explicitly denied location access.
     var isLocationDenied: Bool {
         authorizationStatus == .denied || authorizationStatus == .restricted
     }
@@ -90,8 +68,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
             locationError = nil
-            // Guard prevents redundant startUpdatingLocation() calls on every
-            // ContentView.onAppear when permission is already granted.
+            // requestPermission() runs on every ContentView appearance.
             guard !isUpdatingLocation else { return }
             isUpdatingLocation = true
             manager.startUpdatingLocation()

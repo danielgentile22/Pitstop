@@ -1,22 +1,12 @@
-//
-//  BathroomFilter.swift
-//  Pitstop
-//
-//  Value type describing the active filter state for the bathroom list.
-//  Plain struct so it can live as @State in ContentView and flow down
-//  to ListTabView as a value parameter — no extra state management needed.
-//
-
 import Foundation
 
 // MARK: - MaxDistance
 
-/// Distance radius options for the list filter.
 enum MaxDistance: Double, CaseIterable, Equatable {
-    case halfMile  =  804.67   // 0.5 miles in metres
-    case oneMile   = 1609.34   // 1 mile
-    case fiveMiles = 8046.72   // 5 miles
-    case tenMiles  = 16093.44  // 10 miles
+    case halfMile  =  804.67   // meters
+    case oneMile   = 1609.34
+    case fiveMiles = 8046.72
+    case tenMiles  = 16093.44
 
     var displayName: String {
         switch self {
@@ -32,22 +22,20 @@ enum MaxDistance: Double, CaseIterable, Equatable {
 
 struct BathroomFilter: Equatable {
 
+    // Empty sets and 0 mean "any".
+
     // MARK: - Rating
 
-    /// Minimum overall star rating. 0 = any (no filter).
     var minimumRating: Int = 0
 
     // MARK: - Access
 
-    /// Only show bathrooms with one of these access types. Empty = any.
     var accessTypes: Set<BathroomAccess> = []
 
     // MARK: - Layout
 
-    /// Only show bathrooms matching one of these stall types. Empty = any.
     var stallTypes: Set<StallType> = []
 
-    /// Only show bathrooms matching one of these gender designations. Empty = any.
     var genderTypes: Set<GenderType> = []
 
     // MARK: - Boolean Must-Haves
@@ -64,18 +52,15 @@ struct BathroomFilter: Equatable {
 
     // MARK: - Wait Time
 
-    /// Only show bathrooms with one of these typical wait times. Empty = any.
     var waitTimes: Set<WaitTime> = []
 
     // MARK: - Distance
 
-    /// Maximum distance from the user's location. nil = no limit.
-    /// Applied separately in ListTabView (requires live user location).
+    /// Not checked by `applies(to:)`; ListTabView applies it because it needs the user's location.
     var maxDistance: MaxDistance? = nil
 
     // MARK: - Derived
 
-    /// True when any criterion differs from its default value.
     var isActive: Bool {
         minimumRating > 0
         || !accessTypes.isEmpty
@@ -96,11 +81,7 @@ struct BathroomFilter: Equatable {
 
     // MARK: - Application
 
-    /// Returns true when `bathroom` passes every active criterion.
-    ///
-    /// Note: `maxDistance` is NOT evaluated here because it requires a
-    /// live CLLocation, which this value type doesn't own. It is applied
-    /// as a separate step in ListTabView.displayedBathrooms.
+    /// Every criterion except `maxDistance`.
     func applies(to bathroom: Bathroom) -> Bool {
 
         if minimumRating > 0 {

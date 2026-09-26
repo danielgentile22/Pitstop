@@ -1,18 +1,3 @@
-//
-//  AppleSignInButtonView.swift
-//  Pitstop
-//
-//  UIViewRepresentable wrapper for ASAuthorizationAppleIDButton (UIKit).
-//  Permitted by Apple HIG alongside SwiftUI's SignInWithAppleButton.
-//
-//  Flow:
-//    1. User taps the button → Coordinator.handleTap()
-//    2. A cryptographic nonce is generated and hashed
-//    3. ASAuthorizationController presents Apple's Face ID / Touch ID sheet
-//    4. On success the credential + raw nonce are passed to LoginView
-//    5. LoginView calls SupabaseService.signInWithApple() to exchange tokens
-//
-
 import AuthenticationServices
 import SwiftUI
 import UIKit
@@ -55,8 +40,7 @@ struct AppleSignInButtonView: UIViewRepresentable {
         var onSuccess: (ASAuthorizationAppleIDCredential, String) -> Void
         var onFailure: (Error) -> Void
 
-        /// Stored between handleTap() and the delegate callback.
-        /// Both sides run on the main thread so no synchronisation is needed.
+        // Held from handleTap() until the delegate callback; the backend needs the unhashed value.
         private var rawNonce: String?
 
         init(
@@ -110,12 +94,17 @@ struct AppleSignInButtonView: UIViewRepresentable {
         func presentationAnchor(
             for controller: ASAuthorizationController
         ) -> ASPresentationAnchor {
-            UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
+            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            if let keyWindow = scenes
                 .first(where: { $0.activationState == .foregroundActive })?
                 .windows
-                .first(where: \.isKeyWindow)
-            ?? UIWindow()
+                .first(where: \.isKeyWindow) {
+                return keyWindow
+            }
+            guard let scene = scenes.first else {
+                preconditionFailure("Sign in with Apple presented with no connected window scene")
+            }
+            return UIWindow(windowScene: scene)
         }
     }
 }

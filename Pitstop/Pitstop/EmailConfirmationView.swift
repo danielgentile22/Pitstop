@@ -1,42 +1,17 @@
-//
-//  EmailConfirmationView.swift
-//  Pitstop
-//
-//  Shown when a user signs up with email/password and Supabase requires them
-//  to verify their email address before their session becomes active.
-//
-//  PitstopApp mounts this view when `supabaseService.pendingConfirmationEmail`
-//  is non-nil. Once the user has clicked the confirmation link in their email,
-//  they tap "Sign In" here, which clears the pending state and returns them to
-//  the standard login form where they can enter their credentials.
-//
-//  Why not auto-detect confirmation?
-//    After clicking the confirmation link, Supabase redirects the user to a
-//    URL that ideally deep-links back into the app. Handling that redirect
-//    requires registered URL schemes and SceneDelegate work that is outside
-//    the scope of the current auth implementation. In the meantime, the user
-//    clicks "Done" here and signs in normally — clean and reliable.
-//
-
 import SwiftUI
 
+/// Shown after email sign-up. The confirmation link does not deep-link back into the app,
+/// so the user confirms in the browser, then signs in here.
 struct EmailConfirmationView: View {
-
-    // MARK: - Input
 
     let email: String
 
-    // MARK: - Environment
-
     @Environment(SupabaseService.self) private var service
-
-    // MARK: - Body
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            // ── Illustration ─────────────────────────────────────────────
             VStack(spacing: 16) {
                 Image(systemName: "envelope.badge.checkmark")
                     .font(.system(size: 72))
@@ -64,10 +39,8 @@ struct EmailConfirmationView: View {
 
             Spacer().frame(height: 48)
 
-            // ── Actions ──────────────────────────────────────────────────
             VStack(spacing: 14) {
-                // Primary action: dismiss and return to login form
-                Button("Done — Take me to Sign In") {
+                Button("Back to Sign In") {
                     service.pendingConfirmationEmail = nil
                 }
                 .buttonStyle(.borderedProminent)
@@ -76,7 +49,6 @@ struct EmailConfirmationView: View {
                 .frame(height: 50)
                 .padding(.horizontal, 24)
 
-                // Secondary: try a different email
                 Button("Use a different email") {
                     service.pendingConfirmationEmail = nil
                 }

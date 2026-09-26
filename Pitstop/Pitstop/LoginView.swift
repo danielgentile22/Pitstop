@@ -1,30 +1,3 @@
-//
-//  LoginView.swift
-//  Pitstop
-//
-//  Email + password authentication screen.
-//  Supports Sign In, Create Account, and Forgot Password flows.
-//
-//  ── Auth Gate Integration ─────────────────────────────────────────────────
-//
-//  PitstopApp shows LoginView when both `currentUser` and
-//  `pendingConfirmationEmail` are nil. On a successful sign-in, SupabaseService
-//  sets `currentUser` and PitstopApp automatically mounts ContentView.
-//  On sign-up with email confirmation enabled, SupabaseService sets
-//  `pendingConfirmationEmail` and PitstopApp mounts EmailConfirmationView.
-//  No manual navigation is needed from this view.
-//
-//  ── Modes ─────────────────────────────────────────────────────────────────
-//
-//    .signIn      — Standard sign-in form
-//    .createAccount — Sign-up form (same fields)
-//    .forgotPassword — Email-only form, sends a reset link
-//
-//  Modes are toggled with the segmented picker (signIn / createAccount) and
-//  a "Forgot Password?" text button. The forgot-password flow is separate so
-//  the user never accidentally submits a sign-in with a blank password.
-//
-
 import AuthenticationServices
 import SwiftUI
 
@@ -46,8 +19,8 @@ struct LoginView: View {
     @State private var password     = ""
     @State private var isLoading    = false
     @State private var errorMsg     = ""
-    @State private var resetSent    = false   // true after a reset email is dispatched
-    @State private var appeared     = false   // drives entrance animation
+    @State private var resetSent    = false
+    @State private var appeared     = false
 
     @FocusState private var focused: Field?
     private enum Field { case email, password }
@@ -60,15 +33,12 @@ struct LoginView: View {
     // MARK: - Body
 
     var body: some View {
-        // GeometryReader + ScrollView: the VStack fills the screen on tall phones
-        // (Spacers work normally) but becomes scrollable on small phones so the
-        // Apple button is never clipped off the bottom.
+        // Scrollable so small phones never clip the Apple button; minHeight lets Spacers fill tall screens.
         GeometryReader { geo in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     Spacer(minLength: 24)
 
-                    // ── App Icon + Title ─────────────────────────────────────────
                     VStack(spacing: 10) {
                         Image(systemName: "toilet.fill")
                             .font(.system(size: 56))
@@ -108,7 +78,6 @@ struct LoginView: View {
 
                     Spacer(minLength: 32).frame(maxHeight: 40)
 
-                    // ── Form ─────────────────────────────────────────────────────
                     Group {
                         if isForgot {
                             forgotPasswordForm
@@ -134,7 +103,6 @@ struct LoginView: View {
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 16)
                 }
-                // minHeight ensures Spacers fill the screen on large phones
                 .frame(minHeight: geo.size.height)
             }
         }
@@ -145,7 +113,6 @@ struct LoginView: View {
     private var mainForm: some View {
         VStack(spacing: 14) {
 
-            // Mode switcher
             Picker("Mode", selection: $mode) {
                 Text("Sign In").tag(Mode.signIn)
                 Text("Create Account").tag(Mode.createAccount)
@@ -154,7 +121,6 @@ struct LoginView: View {
             .padding(.horizontal, 24)
             .onChange(of: mode) { errorMsg = "" }
 
-            // Fields
             VStack(spacing: 10) {
                 emailField
 
@@ -172,7 +138,6 @@ struct LoginView: View {
             }
             .padding(.horizontal, 24)
 
-            // Error
             if !errorMsg.isEmpty {
                 Text(errorMsg)
                     .font(.footnote)
@@ -182,7 +147,6 @@ struct LoginView: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
 
-            // Submit
             Button {
                 Task { await submit() }
             } label: {
@@ -203,7 +167,6 @@ struct LoginView: View {
             .disabled(isLoading || email.isEmpty || password.isEmpty)
             .padding(.horizontal, 24)
 
-            // Forgot password link — only shown in sign-in mode
             if !isSignUp {
                 Button("Forgot Password?") {
                     mode      = .forgotPassword
@@ -214,11 +177,8 @@ struct LoginView: View {
                 .foregroundStyle(.secondary)
             }
 
-            // ── Apple Sign-In ─────────────────────────────────────────
             orDivider.padding(.horizontal, 24)
 
-            // ASAuthorizationAppleIDButton (UIKit) wrapped via UIViewRepresentable.
-            // Explicitly permitted by Apple HIG alongside SwiftUI's variant.
             AppleSignInButtonView(
                 style: colorScheme == .dark ? .white : .black,
                 onSuccess: { credential, rawNonce in
@@ -277,7 +237,6 @@ struct LoginView: View {
 
             emailField.padding(.horizontal, 24)
 
-            // Error or success messages
             if !errorMsg.isEmpty {
                 Text(errorMsg)
                     .font(.footnote)
@@ -378,7 +337,7 @@ struct LoginView: View {
             } else {
                 try await service.signIn(email: trimmedEmail, password: password)
             }
-            // Success: PitstopApp reacts to currentUser / pendingConfirmationEmail changes.
+            // On success the auth gate in PitstopApp swaps the root view.
         } catch {
             withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
                 errorMsg = error.localizedDescription

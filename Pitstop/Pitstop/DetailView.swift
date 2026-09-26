@@ -1,26 +1,8 @@
-//
-//  DetailView.swift
-//  Pitstop
-//
-//  Full detail sheet for a saved bathroom. Presented at .medium detent
-//  (half-height preview card) and draggable to .large (full screen).
-//
-//  Sections shown:
-//    • Header          — name, rating, edit button
-//    • Photos          — horizontal carousel (hidden when empty)
-//    • Location        — address, date visited, distance
-//    • Access          — how you get in, receipt code, hours, wait time
-//    • Facilities      — stall, gender, indoor, wheelchair, changing table
-//    • Toilet Paper    — availability, extras, dispenser quality
-//    • Amenities       — heated seat, bidet, soap, hand drying
-//    • Notes           — free-form text (hidden when empty)
-//    • Actions         — Open in Maps, Delete
-//
-
 import SwiftUI
 import SwiftData
 import MapKit
 
+/// Detail sheet for a saved bathroom, shown at the medium detent and draggable to large.
 struct DetailView: View {
 
     // MARK: - Input
@@ -49,20 +31,17 @@ struct DetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
 
-                // ── Header ────────────────────────────────────────────────
                 headerSection
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
                     .padding(.bottom, 20)
 
-                // ── Photos ────────────────────────────────────────────────
                 if !bathroom.imageFileNames.isEmpty {
                     Divider()
                     PhotoCarousel(bathroom: bathroom)
                         .padding(.vertical, 16)
                 }
 
-                // ── Location ──────────────────────────────────────────────
                 detailSection("Location") {
                     if let address = bathroom.address, !address.isEmpty {
                         metaRow(icon: "location.fill", color: .red, text: address)
@@ -77,7 +56,6 @@ struct DetailView: View {
                     }
                 }
 
-                // ── Access ────────────────────────────────────────────────
                 detailSection("Access") {
                     metaRow(
                         icon: bathroom.accessType.icon,
@@ -102,7 +80,6 @@ struct DetailView: View {
                     }
                 }
 
-                // ── Facilities ────────────────────────────────────────────
                 detailSection("Facilities") {
                     metaRow(
                         icon: bathroom.stallType.icon,
@@ -133,7 +110,6 @@ struct DetailView: View {
                     )
                 }
 
-                // ── Toilet Paper ──────────────────────────────────────────
                 detailSection("Toilet Paper") {
                     metaRow(
                         icon: "roll",
@@ -161,7 +137,6 @@ struct DetailView: View {
                     }
                 }
 
-                // ── Amenities ─────────────────────────────────────────────
                 detailSection("Amenities") {
                     metaRow(
                         icon: "thermometer.medium",
@@ -190,7 +165,6 @@ struct DetailView: View {
                     )
                 }
 
-                // ── Notes ─────────────────────────────────────────────────
                 if !bathroom.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     detailSection("Notes") {
                         Text(bathroom.notes)
@@ -199,7 +173,6 @@ struct DetailView: View {
                     }
                 }
 
-                // ── Actions ───────────────────────────────────────────────
                 Divider()
                 actionsSection
                     .padding(.horizontal, 20)
@@ -240,7 +213,6 @@ struct DetailView: View {
                             .clipShape(Capsule())
                     }
                 }
-                // Verification status
                 verificationBadge
             }
             Spacer()
@@ -341,7 +313,6 @@ struct DetailView: View {
             .controlSize(.large)
             .tint(.blue)
 
-            // "Still Here?" — available to all users; increments verification count
             Button {
                 Task { await verifyBathroom() }
             } label: {
@@ -361,7 +332,6 @@ struct DetailView: View {
             .tint(.green)
             .disabled(isVerifying)
 
-            // Verification error inline
             if !verifyError.isEmpty {
                 Text(verifyError)
                     .font(.caption)
@@ -370,7 +340,6 @@ struct DetailView: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
 
-            // Report — only shown for bathrooms you didn't create
             if !supabaseService.isOwner(of: bathroom) {
                 Button { showReportView = true } label: {
                     Label("Report an Issue", systemImage: "flag")
@@ -413,7 +382,6 @@ struct DetailView: View {
         ImageStorage.deleteAllImages(bathroomID: bid)
         modelContext.delete(bathroom)
         dismiss()
-        // Enqueue for resilient cloud delete — retried on reconnection if offline
         syncQueue.enqueue(.deleteBathroom(bathroomID: bid, fileNames: fileNames))
         Task { await syncQueue.drain(supabase: supabaseService, context: modelContext) }
     }

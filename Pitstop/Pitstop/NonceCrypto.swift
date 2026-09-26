@@ -1,30 +1,11 @@
-//
-//  NonceCrypto.swift
-//  Pitstop
-//
-//  Nonce utilities for Sign in with Apple.
-//
-//  The protocol requires a two-value nonce:
-//    • rawNonce   — a cryptographically random string, sent to Supabase so it
-//                   can verify the round-trip.
-//    • hashedNonce — SHA-256(rawNonce), sent to Apple in the auth request.
-//                   Apple embeds it in the returned identity-token JWT.
-//
-//  Supabase receives both: it hashes the rawNonce itself and confirms it
-//  matches the hash Apple embedded in the JWT. This prevents replay attacks
-//  where a stolen token is submitted without the matching rawNonce.
-//
-
 import CryptoKit
 import Foundation
 
+/// Sign in with Apple nonces: Apple gets `sha256(raw)` in the request and embeds it in the
+/// identity token; the backend gets `raw` and checks it hashes to that value, blocking token replay.
 enum NonceCrypto {
 
-    /// Generates a cryptographically random URL-safe nonce string.
-    ///
-    /// Uses `SecRandomCopyBytes` (CSPRNG) to sample from a 66-character
-    /// charset. Characters outside the charset are discarded (rejection
-    /// sampling) so there is no modulo bias.
+    /// URL-safe random nonce. Bytes outside the charset range are rejected, avoiding modulo bias.
     static func generateRawNonce(length: Int = 32) -> String {
         precondition(length > 0, "Nonce length must be positive")
         let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
@@ -33,16 +14,13 @@ enum NonceCrypto {
         var remaining = length
 
         while remaining > 0 {
-            // Generate a batch of 16 raw bytes at a time to amortize
-            // the syscall overhead of SecRandomCopyBytes.
             var batch = [UInt8](repeating: 0, count: 16)
             let status = SecRandomCopyBytes(kSecRandomDefault, batch.count, &batch)
             precondition(status == errSecSuccess,
-                         "SecRandomCopyBytes failed — OSStatus \(status)")
+                         "SecRandomCopyBytes failed with OSStatus \(status)")
 
             for byte in batch {
                 guard remaining > 0 else { break }
-                // Reject values that would cause modulo bias
                 if byte < charset.count {
                     result.append(charset[Int(byte)])
                     remaining -= 1
@@ -53,7 +31,7 @@ enum NonceCrypto {
         return String(result)
     }
 
-    /// Returns the lowercase hex-encoded SHA-256 digest of `input`.
+    /// Lowercase hex digest.
     static func sha256(_ input: String) -> String {
         let digest = SHA256.hash(data: Data(input.utf8))
         return digest.map { String(format: "%02x", $0) }.joined()

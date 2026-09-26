@@ -1,17 +1,3 @@
-//
-//  ListTabView.swift
-//  Pitstop
-//
-//  Scrollable list of all saved bathrooms with search, sort, tap-to-detail,
-//  and swipe-to-delete. Presents DetailView as a sheet on row tap.
-//
-//  Architecture notes:
-//  - @Query fetches all bathrooms; filtering/sorting is done in Swift after
-//    the query because distance sort requires a runtime CLLocation value.
-//  - LocationManager is passed in (not owned here) so distance calculations
-//    share the same live coordinate as the map view.
-//
-
 import CoreLocation
 import SwiftData
 import SwiftUI
@@ -31,15 +17,12 @@ struct ListTabView: View {
 
     // MARK: - Dependencies
 
-    /// Shared location manager — used for live distance calculations.
     var locationManager: LocationManager
 
-    /// Active filter — passed in from ContentView, applied to displayedBathrooms.
     var filter: BathroomFilter
 
     // MARK: - Data
 
-    /// All saved bathrooms from SwiftData.
     @Query(sort: \Bathroom.dateCreated, order: .reverse) private var bathrooms: [Bathroom]
 
     @Environment(\.modelContext)       private var modelContext
@@ -56,7 +39,6 @@ struct ListTabView: View {
 
     // MARK: - Derived
 
-    /// Bathrooms after search, filter (including distance), and sort — what the list displays.
     private var displayedBathrooms: [Bathroom] {
         let afterSearch = searchText.isEmpty
             ? bathrooms
@@ -66,8 +48,7 @@ struct ListTabView: View {
             ? afterSearch.filter { filter.applies(to: $0) }
             : afterSearch
 
-        // Apply maxDistance filter — requires live user location, so handled here
-        // rather than inside BathroomFilter.applies(to:).
+        // BathroomFilter.applies(to:) has no user location, so max distance is applied here.
         if let maxDist = filter.maxDistance, let coord = locationManager.userLocation {
             let origin = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
             afterFilter = afterFilter.filter { $0.distance(from: origin) <= maxDist.rawValue }
@@ -81,20 +62,16 @@ struct ListTabView: View {
     var body: some View {
         Group {
             if bathrooms.isEmpty {
-                // No bathrooms saved at all
                 emptyStateView
             } else if displayedBathrooms.isEmpty && !searchText.isEmpty {
-                // Bathrooms exist but search matched nothing
                 ContentUnavailableView.search(text: searchText)
             } else if displayedBathrooms.isEmpty {
-                // Bathrooms exist but the active filter matched nothing
                 filteredEmptyStateView
             } else {
                 listView
             }
         }
         .searchable(text: $searchText, prompt: "Search bathrooms…")
-        // Detail sheet on row tap
         .sheet(item: $selectedBathroom) { bathroom in
             DetailView(
                 bathroom: bathroom,
@@ -103,7 +80,6 @@ struct ListTabView: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
-        // Delete confirmation
         .alert("Delete Bathroom?", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) {
                 if let bathroom = bathroomToDelete {
@@ -122,13 +98,11 @@ struct ListTabView: View {
 
     private var listView: some View {
         List {
-            // ── Sort Picker ────────────────────────────────────────────────
             sortPickerRow
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                 .listRowBackground(Color(.systemGroupedBackground))
 
-            // ── Bathroom Rows ──────────────────────────────────────────────
             ForEach(displayedBathrooms) { bathroom in
                 BathroomRow(
                     bathroom: bathroom,
@@ -138,7 +112,6 @@ struct ListTabView: View {
                 .onTapGesture {
                     selectedBathroom = bathroom
                 }
-                // Swipe left to delete — only for bathrooms the user owns
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     if supabaseService.isOwner(of: bathroom) {
                         Button(role: .destructive) {
@@ -155,9 +128,7 @@ struct ListTabView: View {
         .refreshable {
             await supabaseService.syncAll(context: modelContext, userLocation: nil, force: true)
         }
-        // Animate list reorder when sort option changes
         .animation(.spring(response: 0.38, dampingFraction: 0.88), value: sortOption)
-        // Animate filter changes as the user types
         .animation(.spring(response: 0.38, dampingFraction: 0.88), value: searchText)
     }
 
@@ -172,7 +143,6 @@ struct ListTabView: View {
             Menu {
                 Picker("Sort by", selection: $sortOption) {
                     ForEach(SortOption.allCases, id: \.self) { option in
-                        // Distance option is unavailable if location is denied
                         if option == .distance && !locationManager.hasLocationPermission {
                             Text(option.rawValue + " (unavailable)").tag(option)
                         } else {
@@ -220,7 +190,6 @@ struct ListTabView: View {
 
     // MARK: - Sort Logic
 
-    /// Returns `list` sorted by the current `sortOption`.
     private func sorted(_ list: [Bathroom]) -> [Bathroom] {
         switch sortOption {
         case .distance:
@@ -229,7 +198,7 @@ struct ListTabView: View {
             return list.sorted { $0.distance(from: origin) < $1.distance(from: origin) }
 
         case .rating:
-            // Descending rating; unrated (0) goes to the end
+            // Highest first; unrated (0) sorts last.
             return list.sorted {
                 if $0.rating == $1.rating { return $0.name < $1.name }
                 if $0.rating == 0 { return false }

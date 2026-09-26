@@ -1,15 +1,3 @@
-//
-//  BathroomRow.swift
-//  Pitstop
-//
-//  A single row in the bathroom list.
-//  Shows a photo thumbnail (or icon placeholder), name, access type,
-//  star rating, distance, and key amenity indicators.
-//
-//  Photo loading uses PhotoResolver, which tries the local cache/disk first
-//  and falls back to downloading from Supabase Storage for community bathrooms.
-//
-
 import CoreLocation
 import MapKit
 import SwiftUI
@@ -29,8 +17,6 @@ struct BathroomRow: View {
 
     private let thumbSize: CGFloat   = 72
     private let thumbRadius: CGFloat = 10
-
-    // MARK: - Async Image State
 
     @State private var thumbnailImage: UIImage?
 
@@ -60,7 +46,6 @@ struct BathroomRow: View {
 
     private var thumbnail: some View {
         ZStack {
-            // Placeholder always rendered underneath
             Color(.secondarySystemFill)
                 .overlay(
                     Image(systemName: "toilet.fill")
@@ -69,7 +54,6 @@ struct BathroomRow: View {
                         .opacity(thumbnailImage == nil ? 1 : 0)
                 )
 
-            // Loaded image fades in on top
             if let image = thumbnailImage {
                 Image(uiImage: image)
                     .resizable()
@@ -87,12 +71,10 @@ struct BathroomRow: View {
     private var details: some View {
         VStack(alignment: .leading, spacing: 5) {
 
-            // Name
             Text(bathroom.name)
                 .font(.headline)
                 .lineLimit(1)
 
-            // Access badge + rating + distance
             HStack(spacing: 6) {
                 Label(bathroom.accessType.shortName, systemImage: bathroom.accessType.icon)
                     .font(.caption.weight(.medium))

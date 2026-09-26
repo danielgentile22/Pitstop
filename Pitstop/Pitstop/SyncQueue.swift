@@ -1,39 +1,9 @@
-//
-//  SyncQueue.swift
-//  Pitstop
-//
-//  Persistent queue of cloud operations that failed because the device was
-//  offline. Operations are written atomically to a JSON file in the app's
-//  Documents directory so the queue survives app restarts and crashes.
-//
-//  The queue is drained automatically by ContentView whenever the device
-//  regains network connectivity (observed via NetworkMonitor).
-//
-//  ── Supported Operations ──────────────────────────────────────────────────
-//
-//    upsertBathroom  — push a modified local Bathroom to the cloud.
-//    deleteBathroom  — remove a bathroom row and its photos from the cloud.
-//    uploadPhoto     — upload a single photo file to Supabase Storage.
-//    deletePhotos    — remove a set of photo files from Supabase Storage.
-//
-//  ── Idempotency ───────────────────────────────────────────────────────────
-//
-//  Each operation carries a stable string `id` computed from its parameters.
-//  Re-enqueueing an already-pending operation replaces the existing entry
-//  rather than appending a duplicate, so rapid offline edits collapse to a
-//  single pending upsert.
-//
-//  ── Drain Strategy ────────────────────────────────────────────────────────
-//
-//  Operations are attempted sequentially. Any that fail (still no network,
-//  server error) remain in the queue for the next drain. Operations whose
-//  local prerequisite no longer exists (bathroom deleted, photo deleted) are
-//  silently discarded — they are considered stale.
-//
-
 import Foundation
 import Observation
+import os
 import SwiftData
+
+private let logger = Logger(subsystem: "Pitstop", category: "SyncQueue")
 
 // MARK: - PendingOperation
 
@@ -43,7 +13,7 @@ enum PendingOperation: Codable, Identifiable, Hashable {
     case uploadPhoto(bathroomID:    UUID, fileName:  String)
     case deletePhotos(bathroomID:   UUID, fileNames: [String])
 
-    /// Stable identifier used for deduplication on re-enqueue.
+    /// Derived from the parameters, so re-enqueueing the same operation replaces the pending one.
     var id: String {
         switch self {
         case .upsertBathroom(let id):
@@ -60,18 +30,16 @@ enum PendingOperation: Codable, Identifiable, Hashable {
 
 // MARK: - SyncQueue
 
+/// Cloud operations that failed while offline, persisted to disk and replayed on reconnect.
 @Observable
 final class SyncQueue {
 
     // MARK: - Observed State
 
-    /// Number of operations waiting to be pushed to the cloud.
-    /// Exposed so the toolbar can show a badge when > 0.
     private(set) var pendingCount: Int = 0
 
     // MARK: - Private Storage
 
-    /// The live operation list. Every mutation persists to disk automatically.
     private var operations: [PendingOperation] = [] {
         didSet {
             pendingCount = operations.count
@@ -93,7 +61,6 @@ final class SyncQueue {
 
     // MARK: - Enqueue
 
-    /// Adds an operation to the queue, replacing any existing entry with the same ID.
     func enqueue(_ operation: PendingOperation) {
         operations.removeAll { $0.id == operation.id }
         operations.append(operation)
@@ -101,20 +68,14 @@ final class SyncQueue {
 
     // MARK: - Drain
 
-    /// Attempts to execute every queued operation against the cloud.
-    ///
-    /// Successful operations are removed. Failed operations stay in the queue
-    /// for the next drain. The drain is non-blocking — a single failure does
-    /// not stop subsequent operations from being attempted.
-    ///
-    /// Safe to call concurrently; if called while already draining, pending
-    /// operations may interleave — this is acceptable because all operations
-    /// are idempotent on the server (upsert + delete).
+    /// Runs every queued operation; failures stay queued for the next drain.
+    /// Overlapping drains may replay an operation twice. That is safe because every
+    /// operation is an upsert or a delete, so repeating it leaves the server unchanged.
     func drain(supabase: SupabaseService, context: ModelContext) async {
         guard !operations.isEmpty else { return }
 
         var remaining: [PendingOperation] = []
-        // Snapshot the current list so new enqueues during drain don't get lost
+        // Snapshot so operations enqueued mid-drain survive the final merge.
         let snapshot = operations
 
         for operation in snapshot {
@@ -122,7 +83,6 @@ final class SyncQueue {
             if !succeeded { remaining.append(operation) }
         }
 
-        // Merge: keep operations that were enqueued during the drain AND any that failed
         let drainedIDs = Set(snapshot.map(\.id))
         let newlyEnqueued = operations.filter { !drainedIDs.contains($0.id) }
         operations = remaining + newlyEnqueued
@@ -130,8 +90,7 @@ final class SyncQueue {
 
     // MARK: - Clear
 
-    /// Discards all pending operations. Called on sign-out so a subsequent
-    /// user doesn't accidentally push the previous user's queued data.
+    /// Called on sign-out so the next user never pushes the previous user's data.
     func clear() {
         operations = []
     }
@@ -150,7 +109,7 @@ final class SyncQueue {
                 let descriptor = FetchDescriptor<Bathroom>(
                     predicate: #Predicate { $0.id == bathroomID }
                 )
-                // If the bathroom was deleted locally since it was enqueued, discard
+                // Deleted locally since enqueueing: drop the operation.
                 guard let bathroom = (try? context.fetch(descriptor))?.first else { return true }
                 try await supabase.upsertRemote(bathroom)
 
@@ -158,7 +117,7 @@ final class SyncQueue {
                 await supabase.deleteWithPhotos(bathroomID: bathroomID, fileNames: fileNames)
 
             case .uploadPhoto(let bathroomID, let fileName):
-                // If the image was deleted locally since enqueueing, discard
+                // Deleted locally since enqueueing: drop the operation.
                 guard let image = await ImageStorage.loadImageAsync(
                     bathroomID: bathroomID, fileName: fileName
                 ) else { return true }
@@ -170,7 +129,7 @@ final class SyncQueue {
             return true
 
         } catch {
-            print("[SyncQueue] failed: \(operation.id) — \(error.localizedDescription)")
+            logger.error("Operation \(operation.id, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
@@ -182,7 +141,7 @@ final class SyncQueue {
             let data = try JSONEncoder().encode(operations)
             try data.write(to: Self.queueFileURL, options: .atomic)
         } catch {
-            print("[SyncQueue] persist error: \(error)")
+            logger.error("Persist failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 

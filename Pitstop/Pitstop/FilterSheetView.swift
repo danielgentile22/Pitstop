@@ -1,20 +1,6 @@
-//
-//  FilterSheetView.swift
-//  Pitstop
-//
-//  Bottom sheet for filtering the bathroom list.
-//  Changes take effect live — no "Apply" button.
-//
-//  Sections:
-//    • Minimum Rating   — tappable stars
-//    • Max Distance     — single-select radius chips (requires location)
-//    • Access Type      — multi-select chips (any match passes)
-//    • Stall & Gender   — multi-select chips
-//    • Must Have        — boolean toggles for key amenities
-//
-
 import SwiftUI
 
+/// Filter sheet for the bathroom list. Edits apply live; there is no Apply button.
 struct FilterSheetView: View {
 
     @Binding var filter: BathroomFilter

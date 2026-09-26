@@ -1,19 +1,3 @@
-//
-//  ReportView.swift
-//  Pitstop
-//
-//  Sheet for reporting a bathroom entry to the moderation queue.
-//  Presented from DetailView when the user taps "Report".
-//
-//  The user selects a reason from the predefined ReportReason cases and
-//  optionally adds a free-text note. Submitting sends the report to the
-//  `reports` table in Supabase and dismisses the sheet.
-//
-//  Reports are fire-and-forget: a successful submit is confirmed with a
-//  brief inline success message. Failures are shown inline so the user
-//  can retry without losing their input.
-//
-
 import SwiftUI
 
 struct ReportView: View {
@@ -55,7 +39,6 @@ struct ReportView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
 
-                // Bathroom name context
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Reporting".uppercased())
                         .font(.caption.weight(.bold))
@@ -69,7 +52,6 @@ struct ReportView: View {
 
                 Divider()
 
-                // Reason selection
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Reason".uppercased())
                         .font(.caption.weight(.bold))
@@ -84,7 +66,6 @@ struct ReportView: View {
 
                 Divider()
 
-                // Optional notes
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Additional Notes (optional)".uppercased())
                         .font(.caption.weight(.bold))
@@ -100,7 +81,6 @@ struct ReportView: View {
                 }
                 .padding(.horizontal, 20)
 
-                // Error message
                 if !errorMsg.isEmpty {
                     Text(errorMsg)
                         .font(.footnote)
@@ -108,7 +88,6 @@ struct ReportView: View {
                         .padding(.horizontal, 20)
                 }
 
-                // Submit button
                 Button {
                     Task { await submit() }
                 } label: {

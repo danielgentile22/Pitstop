@@ -1,70 +1,8 @@
-//
-//  ContentView.swift
-//  Pitstop
-//
-//  Root view of the app. Manages the Map/List toggle, toolbar actions,
-//  the floating emergency FAB, and map camera state.
-//
-//  ── Architecture Overview ──────────────────────────────────────────────────
-//
-//  ContentView is the single top-level view mounted by PitstopApp once the
-//  user is authenticated. It owns all cross-cutting state that child views
-//  need to share or that must survive tab switches:
-//
-//    • Map camera position  — kept here (not in MapTabView) so the camera
-//      does not reset when the user briefly switches to List and then back.
-//      MapTabView receives it as a @Binding, meaning the user's pan/zoom
-//      is automatically remembered.
-//
-//    • Filter state         — owned here because both the FilterSheetView
-//      (which writes it) and the ListTabView and MapTabView (which read it)
-//      are children of ContentView. Hoisting filter to the common ancestor
-//      is the standard SwiftUI single-source-of-truth pattern.
-//
-//  ── Map / List Tab Design ──────────────────────────────────────────────────
-//
-//  Switching between Map and List is implemented as a switch-inside-Group
-//  rather than hidden ZStack layers. This means:
-//    1. Only one view is alive in the hierarchy at a time → lower memory.
-//    2. The search bar in ListTabView is automatically absent when not in
-//       List mode (no need to manually hide it).
-//    3. SwiftUI can cleanly animate insertion/removal of each view via
-//       .transition(.opacity), driven by a single .animation(value:) modifier
-//       on the Group — avoiding the ZStack opacity hack where both views
-//       stay rendered simultaneously.
-//
-//  ── Emergency FAB ─────────────────────────────────────────────────────────
-//
-//  The floating action button lives in a ZStack above both content views so
-//  it is ALWAYS visible regardless of which tab is active. Tapping it:
-//    1. Checks location permission and live coordinate.
-//    2. If bathrooms exist locally → finds the nearest by straight-line
-//       distance (fast, no network required) and opens Apple Maps.
-//    3. If no local bathrooms exist → queries Supabase for any bathrooms
-//       in a bounding box around the user (cloud emergency query).
-//  Straight-line distance is used for local lookup because routing APIs
-//  are asynchronous and may be unavailable in a genuine emergency.
-//
-//  ── Offline Banner ────────────────────────────────────────────────────────
-//
-//  NetworkMonitor drives an offline banner that slides in from the top of
-//  the ZStack when connectivity is lost and slides back out on reconnection.
-//  It is informational only — the app remains fully functional offline using
-//  cached data and the SyncQueue for deferred writes.
-//
-//  ── Sync-on-Appear Pattern ────────────────────────────────────────────────
-//
-//  .onAppear calls supabaseService.syncAll() every time ContentView enters
-//  the hierarchy (app launch, return from background via scene phase, etc.).
-//  SupabaseService is responsible for deduplication — syncing the same record
-//  twice is idempotent. This keeps the local SwiftData store in step with the
-//  cloud without requiring a manual refresh control.
-//
-
 import SwiftUI
 import SwiftData
 import MapKit
 
+/// Root view after sign-in. Owns camera and filter state so both survive Map/List switches.
 struct ContentView: View {
 
     // MARK: - View Mode
@@ -115,7 +53,6 @@ struct ContentView: View {
         NavigationStack {
             ZStack(alignment: .top) {
 
-                // ── Main Content ───────────────────────────────────────────────
                 Group {
                     switch selectedView {
                     case .map:
@@ -133,7 +70,6 @@ struct ContentView: View {
                 }
                 .animation(.spring(response: 0.38, dampingFraction: 0.88), value: selectedView)
 
-                // ── Offline Banner ─────────────────────────────────────────────
                 if !networkMonitor.isConnected {
                     OfflineBanner()
                         .padding(.horizontal, 16)
@@ -142,7 +78,6 @@ struct ContentView: View {
                         .zIndex(1)
                 }
 
-                // ── Emergency FAB ──────────────────────────────────────────────
                 VStack {
                     Spacer()
                     HStack {
@@ -184,7 +119,6 @@ struct ContentView: View {
                     .accessibilityLabel(filter.isActive ? "Filters active" : "Filter bathrooms")
                 }
 
-                // Sync indicator — spins while a cloud sync is in flight
                 ToolbarItem(placement: .topBarTrailing) {
                     if isSyncing {
                         ProgressView()
@@ -245,13 +179,7 @@ struct ContentView: View {
 
     // MARK: - Emergency Logic
 
-    /// Handles the emergency FAB tap.
-    ///
-    /// Priority order:
-    ///   1. Check location permission and live coordinate.
-    ///   2. If local bathrooms exist, find nearest by straight-line distance.
-    ///   3. If no local bathrooms, run a cloud query (shows spinner during fetch).
-    ///   4. Open Apple Maps to the nearest result.
+    /// Opens directions to the nearest cached bathroom, falling back to a server query when none are cached.
     private func handleEmergencyTap() async {
         guard locationManager.hasLocationPermission else {
             emergencyAlertMsg = "Enable location access in Settings to find the nearest bathroom."
@@ -268,13 +196,12 @@ struct ContentView: View {
         let origin = CLLocation(latitude: userCoord.latitude, longitude: userCoord.longitude)
 
         if !bathrooms.isEmpty {
-            // Fast path: nearest from local SwiftData store — no network needed
+            // Straight-line distance: no routing call, so it works offline.
             guard let nearest = bathrooms.min(by: {
                 $0.distance(from: origin) < $1.distance(from: origin)
             }) else { return }
             MapURLHelper.openDirections(toLatitude: nearest.latitude, longitude: nearest.longitude)
         } else {
-            // Slow path: query cloud for any nearby bathroom
             guard networkMonitor.isConnected else {
                 emergencyAlertMsg = "No bathrooms saved and you're offline. Add bathrooms while connected so they're available in an emergency."
                 showEmergencyAlert = true

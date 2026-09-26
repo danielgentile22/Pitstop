@@ -1,35 +1,11 @@
-//
-//  CameraPickerView.swift
-//  Pitstop
-//
-//  UIImagePickerController wrapped as a SwiftUI view for camera capture.
-//  As of iOS 18, there is no pure SwiftUI camera API — UIKit bridging is required.
-//
-//  Usage:
-//    .sheet(isPresented: $showCamera) {
-//        CameraPickerView(onCapture: { image in
-//            selectedPhotos.append(image)
-//        })
-//        .ignoresSafeArea()
-//    }
-//
-
 import SwiftUI
 import UIKit
 
-/// A SwiftUI wrapper around `UIImagePickerController` for camera capture.
-///
-/// - Calls `onCapture` with the taken photo if the user confirms.
-/// - Calls `onCapture` with `nil` if the user cancels (so callers can dismiss).
-/// - The parent is responsible for dismissing the sheet.
+/// Camera capture via `UIImagePickerController` (SwiftUI has no camera API). The caller dismisses it.
 struct CameraPickerView: UIViewControllerRepresentable {
 
-    // MARK: - Input
-
-    /// Called when the user finishes (photo taken) or cancels (nil).
+    /// Receives the photo, or nil on cancel.
     var onCapture: (UIImage?) -> Void
-
-    // MARK: - UIViewControllerRepresentable
 
     func makeCoordinator() -> Coordinator {
         Coordinator(onCapture: onCapture)
@@ -43,11 +19,7 @@ struct CameraPickerView: UIViewControllerRepresentable {
         return picker
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
-        // No updates needed — the picker is fully managed by the coordinator.
-    }
-
-    // MARK: - Coordinator
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 
     final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 

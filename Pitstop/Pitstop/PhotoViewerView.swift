@@ -1,28 +1,12 @@
-//
-//  PhotoViewerView.swift
-//  Pitstop
-//
-//  Full-screen photo viewer presented when the user taps a thumbnail in
-//  DetailView's photo carousel.
-//
-//  Features:
-//    • Full-resolution image loaded via PhotoResolver (local cache → Supabase Storage)
-//    • Swipe left / right between all photos in the bathroom
-//    • Pinch-to-zoom; double-tap resets back to fit
-//    • Swipe down (or tap ✕) to dismiss — disabled while zoomed in
-//    • Background fades out as the user drags down
-//    • Zoom is reset automatically when swiping to a different page
-//
-
 import SwiftUI
 
+/// Full-screen, swipeable photo viewer. Swipe-down dismiss is disabled while a photo is zoomed.
 struct PhotoViewerView: View {
 
     // MARK: - Input
 
     let bathroom: Bathroom
 
-    /// The photo index to open on. User can swipe to adjacent photos from here.
     @Binding var selectedIndex: Int
 
     // MARK: - Environment
@@ -33,7 +17,6 @@ struct PhotoViewerView: View {
 
     @State private var dragOffset: CGFloat = 0
 
-    /// True while the active page is pinched beyond fit-scale.
     @State private var isZoomed = false
 
     // MARK: - Derived
@@ -47,12 +30,10 @@ struct PhotoViewerView: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
 
-            // ── Background ────────────────────────────────────────────────
             Color.black
                 .opacity(backgroundOpacity)
                 .ignoresSafeArea()
 
-            // ── Photo Pages ───────────────────────────────────────────────
             TabView(selection: $selectedIndex) {
                 ForEach(Array(bathroom.imageFileNames.enumerated()), id: \.offset) { index, fileName in
                     ZoomablePhotoPage(
@@ -70,7 +51,6 @@ struct PhotoViewerView: View {
             .opacity(backgroundOpacity)
             .onChange(of: selectedIndex) { isZoomed = false }
 
-            // ── Close Button ──────────────────────────────────────────────
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 15, weight: .bold))
@@ -110,8 +90,7 @@ struct PhotoViewerView: View {
 
 // MARK: - ZoomablePhotoPage
 
-/// A single photo page with async image loading and pinch-to-zoom.
-/// Images are loaded via PhotoResolver — local cache/disk first, then Supabase Storage.
+/// One page of the viewer: loads the full-size image (local first, then server) and supports pinch-to-zoom.
 private struct ZoomablePhotoPage: View {
 
     let bathroomID: UUID

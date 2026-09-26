@@ -1,16 +1,3 @@
-//
-//  PhotoCarousel.swift
-//  Pitstop
-//
-//  Horizontally scrolling photo strip shown in DetailView.
-//  Tapping a thumbnail opens PhotoViewerView at full size.
-//  Renders nothing (EmptyView) when there are no photos.
-//
-//  ThumbnailCell uses PhotoResolver so community bathroom photos are
-//  downloaded from Supabase Storage on first access and cached locally
-//  for all subsequent views.
-//
-
 import SwiftUI
 
 struct PhotoCarousel: View {
@@ -75,8 +62,7 @@ struct PhotoCarousel: View {
 
 // MARK: - ThumbnailCell
 
-/// A single thumbnail in the carousel.
-/// Loads the image via PhotoResolver — local cache first, then Supabase Storage.
+/// Loads its thumbnail local first, then from the server (cached for later views).
 private struct ThumbnailCell: View {
 
     let bathroomID: UUID
@@ -90,7 +76,6 @@ private struct ThumbnailCell: View {
 
     var body: some View {
         ZStack {
-            // Placeholder always rendered underneath
             Rectangle()
                 .fill(Color(.systemGray5))
                 .overlay(
@@ -100,7 +85,6 @@ private struct ThumbnailCell: View {
                         .opacity(image == nil ? 1 : 0)
                 )
 
-            // Loaded image fades in on top
             if let image {
                 Image(uiImage: image)
                     .resizable()

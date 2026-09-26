@@ -1,29 +1,10 @@
-//
-//  AddBathroomView.swift
-//  Pitstop
-//
-//  Full-screen form for adding a new bathroom OR editing an existing one.
-//  Pass `editing: bathroom` to pre-fill all fields and update on save.
-//
-//  Form sections (in order):
-//    1. Mini map + reverse-geocoded address
-//    2. Name (required) · Date Visited
-//    3. Overall Rating
-//    4. Access & Availability
-//    5. Layout
-//    6. Toilet Paper
-//    7. Amenities & Fixtures
-//    8. Hygiene & Wait Time
-//    9. Photos
-//   10. Notes
-//
-
 import CoreLocation
 import MapKit
 import PhotosUI
 import SwiftData
 import SwiftUI
 
+/// Full-screen form for adding a bathroom, or editing one when `editing` is non-nil.
 struct AddBathroomView: View {
 
     // MARK: - Environment
@@ -62,8 +43,8 @@ struct AddBathroomView: View {
 
     @State private var hasToiletPaper      = true
     @State private var hasExtraToiletPaper = false
-    @State private var hasDispenser        = false   // form-only; maps to dispenserRating
-    @State private var dispenserRating     = 0       // 1–5 when hasDispenser is true
+    @State private var hasDispenser        = false   // form-only; persisted as dispenserRating > 0
+    @State private var dispenserRating     = 0       // 1-5 when hasDispenser is true
 
     // MARK: - Amenities & Fixtures
 
@@ -184,20 +165,17 @@ struct AddBathroomView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
 
-                    // ── Mini Map ──────────────────────────────────────────────
                     MiniMapPicker(selectedCoordinate: $selectedCoordinate)
                         .frame(height: 220)
                         .onChange(of: selectedCoordinate.latitude)  { scheduleGeocode(for: selectedCoordinate) }
                         .onChange(of: selectedCoordinate.longitude) { scheduleGeocode(for: selectedCoordinate) }
 
-                    // ── Address ───────────────────────────────────────────────
                     addressRow
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.secondarySystemBackground))
 
-                    // ── Form ──────────────────────────────────────────────────
                     VStack(alignment: .leading, spacing: 0) {
 
                         formSection("Essentials") {
@@ -223,9 +201,6 @@ struct AddBathroomView: View {
 
                         formDivider
 
-                        // ── Additional Details ─────────────────────────────────────────
-                        // Progressive disclosure: collapsed by default to avoid overwhelming
-                        // new users. Power users can expand to fill in the full detail set.
                         DisclosureGroup {
                             VStack(alignment: .leading, spacing: 0) {
                                 formSection("Layout") {
@@ -788,8 +763,9 @@ struct AddBathroomView: View {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         guard let request = MKReverseGeocodingRequest(location: location),
               let mapItem = try? await request.mapItems.first else { return nil }
-        let p = mapItem.placemark
-        return [p.subThoroughfare, p.thoroughfare, p.locality].compactMap { $0 }.joined(separator: " ")
+        guard let short = mapItem.address?.shortAddress else { return nil }
+        let line = short.split(whereSeparator: \.isNewline).joined(separator: ", ")
+        return line.isEmpty ? nil : line
     }
 
     // MARK: - Actions
@@ -807,7 +783,6 @@ struct AddBathroomView: View {
         let savedDispenserRating = hasDispenser ? max(1, dispenserRating) : 0
 
         if let bathroom = editing {
-            // Edit mode — apply photo changes, then mutate all fields in place
             let removed = Set(bathroom.imageFileNames).subtracting(existingFileNames)
             removed.forEach { ImageStorage.deleteImage(bathroomID: bathroom.id, fileName: $0) }
             var newFiles: [String] = []
@@ -822,7 +797,6 @@ struct AddBathroomView: View {
             let removedArr  = Array(removed)
             let uploadPairs = zip(selectedPhotos, newFiles).map { ($0, $1) }
             let bid         = bathroom.id
-            // Enqueue all cloud ops — retried automatically if offline
             if !removedArr.isEmpty {
                 syncQueue.enqueue(.deletePhotos(bathroomID: bid, fileNames: removedArr))
             }
@@ -833,7 +807,6 @@ struct AddBathroomView: View {
             Task { await syncQueue.drain(supabase: supabaseService, context: modelContext) }
 
         } else {
-            // Add mode — create, populate, then insert
             let bathroom = Bathroom(
                 name:      name.trimmingCharacters(in: .whitespacesAndNewlines),
                 latitude:  selectedCoordinate.latitude,
@@ -860,9 +833,6 @@ struct AddBathroomView: View {
         dismiss()
     }
 
-    /// Writes all form-state values onto a Bathroom instance.
-    /// Called by both add mode (after creating a new record) and edit mode
-    /// (mutating an existing record) to eliminate the duplicate assignment block.
     private func applyFormState(to bathroom: Bathroom, address: String?, savedDispenserRating: Int) {
         bathroom.name                   = name.trimmingCharacters(in: .whitespacesAndNewlines)
         bathroom.latitude               = selectedCoordinate.latitude
