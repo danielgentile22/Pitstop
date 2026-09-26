@@ -11,7 +11,7 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
-GeoPoop/GeoPoop.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+Pitstop/Pitstop.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 
 # macOS metadata
 .DS_Store

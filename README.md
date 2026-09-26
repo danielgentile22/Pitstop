@@ -1,4 +1,4 @@
-# GeoPoop
+# Pitstop
 
 An iOS app for logging and finding public bathrooms. Built purely to learn iOS development — SwiftUI, MapKit, SwiftData, and Supabase.
 
@@ -33,14 +33,14 @@ An iOS app for logging and finding public bathrooms. Built purely to learn iOS d
 
 ## Running it
 
-You need your own Supabase project. Update `GeoPoop/SupabaseConfig.swift` with your credentials:
+You need your own Supabase project. Update `Pitstop/SupabaseConfig.swift` with your credentials:
 
 ```swift
 static let projectURL    = URL(string: "https://your-project.supabase.co")!
 static let publishableKey = "your-anon-key"
 ```
 
-Then open `GeoPoop/GeoPoop.xcodeproj` in Xcode and run.
+Then open `Pitstop/Pitstop.xcodeproj` in Xcode and run.
 
 > The anon/publishable key is safe to commit — it's a project identifier, not a secret. Row Level Security in Supabase is the actual security layer.
 
@@ -49,8 +49,8 @@ Then open `GeoPoop/GeoPoop.xcodeproj` in Xcode and run.
 ## Project structure
 
 ```
-GeoPoop/
-├── GeoPoopApp.swift           # App entry, singletons, auth gate
+Pitstop/
+├── PitstopApp.swift           # App entry, singletons, auth gate
 ├── ContentView.swift           # Root Map ↔ List segmented view
 │
 ├── MapTabView.swift            # MapKit map with bathroom pins
@@ -76,6 +76,6 @@ GeoPoop/
 
 ---
 
-## Why "GeoPoop"?
+## Why a bathroom app?
 
 Because sometimes you urgently need a bathroom, and that turned out to be a perfectly reasonable iOS learning project.
