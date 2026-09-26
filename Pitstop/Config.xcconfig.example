@@ -1,0 +1,6 @@
+// Copy to Config.xcconfig (gitignored) and fill in your backend project.
+// xcconfig treats "//" as a comment, so write the scheme as https:/$()/
+// to keep the URL intact.
+
+BACKEND_URL = https:/$()/your-project.example.com
+BACKEND_PUBLISHABLE_KEY = your-publishable-key

@@ -17,6 +17,8 @@
 
 /* Begin PBXFileReference section */
 		4E36BDA32F62EA98002100C9 /* Pitstop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pitstop.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E90000A2F7A000000C0FFEE /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		4E90000B2F7A000000C0FFEE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -47,6 +49,8 @@
 		4E36BD9A2F62EA98002100C9 = {
 			isa = PBXGroup;
 			children = (
+				4E90000A2F7A000000C0FFEE /* Base.xcconfig */,
+				4E90000B2F7A000000C0FFEE /* Info.plist */,
 				4E36BDA52F62EA98002100C9 /* Pitstop */,
 				4E36BDA42F62EA98002100C9 /* Products */,
 			);
@@ -270,6 +274,7 @@
 		};
 		4E36BDAF2F62EA9A002100C9 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4E90000A2F7A000000C0FFEE /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -279,6 +284,7 @@
 				DEVELOPMENT_TEAM = 58N856BAX8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pitstop;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Pitstop uses your camera to add photos to a saved bathroom.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Pitstop uses your location to pin bathrooms and find the nearest one in an emergency.";
@@ -307,6 +313,7 @@
 		};
 		4E36BDB02F62EA9A002100C9 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4E90000A2F7A000000C0FFEE /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -316,6 +323,7 @@
 				DEVELOPMENT_TEAM = 58N856BAX8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pitstop;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Pitstop uses your camera to add photos to a saved bathroom.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Pitstop uses your location to pin bathrooms and find the nearest one in an emergency.";

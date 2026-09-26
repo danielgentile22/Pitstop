@@ -11,19 +11,15 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
-Pitstop/Pitstop.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 
 # macOS metadata
 .DS_Store
 **/.DS_Store
 
-# CocoaPods (not used, but common)
-Pods/
-Podfile.lock
-
-# Credentials — never commit secrets
+# Local backend credentials
 *.env
 secrets.plist
+Pitstop/Config.xcconfig
 
 # Simulator state
 *.moved-aside
@@ -31,5 +27,5 @@ secrets.plist
 # Claude Code local config and memory
 .claude/
 
-# Personal notes — not part of the project
+# Personal notes, not part of the project
 FUTURE_IDEAS.md

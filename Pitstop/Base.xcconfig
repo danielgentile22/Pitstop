@@ -1,0 +1,8 @@
+// Build settings shared by every configuration.
+// Backend credentials live in Config.xcconfig, which is gitignored.
+// Copy Config.xcconfig.example to Config.xcconfig and fill it in.
+
+BACKEND_URL =
+BACKEND_PUBLISHABLE_KEY =
+
+#include? "Config.xcconfig"

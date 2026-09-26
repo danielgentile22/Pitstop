@@ -1,61 +1,17 @@
-//
-//  SupabaseService.swift
-//  Pitstop
-//
-//  @Observable singleton that owns every interaction with Supabase:
-//    • Auth    — email/password sign-in, sign-up, sign-out, forgot password
-//    • Profile — fetch and update the user's display name
-//    • Sync    — download accessible bathrooms → upsert into SwiftData (delta)
-//    • Push    — upsert / delete a single bathroom to/from Supabase
-//    • Photos  — upload/download/delete files in Supabase Storage
-//    • Verify  — increment community verification count on a bathroom
-//    • Report  — submit a moderation report for a bathroom
-//    • Emergency — direct cloud query for the nearest bathroom
-//
-//  ── Sync Strategy ─────────────────────────────────────────────────────────
-//
-//  Delta sync: on every syncAll(), the last successful sync timestamp is
-//  loaded from UserDefaults (keyed per user ID). The query includes a
-//  `updated_at > lastSyncedAt` filter so only changed records are fetched
-//  after the initial full download. This keeps bandwidth proportional to
-//  activity, not dataset size.
-//
-//  On the first sync (or after sign-in on a new device), `lastSyncedAt` is
-//  nil and the full bounding-box dataset is fetched.
-//
-//  Antimeridian safety: the bounding box longitude filter is split into two
-//  queries when it crosses ±180°, preventing invalid range comparisons for
-//  users near the International Date Line (eastern Russia, Fiji, Alaska, etc.)
-//
-//  Conflict resolution: last-write-wins on `updated_at`.
-//
-//  ── Auth State ────────────────────────────────────────────────────────────
-//
-//  Three possible states, exposed as separate observable properties:
-//    1. currentUser != nil         → fully authenticated
-//    2. pendingConfirmationEmail  → signed up but email not yet confirmed
-//    3. both nil                  → unauthenticated (show login)
-//
-//  PitstopApp switches on these to display the correct root view.
-//
-//  ── Profile Creation ──────────────────────────────────────────────────────
-//
-//  After sign-up, if the DB trigger that auto-creates a `profiles` row hasn't
-//  fired yet, createProfile() inserts one directly. This eliminates the
-//  fragile 600ms sleep that previously guarded against trigger lag.
-//
-
 import AuthenticationServices
 import CoreLocation
 import Foundation
 import Observation
+import os
 import SwiftData
 import UIKit
 import Supabase
 
+private let logger = Logger(subsystem: "Pitstop", category: "SupabaseService")
+
 // MARK: - UserProfile
 
-struct UserProfile: Codable {
+nonisolated struct UserProfile: Codable {
     var id:          UUID
     var displayName: String
 
@@ -83,24 +39,22 @@ struct BathroomReport: Codable {
 
 // MARK: - SupabaseService
 
+/// Owns auth, profile, sync, photo storage, verification and reporting against the backend.
 @Observable
 final class SupabaseService {
 
     // MARK: - Auth State
 
-    /// Non-nil when the user is fully authenticated.
     var currentUser: User?
 
-    /// Non-nil when the user has signed up but not yet confirmed their email.
-    /// PitstopApp uses this to show the EmailConfirmationView.
+    /// Set after sign-up when email confirmation is still pending.
     var pendingConfirmationEmail: String?
 
     var userProfile: UserProfile?
 
-    /// Current user's email. Callers use this instead of importing Auth directly.
+    // Exposed so callers don't need to import the SDK's Auth types.
     var currentUserEmail: String? { currentUser?.email }
 
-    /// Current user's UUID as a String. Callers use this instead of importing Auth directly.
     var currentUserIDString: String? { currentUser?.id.uuidString }
 
     // MARK: - Operation State
@@ -111,19 +65,16 @@ final class SupabaseService {
 
     // MARK: - Private
 
-    private let client = SupabaseConfig.client
+    private let client = BackendConfig.client
     private let bucket = "bathroom-photos"
 
-    // UserDefaults key for the stable Apple user ID (used for credential-state checks).
-    // Not sensitive — just an opaque string issued by Apple.
+    // Apple's stable user ID, kept for credential-state checks on launch.
     private let appleUserIDKey = "geo.poop.appleUserID"
 
     // MARK: - Init
 
     init() {
-        // Restore any existing session from the Supabase SDK's keychain storage.
-        // If a session exists, set currentUser immediately so PitstopApp renders
-        // ContentView without flashing LoginView first.
+        // Restore the keychain session synchronously so the first frame isn't the login screen.
         currentUser = client.auth.currentSession?.user
         if let user = currentUser {
             Task { await fetchProfile(for: user.id) }
@@ -146,8 +97,7 @@ final class SupabaseService {
         authError = nil
         let response = try await client.auth.signUp(email: email, password: password)
 
-        // Supabase returns session == nil when email confirmation is required.
-        // Don't set currentUser — show EmailConfirmationView instead.
+        // No session means email confirmation is required.
         guard let session = response.session else {
             pendingConfirmationEmail = email
             return
@@ -156,8 +106,7 @@ final class SupabaseService {
         currentUser              = session.user
         pendingConfirmationEmail = nil
 
-        // Fetch the auto-created profile. If the DB trigger hasn't fired yet,
-        // create the profile row directly — no sleep hacks needed.
+        // A DB trigger normally creates the profile row; create it here if the trigger hasn't run yet.
         await fetchProfile(for: session.user.id)
         if userProfile == nil {
             try? await createProfile(for: session.user.id, email: email)
@@ -167,24 +116,14 @@ final class SupabaseService {
 
     // MARK: - Auth: Forgot Password
 
-    /// Sends a password-reset email to the given address.
-    /// Supabase delivers a magic link; tapping it opens the app (or a browser)
-    /// where the user sets a new password.
     func resetPassword(email: String) async throws {
         try await client.auth.resetPasswordForEmail(email)
     }
 
     // MARK: - Auth: Apple Sign-In
 
-    /// Exchanges an Apple identity token for a Supabase session.
-    ///
-    /// Apple only returns `fullName` on the FIRST authorization. The caller
-    /// must pass it immediately — it is nil on subsequent sign-ins.
-    ///
-    /// Account linking: if a user with the same email already exists (e.g.
-    /// via email/password), Supabase merges the Apple identity into that
-    /// account automatically when "Allow manual linking" is enabled in the
-    /// Supabase dashboard. No extra code required here.
+    /// Exchanges an Apple identity token for a backend session.
+    /// `fullName` is only provided by Apple on the first authorization.
     func signInWithApple(
         idToken: String,
         rawNonce: String,
@@ -204,11 +143,8 @@ final class SupabaseService {
         currentUser              = session.user
         pendingConfirmationEmail = nil
 
-        // Persist the stable Apple user ID so we can check credential state
-        // on future launches without needing to go through a full sign-in.
         UserDefaults.standard.set(appleUserID, forKey: appleUserIDKey)
 
-        // Determine if this is a brand-new user before we create a profile row.
         await fetchProfile(for: session.user.id)
         let isNewUser = userProfile == nil
 
@@ -217,9 +153,7 @@ final class SupabaseService {
             await fetchProfile(for: session.user.id)
         }
 
-        // Apply Apple-provided name only for new users — never overwrite a name
-        // the user may have customised. Apple only sends fullName on first auth,
-        // so we must handle it here rather than deferring to a profile-edit step.
+        // Only seed the name for new users so a customized name is never overwritten.
         if isNewUser, let name = fullName {
             let displayName = [name.givenName, name.familyName]
                 .compactMap { $0 }
@@ -231,12 +165,7 @@ final class SupabaseService {
         }
     }
 
-    /// Checks whether the saved Apple credential is still valid on launch.
-    ///
-    /// Call this once when the app becomes active. If Apple revokes the
-    /// credential (user disables the app in Settings → Apple ID →
-    /// Sign in with Apple), this will sign the user out locally so they
-    /// are prompted to re-authenticate rather than reaching a broken state.
+    /// Signs out if the user revoked Sign in with Apple for this app since the last launch.
     func checkAppleCredentialState() async {
         guard currentUser != nil,
               let appleUserID = UserDefaults.standard.string(forKey: appleUserIDKey)
@@ -247,28 +176,23 @@ final class SupabaseService {
             let state = try await provider.credentialState(forUserID: appleUserID)
             switch state {
             case .authorized:
-                break   // All good — nothing to do
+                break
             case .revoked, .notFound:
-                // Credential revoked or not found — force sign-out
                 try? await signOut()
             case .transferred:
-                break   // App-transfer scenario — no action needed
+                break
             @unknown default:
                 break
             }
         } catch {
-            // Cannot determine state (e.g. no network) — leave user signed in
+            // State unknown (e.g. offline): leave the user signed in.
         }
     }
 
     // MARK: - Auth: Sign Out
 
-    /// Signs out the current user and clears all locally cached data.
-    ///
-    /// Pass `clearingContext` to wipe the local SwiftData store so a subsequent
-    /// user on the same device doesn't see the previous user's bathrooms until
-    /// their sync overwrites them. Pass `syncQueue` to discard pending offline
-    /// operations that belong to the outgoing user.
+    /// Pass `clearingContext` and `syncQueue` to wipe local bathrooms, images and
+    /// queued operations so the next user on the device starts clean.
     func signOut(
         clearingContext context: ModelContext? = nil,
         syncQueue: SyncQueue? = nil
@@ -303,7 +227,7 @@ final class SupabaseService {
                 .value
             userProfile = profile
         } catch {
-            // Profile may not exist yet immediately after sign-up — handled by caller.
+            // The row may not exist yet right after sign-up; callers handle a nil profile.
         }
     }
 
@@ -331,18 +255,9 @@ final class SupabaseService {
 
     // MARK: - Sync (cloud → local)
 
-    /// Downloads bathrooms visible to the current user and upserts them into SwiftData.
-    ///
-    /// Delta behaviour:
-    ///   On first sync (or after forced reset), downloads the full bounding-box
-    ///   dataset. On subsequent syncs, only records modified after the last sync
-    ///   timestamp are fetched, keeping bandwidth proportional to activity.
-    ///
-    /// Antimeridian safety:
-    ///   When the bounding box crosses ±180° longitude, two queries are run and
-    ///   merged, preventing invalid range comparisons near the date line.
-    ///
-    /// Concurrency: overlapping calls are silently dropped (isSyncing guard).
+    /// Pulls bathrooms visible to the user into SwiftData, last write wins on `updated_at`.
+    /// After the first sync only rows changed since the last one are fetched (`force` refetches all).
+    /// Overlapping calls are dropped.
     func syncAll(
         context: ModelContext,
         userLocation: CLLocationCoordinate2D? = nil,
@@ -362,7 +277,7 @@ final class SupabaseService {
             if let loc = userLocation {
                 remote = try await fetchBoundingBox(near: loc, force: force)
             } else if let uid = currentUser?.id.uuidString {
-                // No location — fetch only this user's own bathrooms
+                // Without a location, fall back to the user's own bathrooms.
                 remote = try await client
                     .from("bathrooms")
                     .select()
@@ -379,17 +294,17 @@ final class SupabaseService {
 
         } catch {
             lastSyncError = error.localizedDescription
-            print("[Supabase] sync error: \(error)")
+            logger.error("Sync failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
-    // MARK: - Bounding Box Fetch (with antimeridian support)
+    // MARK: - Bounding Box Fetch
 
     private func fetchBoundingBox(
         near loc: CLLocationCoordinate2D,
         force: Bool
     ) async throws -> [RemoteBathroom] {
-        let delta  = 2.0   // ≈ ±220 km latitude; longitude varies by latitude
+        let delta  = 2.0   // degrees; about 220 km of latitude each way
         let minLat = loc.latitude  - delta
         let maxLat = loc.latitude  + delta
         let minLon = loc.longitude - delta
@@ -398,8 +313,8 @@ final class SupabaseService {
         let updatedAfter = force ? nil : lastSyncedAt()
 
         if minLon < -180 || maxLon > 180 {
-            // Bounding box crosses the antimeridian — split into two queries
-            // and merge the results to avoid invalid longitude range comparisons.
+            // A box crossing ±180° has minLon > maxLon once wrapped, which no single
+            // range filter can express, so query each side of the antimeridian and merge.
             let (wrapMinLon, wrapMaxLon) = antimeridianWrapped(min: minLon, max: maxLon)
 
             async let part1: [RemoteBathroom] = try fetchLatLonBox(
@@ -435,7 +350,6 @@ final class SupabaseService {
             .gte("longitude", value: minLon)
             .lte("longitude", value: maxLon)
 
-        // Delta sync: only fetch records modified after the last successful sync
         if let after = updatedAfter {
             let iso = ISO8601DateFormatter()
             iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -445,10 +359,9 @@ final class SupabaseService {
         return try await query.execute().value
     }
 
-    /// Computes the two longitude extremes for an antimeridian-crossing box.
     private func antimeridianWrapped(min: Double, max: Double) -> (Double, Double) {
-        let wrapMin = min < -180 ? min + 360 : min   // e.g. -181 → 179
-        let wrapMax = max >  180 ? max - 360 : max   // e.g.  181 → -179
+        let wrapMin = min < -180 ? min + 360 : min
+        let wrapMax = max >  180 ? max - 360 : max
         return (wrapMin, wrapMax)
     }
 
@@ -529,7 +442,6 @@ final class SupabaseService {
         b.isPrivate              = r.isPrivate
         b.verificationCount      = r.verificationCount ?? b.verificationCount
         b.lastVerifiedAt         = r.lastVerifiedAt    ?? b.lastVerifiedAt
-        // dateCreated intentionally not updated — it should never change.
     }
 
     // MARK: - Push (local → cloud)
@@ -582,8 +494,7 @@ final class SupabaseService {
 
     // MARK: - Community Verification
 
-    /// Increments the verification count and sets `last_verified_at` to now
-    /// for the given bathroom, on both the server and the local model.
+    /// Bumps the verification count and `last_verified_at` on the server, then locally.
     func verifyBathroom(_ bathroom: Bathroom) async throws {
         let newCount = bathroom.verificationCount + 1
         let now      = Date()
@@ -599,7 +510,6 @@ final class SupabaseService {
             .eq("id", value: bathroom.id.uuidString)
             .execute()
 
-        // Update the local model immediately (optimistic update)
         bathroom.verificationCount = newCount
         bathroom.lastVerifiedAt    = now
         bathroom.dateModified      = now
@@ -607,7 +517,6 @@ final class SupabaseService {
 
     // MARK: - Report
 
-    /// Submits a moderation report for a bathroom entry.
     func submitReport(bathroomID: UUID, reason: ReportReason, notes: String) async throws {
         guard let userID = currentUser?.id else { return }
         let report = BathroomReport(
@@ -624,15 +533,11 @@ final class SupabaseService {
 
     // MARK: - Emergency Cloud Query
 
-    /// Finds the nearest bathroom to `location` by querying Supabase directly.
-    ///
-    /// Used by the emergency handler when the local SwiftData store is empty
-    /// (new device, first launch). Tries a small box first (≈ 55 km), then
-    /// expands to the full ≈ 220 km box if nothing is found nearby.
+    /// Server-side nearest-bathroom lookup for when the local store is empty.
+    /// Tries a 0.5° box (about 55 km) before widening to 2°.
     func findNearestBathroom(near location: CLLocationCoordinate2D) async throws -> RemoteBathroom? {
         let origin = CLLocation(latitude: location.latitude, longitude: location.longitude)
 
-        // Try a smaller initial box (faster, more relevant results)
         for delta in [0.5, 2.0] {
             let results: [RemoteBathroom] = try await fetchLatLonBox(
                 minLat:       location.latitude  - delta,
@@ -658,7 +563,7 @@ final class SupabaseService {
         return bathroom.ownerID.lowercased() == userID.lowercased()
     }
 
-    // MARK: - Delta Sync Timestamp (per user, stored in UserDefaults)
+    // MARK: - Delta Sync Timestamp (per user)
 
     private func lastSyncedAtKey() -> String? {
         guard let uid = currentUser?.id else { return nil }
