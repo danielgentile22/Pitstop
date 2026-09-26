@@ -1,4 +1,4 @@
-# GeoPoop — Design Document
+# Pitstop — Design Document
 
 ---
 
@@ -85,7 +85,7 @@
 
 ```
 ┌─────────────────────────────────┐
-│   GeoPoop            [filter] [+] │  ← Navigation bar (no back button — this is root)
+│   Pitstop            [filter] [+] │  ← Navigation bar (no back button — this is root)
 ├─────────────────────────────────┤
 │  [ Map  |  List ]               │  ← Segmented control
 ├─────────────────────────────────┤
@@ -127,7 +127,7 @@
 
 ```
 ┌─────────────────────────────────┐
-│   GeoPoop            [filter] [+] │
+│   Pitstop            [filter] [+] │
 ├─────────────────────────────────┤
 │  [ Map  |  List ]               │
 ├─────────────────────────────────┤
@@ -168,7 +168,7 @@
 **Empty State (no saved bathrooms):**
 ```
 ┌─────────────────────────────────┐
-│   GeoPoop            [filter] [+] │
+│   Pitstop            [filter] [+] │
 ├─────────────────────────────────┤
 │  [ Map  |  List ]               │
 ├─────────────────────────────────┤
@@ -503,9 +503,9 @@ These are toggled in Xcode under Signing & Capabilities or set in Info.plist:
 
 | Capability                          | Info.plist Key                          | Value                                            |
 |-------------------------------------|-----------------------------------------|--------------------------------------------------|
-| Location (when in use)              | `NSLocationWhenInUseUsageDescription`   | "GeoPoop uses your location to show nearby bathrooms and provide directions." |
-| Camera                              | `NSCameraUsageDescription`              | "GeoPoop uses the camera to photograph bathrooms." |
-| Photo Library (read)                | `NSPhotoLibraryUsageDescription`        | "GeoPoop accesses your photos to add images to bathroom entries." |
+| Location (when in use)              | `NSLocationWhenInUseUsageDescription`   | "Pitstop uses your location to show nearby bathrooms and provide directions." |
+| Camera                              | `NSCameraUsageDescription`              | "Pitstop uses the camera to photograph bathrooms." |
+| Photo Library (read)                | `NSPhotoLibraryUsageDescription`        | "Pitstop accesses your photos to add images to bathroom entries." |
 | URL Schemes (queried)               | `LSApplicationQueriesSchemes`           | `["comgooglemaps"]` — required to check if Google Maps is installed before opening |
 
 ### Deployment Target
@@ -526,8 +526,8 @@ These are toggled in Xcode under Signing & Capabilities or set in Info.plist:
 ## 5. File Structure (Planned)
 
 ```
-GeoPoop/
-├── GeoPoopApp.swift                  # App entry point
+Pitstop/
+├── PitstopApp.swift                  # App entry point
 ├── Models/
 │   └── Bathroom.swift                # Core Data entity + helpers
 ├── ViewModels/
@@ -568,7 +568,7 @@ GeoPoop/
 
 Note: With SwiftData, there is no `.xcdatamodeld` file or `PersistenceController`.
 The `@Model` macro on `Bathroom.swift` replaces all of that. The `ModelContainer`
-is configured in `GeoPoopApp.swift` with a single line.
+is configured in `PitstopApp.swift` with a single line.
 
 ---
 
@@ -619,9 +619,9 @@ Users select from predefined tags only (v1). Custom tags can be added in a futur
 ### SwiftData Container Setup
 
 ```swift
-// In GeoPoopApp.swift
+// In PitstopApp.swift
 @main
-struct GeoPoopApp: App {
+struct PitstopApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
