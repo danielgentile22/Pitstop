@@ -14,16 +14,11 @@ struct DetailView: View {
 
     @Environment(\.dismiss)            private var dismiss
     @Environment(\.modelContext)       private var modelContext
-    @Environment(SupabaseService.self) private var supabaseService
-    @Environment(SyncQueue.self)       private var syncQueue
 
     // MARK: - State
 
     @State private var showDeleteAlert = false
     @State private var showEditView    = false
-    @State private var showReportView  = false
-    @State private var isVerifying     = false
-    @State private var verifyError     = ""
 
     // MARK: - Body
 
@@ -182,9 +177,6 @@ struct DetailView: View {
         .fullScreenCover(isPresented: $showEditView) {
             AddBathroomView(userLocation: userLocation, editing: bathroom)
         }
-        .sheet(isPresented: $showReportView) {
-            ReportView(bathroom: bathroom)
-        }
         .alert("Delete Bathroom?", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) { deleteBathroom() }
             Button("Cancel", role: .cancel) {}
@@ -201,57 +193,18 @@ struct DetailView: View {
                 Text(bathroom.name)
                     .font(.title2.bold())
                     .fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: 8) {
-                    StarRatingView(rating: bathroom.rating, showUnratedLabel: true)
-                    if bathroom.isPrivate {
-                        Label("Private", systemImage: "lock.fill")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.red)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Color.red.opacity(0.12))
-                            .clipShape(Capsule())
-                    }
-                }
-                verificationBadge
+                StarRatingView(rating: bathroom.rating, showUnratedLabel: true)
             }
             Spacer()
-            if supabaseService.isOwner(of: bathroom) {
-                Button { showEditView = true } label: {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.blue)
-                        .frame(width: 36, height: 36)
-                        .background(Color(.secondarySystemFill))
-                        .clipShape(Circle())
-                }
-                .accessibilityLabel("Edit this bathroom")
+            Button { showEditView = true } label: {
+                Image(systemName: "pencil")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.blue)
+                    .frame(width: 36, height: 36)
+                    .background(Color(.secondarySystemFill))
+                    .clipShape(Circle())
             }
-        }
-    }
-
-    private var verificationBadge: some View {
-        Group {
-            if bathroom.verificationCount > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .foregroundStyle(.green)
-                    Text("\(bathroom.verificationCount) verification\(bathroom.verificationCount == 1 ? "" : "s")")
-                    if let lastVerified = bathroom.lastVerifiedAt {
-                        Text("·")
-                        Text(lastVerified, format: .relative(presentation: .named))
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            } else {
-                HStack(spacing: 4) {
-                    Image(systemName: "questionmark.circle")
-                    Text("Not yet verified")
-                }
-                .font(.caption)
-                .foregroundStyle(Color(.systemGray3))
-            }
+            .accessibilityLabel("Edit this bathroom")
         }
     }
 
@@ -313,52 +266,13 @@ struct DetailView: View {
             .controlSize(.large)
             .tint(.blue)
 
-            Button {
-                Task { await verifyBathroom() }
-            } label: {
-                Group {
-                    if isVerifying {
-                        ProgressView().tint(.green)
-                    } else {
-                        Label("Still Here? Verify", systemImage: "checkmark.seal")
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .animation(.easeInOut(duration: 0.2), value: isVerifying)
+            Button(role: .destructive) { showDeleteAlert = true } label: {
+                Label("Delete", systemImage: "trash.fill")
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
-            .tint(.green)
-            .disabled(isVerifying)
-
-            if !verifyError.isEmpty {
-                Text(verifyError)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
-            }
-
-            if !supabaseService.isOwner(of: bathroom) {
-                Button { showReportView = true } label: {
-                    Label("Report an Issue", systemImage: "flag")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .tint(.orange)
-            }
-
-            if supabaseService.isOwner(of: bathroom) {
-                Button(role: .destructive) { showDeleteAlert = true } label: {
-                    Label("Delete", systemImage: "trash.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .tint(.red)
-            }
+            .tint(.red)
         }
     }
 
@@ -377,26 +291,9 @@ struct DetailView: View {
     }
 
     private func deleteBathroom() {
-        let bid       = bathroom.id
-        let fileNames = bathroom.imageFileNames
-        ImageStorage.deleteAllImages(bathroomID: bid)
+        ImageStorage.deleteAllImages(bathroomID: bathroom.id)
         modelContext.delete(bathroom)
         dismiss()
-        syncQueue.enqueue(.deleteBathroom(bathroomID: bid, fileNames: fileNames))
-        Task { await syncQueue.drain(supabase: supabaseService, context: modelContext) }
-    }
-
-    private func verifyBathroom() async {
-        withAnimation(.easeInOut(duration: 0.2)) { isVerifying = true }
-        verifyError = ""
-        defer { withAnimation(.easeInOut(duration: 0.2)) { isVerifying = false } }
-        do {
-            try await supabaseService.verifyBathroom(bathroom)
-        } catch {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                verifyError = "Couldn't submit verification. Please try again."
-            }
-        }
     }
 }
 
@@ -424,7 +321,6 @@ struct DetailView: View {
         bathroom: bathroom,
         userLocation: CLLocationCoordinate2D(latitude: 37.7751, longitude: -122.4180)
     )
-    .environment(SupabaseService())
     .presentationDetents([.medium, .large])
     .presentationDragIndicator(.visible)
 }

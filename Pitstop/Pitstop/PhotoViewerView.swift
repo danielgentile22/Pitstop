@@ -90,7 +90,7 @@ struct PhotoViewerView: View {
 
 // MARK: - ZoomablePhotoPage
 
-/// One page of the viewer: loads the full-size image (local first, then server) and supports pinch-to-zoom.
+/// One page of the viewer: loads the full-size image and supports pinch-to-zoom.
 private struct ZoomablePhotoPage: View {
 
     let bathroomID: UUID
@@ -98,7 +98,6 @@ private struct ZoomablePhotoPage: View {
 
     @Binding var isZoomed: Bool
 
-    @Environment(SupabaseService.self) private var supabaseService
     @State private var image:     UIImage?
     @State private var zoomScale: CGFloat = 1.0
     @GestureState private var magnifyBy: CGFloat = 1.0
@@ -136,11 +135,7 @@ private struct ZoomablePhotoPage: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task(id: fileName) {
-            image = await PhotoResolver.fullSize(
-                bathroomID: bathroomID,
-                fileName: fileName,
-                supabase: supabaseService
-            )
+            image = await ImageStorage.loadImageAsync(bathroomID: bathroomID, fileName: fileName)
         }
         .onDisappear {
             zoomScale = 1.0

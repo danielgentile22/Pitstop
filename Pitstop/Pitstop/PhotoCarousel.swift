@@ -62,7 +62,6 @@ struct PhotoCarousel: View {
 
 // MARK: - ThumbnailCell
 
-/// Loads its thumbnail local first, then from the server (cached for later views).
 private struct ThumbnailCell: View {
 
     let bathroomID: UUID
@@ -71,7 +70,6 @@ private struct ThumbnailCell: View {
     let radius:     CGFloat
     let label:      String
 
-    @Environment(SupabaseService.self) private var supabaseService
     @State private var image: UIImage?
 
     var body: some View {
@@ -98,11 +96,7 @@ private struct ThumbnailCell: View {
         .accessibilityLabel(label)
         .accessibilityAddTraits([.isImage, .isButton])
         .task(id: fileName) {
-            image = await PhotoResolver.thumbnail(
-                bathroomID: bathroomID,
-                fileName: fileName,
-                supabase: supabaseService
-            )
+            image = await ImageStorage.loadThumbnailAsync(bathroomID: bathroomID, fileName: fileName)
         }
     }
 }

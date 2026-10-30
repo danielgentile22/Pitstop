@@ -9,10 +9,6 @@ struct BathroomRow: View {
     let bathroom: Bathroom
     let userLocation: CLLocationCoordinate2D?
 
-    // MARK: - Environment
-
-    @Environment(SupabaseService.self) private var supabaseService
-
     // MARK: - Constants
 
     private let thumbSize: CGFloat   = 72
@@ -34,11 +30,7 @@ struct BathroomRow: View {
             guard let fileName = bathroom.imageFileNames.first else {
                 thumbnailImage = nil; return
             }
-            thumbnailImage = await PhotoResolver.thumbnail(
-                bathroomID: bathroom.id,
-                fileName: fileName,
-                supabase: supabaseService
-            )
+            thumbnailImage = await ImageStorage.loadThumbnailAsync(bathroomID: bathroom.id, fileName: fileName)
         }
     }
 
@@ -180,5 +172,4 @@ struct BathroomRow: View {
         BathroomRow(bathroom: simple, userLocation: nil)
     }
     .listStyle(.plain)
-    .environment(SupabaseService())
 }

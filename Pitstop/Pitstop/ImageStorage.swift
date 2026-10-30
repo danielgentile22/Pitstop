@@ -51,17 +51,6 @@ enum ImageStorage {
         return write(image, bathroomID: bathroomID, fileName: fileName, dir: dir)
     }
 
-    /// Saves a downloaded image under the file name the server recorded. No-op if already on disk.
-    @discardableResult
-    static func saveDownloadedImage(_ image: UIImage, bathroomID: UUID, fileName: String) -> Bool {
-        guard let dir = try? bathroomDirectory(id: bathroomID) else { return false }
-
-        let fullURL = dir.appendingPathComponent(fileName)
-        guard !FileManager.default.fileExists(atPath: fullURL.path) else { return true }
-
-        return write(image, bathroomID: bathroomID, fileName: fileName, dir: dir) != nil
-    }
-
     // MARK: - Write
 
     @discardableResult

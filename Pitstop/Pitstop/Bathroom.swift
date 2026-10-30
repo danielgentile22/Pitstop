@@ -71,22 +71,6 @@ final class Bathroom {
     /// so the full path is rebuilt at read time.
     var imageFileNames: [String]
 
-    // MARK: - Community Verification
-
-    /// Number of "Still Here?" confirmations, incremented server-side.
-    var verificationCount: Int
-
-    /// Nil until first verified.
-    var lastVerifiedAt: Date?
-
-    // MARK: - Cloud / Privacy
-
-    /// Enforced server-side by row-level security, so other users can't read a private record at all.
-    var isPrivate: Bool
-
-    /// Backend auth user ID as a string. Empty for records created before cloud sync existed.
-    var ownerID: String
-
     // MARK: - Init
 
     init(
@@ -115,11 +99,7 @@ final class Bathroom {
         notes:                  String         = "",
         dateVisited:            Date           = Date(),
         dateCreated:            Date?          = nil,
-        imageFileNames:         [String]       = [],
-        isPrivate:              Bool           = false,
-        ownerID:                String         = "",
-        verificationCount:      Int            = 0,
-        lastVerifiedAt:         Date?          = nil
+        imageFileNames:         [String]       = []
     ) {
         self.id                     = id
         self.name                   = name
@@ -145,14 +125,9 @@ final class Bathroom {
         self.waitTime               = waitTime
         self.notes                  = notes
         self.dateVisited            = dateVisited
-        // Callers restoring from the server pass the original creation date.
         self.dateCreated            = dateCreated ?? Date()
         self.dateModified           = Date()
         self.imageFileNames         = imageFileNames
-        self.isPrivate              = isPrivate
-        self.ownerID                = ownerID
-        self.verificationCount      = verificationCount
-        self.lastVerifiedAt         = lastVerifiedAt
     }
 
     // MARK: - Computed Properties

@@ -26,8 +26,6 @@ struct ListTabView: View {
     @Query(sort: \Bathroom.dateCreated, order: .reverse) private var bathrooms: [Bathroom]
 
     @Environment(\.modelContext)       private var modelContext
-    @Environment(SupabaseService.self) private var supabaseService
-    @Environment(SyncQueue.self)       private var syncQueue
 
     // MARK: - State
 
@@ -113,21 +111,16 @@ struct ListTabView: View {
                     selectedBathroom = bathroom
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    if supabaseService.isOwner(of: bathroom) {
-                        Button(role: .destructive) {
-                            bathroomToDelete = bathroom
-                            showDeleteAlert  = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+                    Button(role: .destructive) {
+                        bathroomToDelete = bathroom
+                        showDeleteAlert  = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
                     }
                 }
             }
         }
         .listStyle(.plain)
-        .refreshable {
-            await supabaseService.syncAll(context: modelContext, userLocation: nil, force: true)
-        }
         .animation(.spring(response: 0.38, dampingFraction: 0.88), value: sortOption)
         .animation(.spring(response: 0.38, dampingFraction: 0.88), value: searchText)
     }
@@ -219,13 +212,9 @@ struct ListTabView: View {
     // MARK: - Delete
 
     private func deleteBathroom(_ bathroom: Bathroom) {
-        let bid       = bathroom.id
-        let fileNames = bathroom.imageFileNames
-        ImageStorage.deleteAllImages(bathroomID: bid)
+        ImageStorage.deleteAllImages(bathroomID: bathroom.id)
         modelContext.delete(bathroom)
         bathroomToDelete = nil
-        syncQueue.enqueue(.deleteBathroom(bathroomID: bid, fileNames: fileNames))
-        Task { await syncQueue.drain(supabase: supabaseService, context: modelContext) }
     }
 }
 
@@ -235,6 +224,5 @@ struct ListTabView: View {
     NavigationStack {
         ListTabView(locationManager: LocationManager(), filter: BathroomFilter())
             .modelContainer(for: Bathroom.self, inMemory: true)
-            .environment(SupabaseService())
     }
 }

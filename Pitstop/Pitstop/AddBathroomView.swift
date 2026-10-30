@@ -11,8 +11,6 @@ struct AddBathroomView: View {
 
     @Environment(\.dismiss)            private var dismiss
     @Environment(\.modelContext)       private var modelContext
-    @Environment(SupabaseService.self) private var supabaseService
-    @Environment(SyncQueue.self)       private var syncQueue
 
     // MARK: - Input
 
@@ -71,10 +69,6 @@ struct AddBathroomView: View {
     @State private var selectedPhotos: [UIImage]    = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
 
-    // MARK: - Cloud / Privacy
-
-    @State private var isPrivate = false
-
     // MARK: - UI State
 
     @State private var showDiscardAlert = false
@@ -110,7 +104,6 @@ struct AddBathroomView: View {
                 || hasSoap                != b.hasSoap
                 || hasDryingOption        != b.hasDryingOption
                 || waitTime               != b.waitTime
-                || isPrivate              != b.isPrivate
                 || existingFileNames      != b.imageFileNames
                 || !selectedPhotos.isEmpty
         }
@@ -151,7 +144,6 @@ struct AddBathroomView: View {
             _selectedCoordinate     = State(initialValue: b.coordinate)
             _existingFileNames      = State(initialValue: b.imageFileNames)
             _geocodedAddress        = State(initialValue: b.address ?? "")
-            _isPrivate              = State(initialValue: b.isPrivate)
         } else {
             let start = userLocation ?? CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855)
             _selectedCoordinate = State(initialValue: start)
@@ -261,12 +253,6 @@ struct AddBathroomView: View {
 
                         formSection("Notes") {
                             notesField
-                        }
-
-                        formDivider
-
-                        formSection("Privacy") {
-                            privacyField
                         }
                     }
                     .padding(.bottom, 40)
@@ -627,26 +613,6 @@ struct AddBathroomView: View {
         }
     }
 
-    // MARK: - Privacy
-
-    private var privacyField: some View {
-        Toggle(isOn: $isPrivate) {
-            Label {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Private Entry").font(.subheadline)
-                    Text(isPrivate
-                         ? "Only you can see this bathroom"
-                         : "Visible to everyone in the app")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            } icon: {
-                Image(systemName: isPrivate ? "lock.fill" : "globe")
-                    .foregroundStyle(isPrivate ? .red : .green)
-            }
-        }
-        .tint(.red)
-    }
-
     // MARK: - Notes
 
     private var notesField: some View {
@@ -794,18 +760,6 @@ struct AddBathroomView: View {
                            savedDispenserRating: savedDispenserRating)
             bathroom.imageFileNames = existingFileNames + newFiles
 
-            let removedArr  = Array(removed)
-            let uploadPairs = zip(selectedPhotos, newFiles).map { ($0, $1) }
-            let bid         = bathroom.id
-            if !removedArr.isEmpty {
-                syncQueue.enqueue(.deletePhotos(bathroomID: bid, fileNames: removedArr))
-            }
-            for (_, fileName) in uploadPairs {
-                syncQueue.enqueue(.uploadPhoto(bathroomID: bid, fileName: fileName))
-            }
-            syncQueue.enqueue(.upsertBathroom(bathroomID: bid))
-            Task { await syncQueue.drain(supabase: supabaseService, context: modelContext) }
-
         } else {
             let bathroom = Bathroom(
                 name:      name.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -821,13 +775,6 @@ struct AddBathroomView: View {
             }
             bathroom.imageFileNames = files
             modelContext.insert(bathroom)
-
-            let bid = bathroom.id
-            for fileName in files {
-                syncQueue.enqueue(.uploadPhoto(bathroomID: bid, fileName: fileName))
-            }
-            syncQueue.enqueue(.upsertBathroom(bathroomID: bid))
-            Task { await syncQueue.drain(supabase: supabaseService, context: modelContext) }
         }
 
         dismiss()
@@ -857,7 +804,6 @@ struct AddBathroomView: View {
         bathroom.waitTime               = waitTime
         bathroom.notes                  = notes
         bathroom.dateVisited            = dateVisited
-        bathroom.isPrivate              = isPrivate
         bathroom.dateModified           = Date()
     }
 }
@@ -867,8 +813,6 @@ struct AddBathroomView: View {
 #Preview("Add mode") {
     AddBathroomView(userLocation: CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855))
         .modelContainer(for: Bathroom.self, inMemory: true)
-        .environment(SupabaseService())
-        .environment(SyncQueue())
 }
 
 #Preview("Edit mode") {
@@ -879,6 +823,4 @@ struct AddBathroomView: View {
     )
     return AddBathroomView(userLocation: nil, editing: b)
         .modelContainer(for: Bathroom.self, inMemory: true)
-        .environment(SupabaseService())
-        .environment(SyncQueue())
 }

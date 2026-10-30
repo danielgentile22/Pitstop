@@ -172,36 +172,3 @@ enum WaitTime: String, Codable, CaseIterable {
         }
     }
 }
-
-// MARK: - Report Reason
-
-/// Stored in the backend `reports` table. Ordered most-likely first for the picker.
-enum ReportReason: String, Codable, CaseIterable, Identifiable {
-    case noLongerExists = "no_longer_exists"
-    case wrongLocation  = "wrong_location"
-    case incorrectInfo  = "incorrect_info"
-    case inappropriate  = "inappropriate"      // notes or photos
-    case other          = "other"
-
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .noLongerExists: return "No longer exists"
-        case .wrongLocation:  return "Wrong location"
-        case .incorrectInfo:  return "Incorrect information"
-        case .inappropriate:  return "Inappropriate content"
-        case .other:          return "Other"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .noLongerExists: return "building.2.slash"
-        case .wrongLocation:  return "location.slash"
-        case .incorrectInfo:  return "exclamationmark.circle"
-        case .inappropriate:  return "hand.raised"
-        case .other:          return "ellipsis.circle"
-        }
-    }
-}
