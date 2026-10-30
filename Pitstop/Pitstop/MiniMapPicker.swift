@@ -5,12 +5,20 @@ import SwiftUI
 /// `selectedCoordinate` tracks the map center continuously.
 struct MiniMapPicker: View {
 
+    /// A request to move the map, e.g. after the user searches for an address.
+    struct JumpTarget: Equatable {
+        let latitude: Double
+        let longitude: Double
+    }
+
     @Binding var selectedCoordinate: CLLocationCoordinate2D
+    @Binding var jumpTo: JumpTarget?
 
     @State private var position: MapCameraPosition
 
-    init(selectedCoordinate: Binding<CLLocationCoordinate2D>) {
+    init(selectedCoordinate: Binding<CLLocationCoordinate2D>, jumpTo: Binding<JumpTarget?> = .constant(nil)) {
         _selectedCoordinate = selectedCoordinate
+        _jumpTo = jumpTo
         _position = State(initialValue: .region(
             MKCoordinateRegion(
                 center: selectedCoordinate.wrappedValue,
@@ -26,6 +34,15 @@ struct MiniMapPicker: View {
             Map(position: $position)
                 .onMapCameraChange(frequency: .continuous) { context in
                     selectedCoordinate = context.camera.centerCoordinate
+                }
+                .onChange(of: jumpTo) { _, target in
+                    guard let target else { return }
+                    position = .region(MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: target.latitude, longitude: target.longitude),
+                        latitudinalMeters: 400,
+                        longitudinalMeters: 400
+                    ))
+                    jumpTo = nil
                 }
                 .mapStyle(.standard)
                 .mapControls { }

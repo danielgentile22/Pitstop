@@ -60,6 +60,9 @@ struct AddBathroomView: View {
 
     @State private var selectedCoordinate: CLLocationCoordinate2D
     @State private var geocodedAddress = ""
+    @State private var addressQuery = ""
+    @State private var mapJump: MiniMapPicker.JumpTarget?
+    @State private var addressNotFound = false
     @State private var isGeocoding     = false
     @State private var geocodeTask: Task<Void, Never>?
 
@@ -157,7 +160,7 @@ struct AddBathroomView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
 
-                    MiniMapPicker(selectedCoordinate: $selectedCoordinate)
+                    MiniMapPicker(selectedCoordinate: $selectedCoordinate, jumpTo: $mapJump)
                         .frame(height: 220)
                         .onChange(of: selectedCoordinate.latitude)  { scheduleGeocode(for: selectedCoordinate) }
                         .onChange(of: selectedCoordinate.longitude) { scheduleGeocode(for: selectedCoordinate) }
@@ -321,14 +324,27 @@ struct AddBathroomView: View {
     // MARK: - Address Row
 
     private var addressRow: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "location.fill").font(.caption).foregroundStyle(.blue)
-            if isGeocoding {
-                Text("Locating…").font(.caption).foregroundStyle(.secondary)
-            } else if geocodedAddress.isEmpty {
-                Text("Address unavailable").font(.caption).foregroundStyle(.secondary)
-            } else {
-                Text(geocodedAddress).font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").font(.caption).foregroundStyle(.blue)
+                TextField("Type an address to move the pin", text: $addressQuery)
+                    .font(.subheadline)
+                    .textContentType(.fullStreetAddress)
+                    .submitLabel(.search)
+                    .onSubmit { Task { await searchAddress() } }
+                    .onChange(of: addressQuery) { addressNotFound = false }
+            }
+            HStack(spacing: 8) {
+                Image(systemName: "location.fill").font(.caption).foregroundStyle(.blue)
+                if addressNotFound {
+                    Text("No match for that address").font(.caption).foregroundStyle(.red)
+                } else if isGeocoding {
+                    Text("Locating…").font(.caption).foregroundStyle(.secondary)
+                } else if geocodedAddress.isEmpty {
+                    Text("Address unavailable").font(.caption).foregroundStyle(.secondary)
+                } else {
+                    Text(geocodedAddress).font(.caption).foregroundStyle(.secondary)
+                }
             }
         }
     }
@@ -723,6 +739,21 @@ struct AddBathroomView: View {
             geocodedAddress = await reverseGeocode(coordinate) ?? geocodedAddress
             isGeocoding = false
         }
+    }
+
+    private func searchAddress() async {
+        let query = addressQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return }
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        request.region = MKCoordinateRegion(center: selectedCoordinate, latitudinalMeters: 50_000, longitudinalMeters: 50_000)
+        guard let item = try? await MKLocalSearch(request: request).start().mapItems.first else {
+            addressNotFound = true
+            return
+        }
+        let coordinate = item.location.coordinate
+        mapJump = .init(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func reverseGeocode(_ coordinate: CLLocationCoordinate2D) async -> String? {
