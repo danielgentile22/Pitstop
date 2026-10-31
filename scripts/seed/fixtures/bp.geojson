@@ -1,0 +1,52 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "73_WtB4b-4J3D_u42ARFNgA8ows=",
+   "properties": {
+    "ref": "US-128668",
+    "amenity": "fuel",
+    "addr:street_address": "1400 Elkton Rd",
+    "addr:city": "Elkton",
+    "addr:state": "MD",
+    "addr:postcode": "21921",
+    "addr:country": "US",
+    "name": "BP",
+    "brand": "BP",
+    "brand:wikidata": "Q152057"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.797419,
+     39.643722
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "9bZoZevqfaZh8nd94BF5LcFjsBk=",
+   "properties": {
+    "ref": "US-96582892290402109300100000000000",
+    "amenity": "fuel",
+    "addr:street_address": "40 E Timonium Rd",
+    "addr:city": "Timonium",
+    "addr:state": "MD",
+    "addr:postcode": "21093",
+    "addr:country": "US",
+    "name": "Amoco",
+    "opening_hours": "Mo-Fr 06:00-22:00; Sa-Su 07:00-21:00",
+    "brand": "Amoco",
+    "brand:wikidata": "Q465952"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -76.623603,
+     39.442712
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "fF-EaEW5T8YbAF1IqaTTTtoB6tM=",
+   "properties": {
+    "ref": "40063_SHOP",
+    "shop": "convenience",
+    "addr:street_address": "4625 Cleburne Blvd",
+    "addr:city": "Dublin",
+    "addr:state": "VA",
+    "addr:postcode": "24084",
+    "addr:country": "US",
+    "name": "7-Eleven",
+    "opening_hours": "24/7",
+    "brand": "7-Eleven",
+    "brand:wikidata": "Q259340"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.69098,
+     37.08295
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "yr0ad0XnFTGdCEjz60IaYuUI2Po=",
+   "properties": {
+    "ref": "40063",
+    "amenity": "fuel",
+    "addr:street_address": "4625 Cleburne Blvd",
+    "addr:city": "Dublin",
+    "addr:state": "VA",
+    "addr:postcode": "24084",
+    "addr:country": "US",
+    "opening_hours": "24/7"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.69098,
+     37.08295
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "9w_2uv1f6QPd1v_dRs2-RTSaRK8=",
+   "properties": {
+    "ref": "46613_SHOP",
+    "shop": "convenience",
+    "addr:street_address": "110 Ready Mix Rd.",
+    "addr:city": "Wytheville",
+    "addr:state": "VA",
+    "addr:postcode": "24382",
+    "addr:country": "US",
+    "name": "Speedway",
+    "opening_hours": "24/7",
+    "brand": "Speedway",
+    "brand:wikidata": "Q7575683"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.99409,
+     36.93605
+    ]
+   }
+  }
+ ]
+}

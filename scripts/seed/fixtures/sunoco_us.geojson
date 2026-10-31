@@ -1,0 +1,53 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "le-OmLCt-k-ew8Ru8TjVFkkFPfQ=",
+   "properties": {
+    "ref": "8003437401",
+    "amenity": "fuel",
+    "addr:street_address": "4220 DUMFRIES RD",
+    "addr:city": "CATLETT",
+    "addr:state": "VA",
+    "addr:postcode": "20119",
+    "addr:country": "US",
+    "name": "Sunoco",
+    "opening_hours": "Mo-Su 00:00-24:00",
+    "brand": "Sunoco",
+    "brand:wikidata": "Q1423218"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.665536,
+     38.70379
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sunoco-at-7-eleven",
+   "properties": {
+    "ref": "8003437499",
+    "amenity": "fuel",
+    "name": "Sunoco",
+    "brand": "Sunoco",
+    "brand:wikidata": "Q1423218",
+    "opening_hours": "24/7",
+    "addr:street_address": "5 Main St",
+    "addr:city": "Dublin",
+    "addr:state": "VA",
+    "addr:postcode": "24084",
+    "addr:country": "US"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.69098,
+     37.08313
+    ]
+   }
+  }
+ ]
+}

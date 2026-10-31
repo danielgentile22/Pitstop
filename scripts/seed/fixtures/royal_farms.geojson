@@ -1,0 +1,28 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "Wg6DlSLwU7_yAzTsYwu1xgYSukE=",
+   "properties": {
+    "ref": "2064",
+    "amenity": "fuel",
+    "addr:street_address": "11532 French Lane",
+    "addr:city": "Hagerstown",
+    "addr:state": "MD",
+    "addr:postcode": "21740",
+    "addr:country": "US",
+    "name": "387",
+    "brand": "Royal Farms",
+    "brand:wikidata": "Q7374169"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.807712,
+     39.633001
+    ]
+   }
+  }
+ ]
+}

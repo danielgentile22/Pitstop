@@ -1,0 +1,28 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "fXMMAPzoIwfU7LJodGmcswJi9n8=",
+   "properties": {
+    "ref": "0000004059",
+    "amenity": "fuel",
+    "addr:street_address": "6886 GATE CITY HWY",
+    "addr:city": "BRISTOL",
+    "addr:state": "VA",
+    "addr:postcode": "24202-1724",
+    "addr:country": "US",
+    "name": "FasMart 437",
+    "brand": "Valero",
+    "brand:wikidata": "Q1283291"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.236,
+     36.6113
+    ]
+   }
+  }
+ ]
+}

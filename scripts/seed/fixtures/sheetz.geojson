@@ -1,0 +1,29 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "-RT3ZH8ESJY3gW_-U6Dh9PmVJvM=",
+   "properties": {
+    "ref": "41",
+    "amenity": "fuel",
+    "addr:street_address": "2045 BEDFORD ST",
+    "addr:city": "CUMBERLAND",
+    "addr:state": "MD",
+    "addr:postcode": "21502",
+    "addr:country": "US",
+    "name": "Sheetz",
+    "opening_hours": "Mo-Su 00:00-24:00",
+    "brand": "Sheetz",
+    "brand:wikidata": "Q7492551"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -78.7367,
+     39.6781
+    ]
+   }
+  }
+ ]
+}

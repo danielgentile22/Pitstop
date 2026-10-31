@@ -1,0 +1,28 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "57oBiGUvHjg3xyqmJpv6A_pdvgw=",
+   "properties": {
+    "ref": "207288",
+    "amenity": "fuel",
+    "addr:street_address": "13781 A WARWICK BLVD",
+    "addr:city": "NEWPORT NEWS",
+    "addr:state": "VA",
+    "addr:postcode": "23602",
+    "addr:country": "US",
+    "name": "Chevron",
+    "brand": "Chevron",
+    "brand:wikidata": "Q319642"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -76.529855,
+     37.123208
+    ]
+   }
+  }
+ ]
+}

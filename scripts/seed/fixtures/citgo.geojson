@@ -1,0 +1,29 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "CJaLYJdwBXoA3BVp_S1Sk8-oGsE=",
+   "properties": {
+    "ref": "39433188",
+    "amenity": "fuel",
+    "addr:street_address": "1111 N SALISBURY BLVD",
+    "addr:city": "SALISBURY",
+    "addr:state": "MD",
+    "addr:postcode": "21801",
+    "addr:country": "US",
+    "name": "Citgo",
+    "opening_hours": "Mo-Su 07:30-24:00",
+    "brand": "Citgo",
+    "brand:wikidata": "Q2974437"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.59137,
+     38.376507
+    ]
+   }
+  }
+ ]
+}

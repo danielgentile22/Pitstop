@@ -1,0 +1,51 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "kEcXrZxjDSs_I9cz9gD0MKFPd9Q=",
+   "properties": {
+    "ref": "11754",
+    "amenity": "fuel",
+    "addr:street_address": "8405 Westphalia Road",
+    "addr:city": "Upper Marlboro",
+    "addr:state": "MD",
+    "addr:postcode": "20774",
+    "addr:country": "US",
+    "name": "Westphalia Marathon",
+    "brand": "Marathon",
+    "brand:wikidata": "Q458363"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -76.861593,
+     38.839464
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "jQPzMUOYj5xodRSEWiMQ1ao1mJk=",
+   "properties": {
+    "ref": "13018",
+    "amenity": "fuel",
+    "addr:street_address": "1605 Memorial Ave",
+    "addr:city": "Lynchburg",
+    "addr:state": "VA",
+    "addr:postcode": "24501",
+    "addr:country": "US",
+    "name": "J Mart",
+    "brand": "Arco",
+    "brand:wikidata": "Q304769"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -79.160318,
+     37.410248
+    ]
+   }
+  }
+ ]
+}

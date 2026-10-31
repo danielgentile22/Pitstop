@@ -1,0 +1,29 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "weMFhKwnkONhldND55Hn_rYSWzY=",
+   "properties": {
+    "ref": "6008",
+    "shop": "convenience",
+    "addr:street_address": "1250 h st nw",
+    "addr:city": "washington",
+    "addr:state": "DC",
+    "addr:postcode": "20005",
+    "addr:country": "US",
+    "name": "1250 h st nw",
+    "opening_hours": "24/7",
+    "brand": "Wawa",
+    "brand:wikidata": "Q5936320"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.029591,
+     38.89979
+    ]
+   }
+  }
+ ]
+}

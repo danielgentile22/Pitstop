@@ -1,0 +1,29 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "Kb9-j4MYq9sAr2tPC1RJ-xhXubI=",
+   "properties": {
+    "ref": "46613",
+    "amenity": "fuel",
+    "addr:street_address": "110 Ready Mix Rd.",
+    "addr:city": "Wytheville",
+    "addr:state": "VA",
+    "addr:postcode": "24382",
+    "addr:country": "US",
+    "name": "Speedway",
+    "opening_hours": "24/7",
+    "brand": "Speedway",
+    "brand:wikidata": "Q7575683"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.99409,
+     36.93605
+    ]
+   }
+  }
+ ]
+}

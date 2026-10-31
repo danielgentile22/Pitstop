@@ -224,3 +224,49 @@ def test_every_brand_is_in_the_app_brand_table():
     table = (build_seed.REPO_ROOT / "Pitstop" / "Pitstop" / "BrandProfile.swift").read_text()
     app_keys = set(re.findall(r'BrandProfile\(key: "(\w+)"', table))
     assert {s.brand_key for s in build_seed.SOURCES} <= app_keys
+
+
+@pytest.mark.parametrize(
+    "source_id, brand_key, name",
+    [
+        ("atp:wawa:6008", "wawa", "Wawa"),
+        ("atp:sheetz:41", "sheetz", "Sheetz"),
+        ("atp:royal_farms:2064", "royal_farms", "Royal Farms"),
+        ("atp:seven_eleven_ca_us:40063_SHOP", "seven_eleven", "7-Eleven"),
+        ("atp:shell:10014751", "shell", "Shell"),
+        ("atp:exxon_mobil:200310061", "exxon", "Exxon"),
+        ("atp:exxon_mobil:200331860", "mobil", "Mobil"),
+        ("atp:bp:US-128668", "bp", "BP"),
+        ("atp:bp:US-96582892290402109300100000000000", "amoco", "Amoco"),
+        ("atp:sunoco_us:8003437401", "sunoco", "Sunoco"),
+        ("atp:citgo:39433188", "citgo", "Citgo"),
+        ("atp:speedway_us:46613", "speedway", "Speedway"),
+        ("atp:valero:0000004059", "valero", "Valero"),
+        ("atp:marathon_petroleum_us:11754", "marathon", "Marathon"),
+        ("atp:chevron_us:207288", "chevron", "Chevron"),
+    ],
+)
+def test_maps_gas_stations_to_their_brands(seed, source_id, brand_key, name):
+    record = by_id(seed)[source_id]
+    assert record["brandKey"] == brand_key
+    assert record["name"] == name
+
+
+def test_keeps_only_the_named_brand_of_a_spider_that_lists_several(seed):
+    ids = by_id(seed)
+    assert "atp:marathon_petroleum_us:13018" not in ids  # an Arco in the Marathon spider
+    assert "atp:seven_eleven_ca_us:46613_SHOP" not in ids  # a Speedway in the 7-Eleven spider
+    assert "atp:seven_eleven_ca_us:40063" not in ids  # the store's fuel pumps, listed without a brand
+
+
+def test_drops_another_brands_fuel_sold_at_a_7_eleven(seed):
+    ids = by_id(seed)
+    assert "atp:seven_eleven_ca_us:40063_SHOP" in ids
+    assert "atp:sunoco_us:8003437499" not in ids  # about 20 m from the 7-Eleven
+
+
+def test_flags_24_hour_gas_stations(seed):
+    ids = by_id(seed)
+    for source_id in ["atp:wawa:6008", "atp:sheetz:41", "atp:shell:10014751", "atp:seven_eleven_ca_us:40063_SHOP"]:
+        assert ids[source_id]["isOpen24Hours"] is True, source_id
+    assert ids["atp:exxon_mobil:200310061"]["isOpen24Hours"] is False  # Mo-Sa 05:00-24:00; Su 06:00-24:00

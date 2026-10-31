@@ -51,6 +51,9 @@ class AtpSource:
     # Stores of brands with the same parent are deduplicated together, so a store a parent lists
     # under two of its banners shows one pin.
     parent: str | None = None
+    # Only features with this brand:wikidata. Fuel spiders list sibling brands (bp: Amoco and TA truck
+    # stops, marathon_petroleum_us: Arco, seven_eleven_ca_us: Speedway and unbranded fuel pumps).
+    wikidata: str | None = None
 
     def load(self, fixtures: Path | None) -> list[dict]:
         if fixtures is not None:
@@ -83,6 +86,9 @@ class OsmSource:
 
 
 AHOLD_DELHAIZE = "ahold_delhaize"
+BP = "bp"
+EXXON_MOBIL = "exxon_mobil"
+SEVEN_ELEVEN = "seven_eleven"
 
 SOURCES = [
     AtpSource("barnes_and_noble_us", "barnes_and_noble", "Barnes & Noble", min_features=550),
@@ -102,7 +108,32 @@ SOURCES = [
     # All The Places has no Harris Teeter or Weis spider (checked 2026-10-31).
     OsmSource("Q5665067", "harris_teeter", "Harris Teeter"),
     OsmSource("Q7980370", "weis", "Weis"),
+    AtpSource("wawa", "wawa", "Wawa", min_features=900),
+    AtpSource("sheetz", "sheetz", "Sheetz", min_features=850),
+    AtpSource("royal_farms", "royal_farms", "Royal Farms", min_features=310),
+    AtpSource(
+        "seven_eleven_ca_us", "seven_eleven", "7-Eleven", min_features=15_500, wikidata="Q259340", parent=SEVEN_ELEVEN
+    ),
+    AtpSource("speedway_us", "speedway", "Speedway", min_features=2_700, parent=SEVEN_ELEVEN),
+    # Worldwide spider; the region and country checks keep the US stations.
+    AtpSource("shell", "shell", "Shell", min_features=49_000),
+    # The exxon_mobil spider last finished in June 2026, so its stations are from then.
+    AtpSource("exxon_mobil", "exxon", "Exxon", min_features=17_000, wikidata="Q109675651", parent=EXXON_MOBIL),
+    AtpSource("exxon_mobil", "mobil", "Mobil", min_features=17_000, wikidata="Q109676002", parent=EXXON_MOBIL),
+    AtpSource("bp", "bp", "BP", min_features=19_500, wikidata="Q152057", parent=BP),
+    AtpSource("bp", "amoco", "Amoco", min_features=19_500, wikidata="Q465952", parent=BP),
+    AtpSource("sunoco_us", "sunoco", "Sunoco", min_features=5_300),
+    # All The Places dropped its citgo spider after the May 2026 run, so its stations are from then.
+    AtpSource("citgo", "citgo", "Citgo", min_features=4_300),
+    AtpSource("valero", "valero", "Valero", min_features=4_200),
+    AtpSource("marathon_petroleum_us", "marathon", "Marathon", min_features=7_600, wikidata="Q458363"),
+    AtpSource("chevron_us", "chevron", "Chevron", min_features=16_500),
 ]
+
+# Many 7-Elevens sell another brand's fuel (about 100 sell Exxon in the region), and both brands list
+# the site. The restroom is the store's, so a fuel brand's station within 50 m of a 7-Eleven is dropped.
+STORES_SELLING_OTHER_FUEL = {"seven_eleven"}
+FUEL_BRANDS = {"shell", "exxon", "mobil", "bp", "amoco", "sunoco", "citgo", "valero", "marathon", "chevron"}
 
 STATES = {
     "VA": "VA",
@@ -288,6 +319,9 @@ def build_records(source: AtpSource | OsmSource, features: list[dict], stats: Co
         if source.shop and props.get("shop") != source.shop:
             stats[f"skipped: not shop={source.shop}"] += 1
             continue
+        if isinstance(source, AtpSource) and source.wikidata and props.get("brand:wikidata") != source.wikidata:
+            stats[f"skipped {source.spider}: another brand"] += 1
+            continue
         lon, lat = geometry["coordinates"][:2]
         hours = clean(props.get("opening_hours"))
         records.append(
@@ -308,7 +342,16 @@ def build_records(source: AtpSource | OsmSource, features: list[dict], stats: Co
 
 
 def remove_duplicates(records: list[dict], stats: Counter) -> list[dict]:
-    """Keeps the lowest source ID of any same-brand or same-parent group within DUPLICATE_RADIUS_METERS."""
+    """Keeps the lowest source ID of any same-brand or same-parent group within DUPLICATE_RADIUS_METERS,
+    and drops fuel brands' stations that sit at a store selling them."""
+    stores = [r for r in records if r["brandKey"] in STORES_SELLING_OTHER_FUEL]
+    fuel_at_store = {
+        r["sourceID"]
+        for r in records
+        if r["brandKey"] in FUEL_BRANDS and any(meters_between(s, r) <= DUPLICATE_RADIUS_METERS for s in stores)
+    }
+    stats["skipped: fuel sold at a 7-Eleven"] += len(fuel_at_store)
+    records = [r for r in records if r["sourceID"] not in fuel_at_store]
     kept: list[dict] = []
     for record in sorted(records, key=lambda r: r["sourceID"]):
         if any(

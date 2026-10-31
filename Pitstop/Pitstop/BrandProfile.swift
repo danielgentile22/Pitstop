@@ -46,6 +46,24 @@ struct BrandProfile {
         // Restrooms are often staff-only; ask at the register.
         BrandProfile(key: "trader_joes",      displayName: "Trader Joe's",   reliability: .uncertain, expectedAccess: .keyRequired),
         BrandProfile(key: "aldi",             displayName: "Aldi",           reliability: .uncertain, expectedAccess: .keyRequired),
+        // Company-run gas stations with large stores and public restrooms.
+        BrandProfile(key: "wawa",             displayName: "Wawa",           reliability: .reliable, expectedAccess: .free),
+        BrandProfile(key: "sheetz",           displayName: "Sheetz",         reliability: .reliable, expectedAccess: .free),
+        BrandProfile(key: "royal_farms",      displayName: "Royal Farms",    reliability: .reliable, expectedAccess: .free),
+        // Mostly franchised, so it varies by station; the restroom is often locked and the key is at the register.
+        BrandProfile(key: "shell",            displayName: "Shell",          reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "exxon",            displayName: "Exxon",          reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "mobil",            displayName: "Mobil",          reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "bp",               displayName: "BP",             reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "amoco",            displayName: "Amoco",          reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "sunoco",           displayName: "Sunoco",         reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "citgo",            displayName: "Citgo",          reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "speedway",         displayName: "Speedway",       reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "valero",           displayName: "Valero",         reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "marathon",         displayName: "Marathon",       reliability: .likely,   expectedAccess: .keyRequired),
+        BrandProfile(key: "chevron",          displayName: "Chevron",        reliability: .likely,   expectedAccess: .keyRequired),
+        // Many small city stores have no public restroom.
+        BrandProfile(key: "seven_eleven",     displayName: "7-Eleven",       reliability: .uncertain, expectedAccess: .keyRequired),
     ].map { ($0.key, $0) })
 
     /// Unknown keys (a seed newer than the app's table) fall back to uncertain rather than failing.

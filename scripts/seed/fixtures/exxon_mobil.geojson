@@ -1,0 +1,53 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "MhSlYNdUrZeEWBx9pAakSkPK8u8=",
+   "properties": {
+    "ref": "200310061",
+    "amenity": "fuel",
+    "addr:street_address": "13505 MINNIEVILLE ROAD",
+    "addr:city": "WOODBRIDGE",
+    "addr:state": "VA",
+    "addr:postcode": "22192",
+    "addr:country": "US",
+    "name": "SMOKETOWN SERVICE CENTER",
+    "opening_hours": "Mo-Sa 05:00-24:00; Su 06:00-24:00",
+    "brand": "Exxon",
+    "brand:wikidata": "Q109675651"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.307526,
+     38.655025
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "lf4zaAPtUT9gasw3TMuNn551ncg=",
+   "properties": {
+    "ref": "200331860",
+    "amenity": "fuel",
+    "addr:street_address": "3200 WESTERN BRANCH BLVD",
+    "addr:city": "CHESAPEAKE",
+    "addr:state": "VA",
+    "addr:postcode": "23321",
+    "addr:country": "US",
+    "name": "CHILL STOP #14",
+    "opening_hours": "Mo-Su 06:00-24:00",
+    "brand": "Mobil",
+    "brand:wikidata": "Q109676002"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -76.404434,
+     36.864075
+    ]
+   }
+  }
+ ]
+}
