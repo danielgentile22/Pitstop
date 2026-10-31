@@ -141,9 +141,6 @@ final class Bathroom {
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
-
-    /// Straight-line distance in meters.
-    func distance(from location: CLLocation) -> CLLocationDistance {
-        CLLocation(latitude: latitude, longitude: longitude).distance(from: location)
-    }
 }
+
+extension Bathroom: LinksCandidate {}

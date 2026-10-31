@@ -132,8 +132,12 @@ struct CandidateImporterTests {
         try context.save()
 
         func visibleIDs() throws -> Set<String> {
-            let all = try context.fetch(FetchDescriptor<Candidate>())
-            return Set(all.unlinked(from: try context.fetch(FetchDescriptor<Bathroom>())).map(\.sourceID))
+            let visible = BathroomFilter().visiblePlaces(
+                bathrooms: try context.fetch(FetchDescriptor<Bathroom>()),
+                candidates: try context.fetch(FetchDescriptor<Candidate>()),
+                userLocation: nil
+            )
+            return Set(visible.candidates.map(\.sourceID))
         }
         #expect(try visibleIDs() == ["other"])
 

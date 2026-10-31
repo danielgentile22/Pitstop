@@ -45,10 +45,8 @@ nonisolated enum CandidateImporter {
     /// Inserts new records and updates changed ones. Unprotected ones missing from the seed are deleted
     /// only by `PendingImport.commit()`.
     static func apply(_ seed: CandidateSeed, to context: ModelContext) throws -> PendingImport {
-        let linkedIDs = Set(
-            try context.fetch(FetchDescriptor<Bathroom>(predicate: #Predicate { $0.sourceID != nil }))
-                .compactMap(\.sourceID)
-        )
+        let linkedIDs = try context.fetch(FetchDescriptor<Bathroom>(predicate: #Predicate { $0.sourceID != nil }))
+            .linkedSourceIDs
         var existing = Dictionary(
             try context.fetch(FetchDescriptor<Candidate>()).map { ($0.sourceID, $0) },
             uniquingKeysWith: { first, _ in first }

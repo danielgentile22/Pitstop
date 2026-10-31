@@ -66,12 +66,17 @@ final class Candidate {
     }
 }
 
-extension Sequence<Candidate> {
+/// A visit that may have been logged from a Candidate.
+nonisolated protocol LinksCandidate {
+    /// The `Candidate.sourceID` this visit was logged from, if any.
+    var sourceID: String? { get }
+}
 
-    /// Drops every Candidate a Bathroom links to: logging a visit hides its Candidate everywhere.
-    /// Pass all Bathrooms, not a filtered subset, so a filtered-out visit still hides its store.
-    func unlinked(from bathrooms: some Sequence<Bathroom>) -> [Candidate] {
-        let linkedIDs = Set(bathrooms.compactMap(\.sourceID))
-        return filter { !linkedIDs.contains($0.sourceID) }
+nonisolated extension Sequence where Element: LinksCandidate {
+
+    /// The Candidates these visits were logged from. Logging a visit hides its Candidate on the map,
+    /// in the list and from the emergency button; all three ask this.
+    var linkedSourceIDs: Set<String> {
+        Set(compactMap(\.sourceID))
     }
 }
