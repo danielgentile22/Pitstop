@@ -108,3 +108,44 @@ def test_version_bumps_only_when_records_change(tmp_path):
     stale["records"] = stale["records"][1:]
     output.write_text(json.dumps(stale))
     assert run(output)["version"] == 2
+
+
+def test_maps_target_and_walmart_to_their_brands(seed):
+    ids = by_id(seed)
+    assert ids["atp:target_us:3430"]["brandKey"] == "target"
+    assert ids["atp:target_us:3430"]["name"] == "Target (Pentagon City)"
+    assert ids["atp:target_us:3430"]["address"] == "900 Army Navy Dr, Arlington, VA 20000"
+    assert ids["atp:walmart_us:1860"]["brandKey"] == "walmart"
+    assert ids["atp:walmart_us:1860"]["name"] == "Walmart (Elkton Supercenter)"
+
+
+def test_walmart_neighborhood_market_is_walmart(seed):
+    record = by_id(seed)["atp:walmart_us:3622"]
+    assert record["brandKey"] == "walmart"
+    assert record["name"] == "Walmart (Roanoke Neighborhood Market)"
+
+
+def test_keeps_target_and_walmart_outside_the_region_out(seed):
+    ids = by_id(seed)
+    assert "atp:target_us:1800" not in ids  # Pennsylvania
+    assert "atp:walmart_us:2662" not in ids  # West Virginia
+
+
+def test_keeps_different_brands_at_the_same_spot(seed):
+    ids = by_id(seed)
+    assert "atp:target_us:3328" in ids
+    assert "atp:walmart_us:5968" in ids  # about 20 m from Target 3328
+
+
+def test_uses_the_newest_run_where_the_spider_finished():
+    walmart = next(s for s in build_seed.SOURCES if s.brand_key == "walmart")
+    runs = [{"run_id": "2026-01-31"}, {"run_id": "2026-10-10"}, {"run_id": "2026-10-17"}]
+    counts = {"2026-01-31": walmart.min_features + 10, "2026-10-10": 1484, "2026-10-17": 540}
+    run = build_seed.newest_complete_run(walmart, runs, lambda r: {walmart.spider: counts[r["run_id"]]})
+    assert run["run_id"] == "2026-01-31"
+
+
+def test_fails_when_no_run_has_a_complete_scrape():
+    walmart = next(s for s in build_seed.SOURCES if s.brand_key == "walmart")
+    with pytest.raises(SystemExit):
+        build_seed.newest_complete_run(walmart, [{"run_id": "2026-10-17"}], lambda r: {walmart.spider: 540})

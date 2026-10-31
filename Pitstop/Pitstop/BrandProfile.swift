@@ -32,6 +32,8 @@ struct BrandProfile {
 
     static let table: [String: BrandProfile] = Dictionary(uniqueKeysWithValues: [
         BrandProfile(key: "barnes_and_noble", displayName: "Barnes & Noble", reliability: .reliable, expectedAccess: .free),
+        BrandProfile(key: "target",           displayName: "Target",         reliability: .reliable, expectedAccess: .free),
+        BrandProfile(key: "walmart",          displayName: "Walmart",        reliability: .reliable, expectedAccess: .free),
     ].map { ($0.key, $0) })
 
     /// Unknown keys (a seed newer than the app's table) fall back to uncertain rather than failing.

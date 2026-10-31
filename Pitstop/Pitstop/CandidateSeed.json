@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "records": [
     {
       "sourceID": "atp:barnes_and_noble_us:2026",
@@ -440,6 +440,2856 @@
       "address": "3040 M Street NW, Washington, DC 20007",
       "isOpen24Hours": false,
       "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:target_us:1000",
+      "brandKey": "target",
+      "name": "Target (Westminster)",
+      "latitude": 39.566736,
+      "longitude": -76.974265,
+      "address": "200 Malcolm Dr, Westminster, MD 21157",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-23:00; We-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1001",
+      "brandKey": "target",
+      "name": "Target (White Marsh)",
+      "latitude": 39.37062,
+      "longitude": -76.4515,
+      "address": "5230 Campbell Blvd, Nottingham, MD 21236",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1002",
+      "brandKey": "target",
+      "name": "Target (Bel Air)",
+      "latitude": 39.525112,
+      "longitude": -76.350472,
+      "address": "580 Marketplace Dr, Bel Air, MD 21014",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1003",
+      "brandKey": "target",
+      "name": "Target (Glen Burnie)",
+      "latitude": 39.133067,
+      "longitude": -76.634601,
+      "address": "7951 Nolpark Ct, Glen Burnie, MD 21061",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1004",
+      "brandKey": "target",
+      "name": "Target (Bowie)",
+      "latitude": 38.952326,
+      "longitude": -76.722322,
+      "address": "4600 Mitchellville Rd, Bowie, MD 20716",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1005",
+      "brandKey": "target",
+      "name": "Target (Fairfax)",
+      "latitude": 38.798687,
+      "longitude": -77.301682,
+      "address": "10301 New Guinea Rd, Fairfax, VA 22032",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1006",
+      "brandKey": "target",
+      "name": "Target (Largo)",
+      "latitude": 38.896156,
+      "longitude": -76.826762,
+      "address": "10500 Campus Way S, Upper Marlboro, MD 20774",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1007",
+      "brandKey": "target",
+      "name": "Target (Laurel)",
+      "latitude": 39.096991,
+      "longitude": -76.809663,
+      "address": "3343 Corridor Marketplace, Laurel, MD 20724",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1008",
+      "brandKey": "target",
+      "name": "Target (Waldorf)",
+      "latitude": 38.621217,
+      "longitude": -76.922799,
+      "address": "3300 Western Pkwy, Waldorf, MD 20603",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1009",
+      "brandKey": "target",
+      "name": "Target (Sterling)",
+      "latitude": 39.026292,
+      "longitude": -77.40061,
+      "address": "46201 Potomac Run Plz, Sterling, VA 20164",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1016",
+      "brandKey": "target",
+      "name": "Target (Colonial Heights)",
+      "latitude": 37.248789,
+      "longitude": -77.386397,
+      "address": "721 Southpark Blvd., Colonial Heights, VA 23834",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1017",
+      "brandKey": "target",
+      "name": "Target (Chester)",
+      "latitude": 37.350281,
+      "longitude": -77.410429,
+      "address": "2530 Weir Rd, Chester, VA 23831",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1018",
+      "brandKey": "target",
+      "name": "Target (Richmond Central)",
+      "latitude": 37.586919,
+      "longitude": -77.500796,
+      "address": "5401 W Broad St, Richmond, VA 23230",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 08:00-24:00; Tu 00:00-01:00,08:00-23:00; We-Su 08:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:1019",
+      "brandKey": "target",
+      "name": "Target (Virginia Center Commons)",
+      "latitude": 37.673607,
+      "longitude": -77.462599,
+      "address": "10100 Brook Rd, Glen Allen, VA 23059",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1021",
+      "brandKey": "target",
+      "name": "Target (Greenbrier)",
+      "latitude": 36.771766,
+      "longitude": -76.231762,
+      "address": "1316 Greenbrier Pkwy, Chesapeake, VA 23320",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1041",
+      "brandKey": "target",
+      "name": "Target (Richmond Midlothian Tpke)",
+      "latitude": 37.50405,
+      "longitude": -77.6051,
+      "address": "11301 Midlothian Tpke, Richmond, VA 23235",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1042",
+      "brandKey": "target",
+      "name": "Target (Ellicott City)",
+      "latitude": 39.250575,
+      "longitude": -76.817265,
+      "address": "4390 Montgomery Rd, Ellicott City, MD 21043",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1043",
+      "brandKey": "target",
+      "name": "Target (Aberdeen)",
+      "latitude": 39.521077,
+      "longitude": -76.17799,
+      "address": "1025 Middleton Rd, Aberdeen, MD 21001",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1044",
+      "brandKey": "target",
+      "name": "Target (Columbia)",
+      "latitude": 39.196971,
+      "longitude": -76.813483,
+      "address": "6111 Dobbin Rd, Columbia, MD 21045",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1045",
+      "brandKey": "target",
+      "name": "Target (Owings Mills)",
+      "latitude": 39.433405,
+      "longitude": -76.799203,
+      "address": "11200 Reisterstown Rd, Owings Mills, MD 21117",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1046",
+      "brandKey": "target",
+      "name": "Target (Germantown)",
+      "latitude": 39.198922,
+      "longitude": -77.248722,
+      "address": "20908 Frederick Rd, Germantown, MD 20876",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1047",
+      "brandKey": "target",
+      "name": "Target (Hilltop)",
+      "latitude": 36.846717,
+      "longitude": -76.022877,
+      "address": "525 First Colonial Rd, Virginia Beach, VA 23451",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1048",
+      "brandKey": "target",
+      "name": "Target (Norfolk)",
+      "latitude": 36.86527,
+      "longitude": -76.212298,
+      "address": "1245 N Military Hwy, Norfolk, VA 23502",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:1049",
+      "brandKey": "target",
+      "name": "Target (Glen Allen Broad St)",
+      "latitude": 37.65192,
+      "longitude": -77.605343,
+      "address": "11290 W Broad St, Glen Allen, VA 23060",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:1076",
+      "brandKey": "target",
+      "name": "Target (Alexandria)",
+      "latitude": 38.833904,
+      "longitude": -77.050005,
+      "address": "3101 Richmond Hwy, Alexandria, VA 22305",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-23:00; We-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1088",
+      "brandKey": "target",
+      "name": "Target (Reston)",
+      "latitude": 38.95471,
+      "longitude": -77.369927,
+      "address": "12197 Sunset Hills Rd, Reston, VA 20190",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:1103",
+      "brandKey": "target",
+      "name": "Target (Newport News)",
+      "latitude": 37.107827,
+      "longitude": -76.492272,
+      "address": "12130 Jefferson Ave, Newport News, VA 23602",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-23:00; We-Su 07:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:1105",
+      "brandKey": "target",
+      "name": "Target (Princess Anne)",
+      "latitude": 36.788687,
+      "longitude": -76.109025,
+      "address": "2060 S Independence Blvd, Virginia Beach, VA 23453",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1137",
+      "brandKey": "target",
+      "name": "Target (Frederick)",
+      "latitude": 39.38227,
+      "longitude": -77.397979,
+      "address": "5437 Urbana Pike, Frederick, MD 21704",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1138",
+      "brandKey": "target",
+      "name": "Target (Silver Spring)",
+      "latitude": 39.052045,
+      "longitude": -76.95646,
+      "address": "12000 Cherry Hill Rd, Silver Spring, MD 20904",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1142",
+      "brandKey": "target",
+      "name": "Target (Towson)",
+      "latitude": 39.394738,
+      "longitude": -76.582217,
+      "address": "1238 Putty Hill Ave, Towson, MD 21286",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1161",
+      "brandKey": "target",
+      "name": "Target (Williamsburg)",
+      "latitude": 37.27137,
+      "longitude": -76.760678,
+      "address": "4630 Monticello Ave, Williamsburg, VA 23188",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1162",
+      "brandKey": "target",
+      "name": "Target (Roanoke)",
+      "latitude": 37.299674,
+      "longitude": -79.958603,
+      "address": "4737 Valley View Blvd NW, Roanoke, VA 24012",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-22:00; We-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1193",
+      "brandKey": "target",
+      "name": "Target (Gaithersburg)",
+      "latitude": 39.118834,
+      "longitude": -77.20236,
+      "address": "25 Grand Corner Ave, Gaithersburg, MD 20878",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-23:00; We-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1225",
+      "brandKey": "target",
+      "name": "Target (Richmond Brandermill)",
+      "latitude": 37.420887,
+      "longitude": -77.63418,
+      "address": "4601 Commonwealth Centre Pkwy, Midlothian, VA 23112",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 08:00-24:00; Tu 00:00-01:00,08:00-22:00; We-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1233",
+      "brandKey": "target",
+      "name": "Target (Salisbury)",
+      "latitude": 38.415965,
+      "longitude": -75.560247,
+      "address": "125 E North Pointe Dr, Salisbury, MD 21804",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1234",
+      "brandKey": "target",
+      "name": "Target (Winchester)",
+      "latitude": 39.154246,
+      "longitude": -78.16744,
+      "address": "2340 Legge Blvd., Winchester, VA 22601",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 08:00-22:00; Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:1257",
+      "brandKey": "target",
+      "name": "Target (Hagerstown)",
+      "latitude": 39.620301,
+      "longitude": -77.772574,
+      "address": "17213 Cole Rd, Hagerstown, MD 21740",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1258",
+      "brandKey": "target",
+      "name": "Target (Lexington Park)",
+      "latitude": 38.297683,
+      "longitude": -76.513826,
+      "address": "45155 First Colony Way, California, MD 20619",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-22:00; We-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1265",
+      "brandKey": "target",
+      "name": "Target (Timonium)",
+      "latitude": 39.461851,
+      "longitude": -76.634099,
+      "address": "9901 York Rd, Cockeysville, MD 21030",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1275",
+      "brandKey": "target",
+      "name": "Target (Lynchburg)",
+      "latitude": 37.346211,
+      "longitude": -79.190985,
+      "address": "4028 Wards Rd, Lynchburg, VA 24502",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-22:00; We-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1292",
+      "brandKey": "target",
+      "name": "Target (Christiansburg)",
+      "latitude": 37.157251,
+      "longitude": -80.422419,
+      "address": "195 Conston Ave, Christiansburg, VA 24073",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 08:00-24:00; Tu 00:00-01:00,08:00-22:00; We-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1295",
+      "brandKey": "target",
+      "name": "Target (Greenbelt)",
+      "latitude": 38.998652,
+      "longitude": -76.906711,
+      "address": "6100 Greenbelt Rd, Greenbelt, MD 20770",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1341",
+      "brandKey": "target",
+      "name": "Target (Fair Lakes)",
+      "latitude": 38.855688,
+      "longitude": -77.392918,
+      "address": "13047 Fair Lakes Shopping Ctr, Fairfax, VA 22033",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:1415",
+      "brandKey": "target",
+      "name": "Target (Wheaton)",
+      "latitude": 39.036286,
+      "longitude": -77.05633,
+      "address": "11160 Veirs Mill Rd, Silver Spring, MD 20902",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1416",
+      "brandKey": "target",
+      "name": "Target (Springfield)",
+      "latitude": 38.77562,
+      "longitude": -77.1736,
+      "address": "6600 Springfield Mall, Springfield, VA 22150",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1420",
+      "brandKey": "target",
+      "name": "Target (Chesapeake Sq Mall)",
+      "latitude": 36.828586,
+      "longitude": -76.414423,
+      "address": "4200 Portsmouth Blvd, STE 600, Chesapeake, VA 23321",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1431",
+      "brandKey": "target",
+      "name": "Target (Falls Church)",
+      "latitude": 38.868047,
+      "longitude": -77.142045,
+      "address": "6100 Arlington Blvd, Falls Church, VA 22044",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-22:00; We-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1533",
+      "brandKey": "target",
+      "name": "Target (Alexandria Hybla Valley)",
+      "latitude": 38.776005,
+      "longitude": -77.082404,
+      "address": "6600 Richmond Hwy, Alexandria, VA 22306",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1541",
+      "brandKey": "target",
+      "name": "Target (Pikesville)",
+      "latitude": 39.384743,
+      "longitude": -76.73146,
+      "address": "1737 Reisterstown Rd, Pikesville, MD 21208",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1827",
+      "brandKey": "target",
+      "name": "Target (Chantilly)",
+      "latitude": 38.8952,
+      "longitude": -77.445838,
+      "address": "14391 Chantilly Crossing Ln, Chantilly, VA 20151",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1854",
+      "brandKey": "target",
+      "name": "Target (Rockville)",
+      "latitude": 39.056591,
+      "longitude": -77.114947,
+      "address": "5700 Bou Ave, Rockville, MD 20852",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1857",
+      "brandKey": "target",
+      "name": "Target (Stafford)",
+      "latitude": 38.468742,
+      "longitude": -77.408662,
+      "address": "1090 Stafford Market Pl, Stafford, VA 22556",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1858",
+      "brandKey": "target",
+      "name": "Target (Charlottesville)",
+      "latitude": 38.12851,
+      "longitude": -78.440993,
+      "address": "312 Connor Dr, Charlottesville, VA 22911",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:1871",
+      "brandKey": "target",
+      "name": "Target (Abingdon)",
+      "latitude": 39.460233,
+      "longitude": -76.316308,
+      "address": "403 Constant Friendship Blvd, Abingdon, MD 21009",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1873",
+      "brandKey": "target",
+      "name": "Target (Gainesville)",
+      "latitude": 38.79473,
+      "longitude": -77.6068,
+      "address": "13301 Gateway Center Dr, Gainesville, VA 20155",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:1874",
+      "brandKey": "target",
+      "name": "Target (Leesburg)",
+      "latitude": 39.115638,
+      "longitude": -77.534723,
+      "address": "1200 Edwards Ferry Rd, Leesburg, VA 20176",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1890",
+      "brandKey": "target",
+      "name": "Target (Prince Georges Plaza)",
+      "latitude": 38.968075,
+      "longitude": -76.955453,
+      "address": "3500 East West Hwy Ste 1200, Hyattsville, MD 20782",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:1893",
+      "brandKey": "target",
+      "name": "Target (Skyline)",
+      "latitude": 38.844672,
+      "longitude": -77.118418,
+      "address": "5115 Leesburg Pike, Falls Church, VA 22041",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1897",
+      "brandKey": "target",
+      "name": "Target (Forestville)",
+      "latitude": 38.848636,
+      "longitude": -76.886439,
+      "address": "3101 Donnell Dr, District Heights, MD 20747",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1931",
+      "brandKey": "target",
+      "name": "Target (Forest Hill)",
+      "latitude": 37.535149,
+      "longitude": -77.52764,
+      "address": "7107 Forest Hill Ave, Richmond, VA 23225",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 08:00-22:00; Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:1938",
+      "brandKey": "target",
+      "name": "Target (Glen Burnie North)",
+      "latitude": 39.189988,
+      "longitude": -76.610587,
+      "address": "6717 Ritchie Hwy, Glen Burnie, MD 21061",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-22:00; Su 07:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:1968",
+      "brandKey": "target",
+      "name": "Target (Mechanicsville)",
+      "latitude": 37.600194,
+      "longitude": -77.350755,
+      "address": "7235 Bell Creek Rd, Mechanicsville, VA 23111",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:1970",
+      "brandKey": "target",
+      "name": "Target (Middle River)",
+      "latitude": 39.334698,
+      "longitude": -76.448058,
+      "address": "1330 Martin Blvd, Middle River, MD 21220",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2007",
+      "brandKey": "target",
+      "name": "Target (Lanham)",
+      "latitude": 38.953917,
+      "longitude": -76.824625,
+      "address": "10401 Martin Luther King Jr Hwy, Bowie, MD 20720",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2017",
+      "brandKey": "target",
+      "name": "Target (Dumfries)",
+      "latitude": 38.597376,
+      "longitude": -77.33311,
+      "address": "4310 Fortuna Center Plz, Dumfries, VA 22025",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2071",
+      "brandKey": "target",
+      "name": "Target (Harrisonburg)",
+      "latitude": 38.425876,
+      "longitude": -78.843,
+      "address": "1995 E Market St, Harrisonburg, VA 22801",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 08:00-24:00; Tu 00:00-01:00,08:00-22:00; We-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2133",
+      "brandKey": "target",
+      "name": "Target (LaPlata)",
+      "latitude": 38.541484,
+      "longitude": -76.982492,
+      "address": "60 Shining Willow Way, La Plata, MD 20646",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2138",
+      "brandKey": "target",
+      "name": "Target (Massaponax)",
+      "latitude": 38.22492,
+      "longitude": -77.5018,
+      "address": "9785 Patriot Hwy, Fredericksburg, VA 22407",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2175",
+      "brandKey": "target",
+      "name": "Target (Stafford South)",
+      "latitude": 38.3448,
+      "longitude": -77.4932,
+      "address": "25 S Gateway Dr, Fredericksburg, VA 22406",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2203",
+      "brandKey": "target",
+      "name": "Target (Hillcrest)",
+      "latitude": 36.659011,
+      "longitude": -76.234037,
+      "address": "233 Carmichael Way, Chesapeake, VA 23322",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2250",
+      "brandKey": "target",
+      "name": "Target (Culpeper)",
+      "latitude": 38.48338,
+      "longitude": -77.966828,
+      "address": "15341 Montanus Dr, Culpeper, VA 22701",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 08:00-22:00; Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:2259",
+      "brandKey": "target",
+      "name": "Target (Columbia Heights)",
+      "latitude": 38.929275,
+      "longitude": -77.032746,
+      "address": "3100 14th St NW, Washington, DC 20010",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2271",
+      "brandKey": "target",
+      "name": "Target (Annapolis)",
+      "latitude": 38.97988,
+      "longitude": -76.541035,
+      "address": "1911 Towne Centre Blvd, Annapolis, MD 21401",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-23:00; We-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2272",
+      "brandKey": "target",
+      "name": "Target (Dulles)",
+      "latitude": 39.009216,
+      "longitude": -77.439655,
+      "address": "45130 Columbia Pl, Sterling, VA 20166",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2294",
+      "brandKey": "target",
+      "name": "Target (Waynesboro)",
+      "latitude": 38.05631,
+      "longitude": -78.9422,
+      "address": "811 Town Center Dr, Waynesboro, VA 22980",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 08:00-22:00; Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:2296",
+      "brandKey": "target",
+      "name": "Target (Williamsburg East)",
+      "latitude": 37.258955,
+      "longitude": -76.641055,
+      "address": "200 Marquis Pkwy, Williamsburg, VA 23185",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2297",
+      "brandKey": "target",
+      "name": "Target (Front Royal)",
+      "latitude": 38.9635,
+      "longitude": -78.1924,
+      "address": "10 Crooked Run Plaza, Front Royal, VA 22630",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 08:00-22:00; Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:2308",
+      "brandKey": "target",
+      "name": "Target (Bristol)",
+      "latitude": 36.636704,
+      "longitude": -82.109602,
+      "address": "16600 Highlands Center Blvd, Bristol, VA 24202",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2310",
+      "brandKey": "target",
+      "name": "Target (Easton)",
+      "latitude": 38.7822,
+      "longitude": -76.0864,
+      "address": "28539 Marlboro Ave, Easton, MD 21601",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2323",
+      "brandKey": "target",
+      "name": "Target (Manassas West)",
+      "latitude": 38.739441,
+      "longitude": -77.532044,
+      "address": "9900 Sowder Village Sq, Manassas, VA 20109",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-23:00; We-Su 07:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:2337",
+      "brandKey": "target",
+      "name": "Target (Henrico Staples Mill Rd)",
+      "latitude": 37.639008,
+      "longitude": -77.511354,
+      "address": "9001 Staples Mill Rd, Henrico, VA 23228",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 08:00-22:00; Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:2379",
+      "brandKey": "target",
+      "name": "Target (Winchester North)",
+      "latitude": 39.221962,
+      "longitude": -78.135246,
+      "address": "191 Market St, Winchester, VA 22603",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 08:00-22:00; Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:2394",
+      "brandKey": "target",
+      "name": "Target (Brandywine)",
+      "latitude": 38.67245,
+      "longitude": -76.8732,
+      "address": "15922 Crain Hwy SE, Brandywine, MD 20613",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2396",
+      "brandKey": "target",
+      "name": "Target (Red Mill)",
+      "latitude": 36.75582,
+      "longitude": -76.009786,
+      "address": "2233 Upton Dr, Virginia Beach, VA 23454",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 08:00-24:00; Tu 00:00-01:00,08:00-22:00; We-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2407",
+      "brandKey": "target",
+      "name": "Target (Danville)",
+      "latitude": 36.599244,
+      "longitude": -79.418579,
+      "address": "155 Holt Garrison Pkwy, Danville, VA 24540",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2436",
+      "brandKey": "target",
+      "name": "Target (Richmond East)",
+      "latitude": 37.530964,
+      "longitude": -77.35611,
+      "address": "4521 S Laburnum Ave, Richmond, VA 23231",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2478",
+      "brandKey": "target",
+      "name": "Target (Midlothian Perimeter Dr)",
+      "latitude": 37.51178,
+      "longitude": -77.692738,
+      "address": "201 Perimeter Dr, Midlothian, VA 23113",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 08:00-22:00; Su 08:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:2501",
+      "brandKey": "target",
+      "name": "Target (Hampton)",
+      "latitude": 37.042442,
+      "longitude": -76.392446,
+      "address": "5001 Holt Ave, Hampton, VA 23666",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2631",
+      "brandKey": "target",
+      "name": "Target (Crofton)",
+      "latitude": 39.0341,
+      "longitude": -76.684,
+      "address": "2384 BRANDERMILL BLVD, Gambrills, MD 21054",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 07:00-23:00; Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2770",
+      "brandKey": "target",
+      "name": "Target (Pembroke)",
+      "latitude": 36.844625,
+      "longitude": -76.133441,
+      "address": "4554 Virginia Beach Blvd, Virginia Beach, VA 23462",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 08:00-24:00; Tu 00:00-01:00,08:00-22:00; We-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2790",
+      "brandKey": "target",
+      "name": "Target (Merrifield)",
+      "latitude": 38.872567,
+      "longitude": -77.229434,
+      "address": "2905 District Ave S, Fairfax, VA 22031",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:2845",
+      "brandKey": "target",
+      "name": "Target (Baltimore East)",
+      "latitude": 39.275284,
+      "longitude": -76.565947,
+      "address": "3559 Boston Street, Baltimore, MD 21224",
+      "isOpen24Hours": false,
+      "openingHours": "Mo 07:00-24:00; Tu 00:00-01:00,07:00-22:00; We-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:2938",
+      "brandKey": "target",
+      "name": "Target (South Riding)",
+      "latitude": 38.93966,
+      "longitude": -77.521242,
+      "address": "24670 Arcola Landing Dr. Bldg 8, Sterling, VA 20166",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Fr 07:00-23:00; Sa-Su 08:00-23:00"
+    },
+    {
+      "sourceID": "atp:target_us:2949",
+      "brandKey": "target",
+      "name": "Target (Norfolk Wards Corner)",
+      "latitude": 36.914227,
+      "longitude": -76.267574,
+      "address": "201 E Little Creek Rd, Norfolk, VA 23505",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:3210",
+      "brandKey": "target",
+      "name": "Target (Rosslyn)",
+      "latitude": 38.8946,
+      "longitude": -77.0743,
+      "address": "1500 Wilson Blvd, Rosslyn, VA 22209",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Fr 07:00-22:00; Sa-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:3242",
+      "brandKey": "target",
+      "name": "Target (Bethesda)",
+      "latitude": 38.978419,
+      "longitude": -77.090702,
+      "address": "6831 Wisconsin Ave, Bethesda, MD 20815",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:3257",
+      "brandKey": "target",
+      "name": "Target (Ballston)",
+      "latitude": 38.879577,
+      "longitude": -77.113826,
+      "address": "740 N Glebe Rd, Arlington, VA 22203",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Fr 07:00-22:00; Sa-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:3320",
+      "brandKey": "target",
+      "name": "Target (DC New York Ave NE)",
+      "latitude": 38.916485,
+      "longitude": -76.981786,
+      "address": "1515 New York Ave NE, Washington, DC 20002",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:3328",
+      "brandKey": "target",
+      "name": "Target (Georgia and Eastern)",
+      "latitude": 38.984459,
+      "longitude": -77.026993,
+      "address": "7828 Georgia Ave NW, Washington, DC 20012",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Fr 07:00-22:00; Sa-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:3339",
+      "brandKey": "target",
+      "name": "Target (Oxon Hill)",
+      "latitude": 38.806012,
+      "longitude": -76.983535,
+      "address": "6163 Oxon Hill Rd, Oxon Hill, MD 20745",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-21:00"
+    },
+    {
+      "sourceID": "atp:target_us:3351",
+      "brandKey": "target",
+      "name": "Target (DC Tenleytown)",
+      "latitude": 38.94841,
+      "longitude": -77.080542,
+      "address": "4500 Wisconsin Ave NW, Washington, DC 20016",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:3419",
+      "brandKey": "target",
+      "name": "Target (Kent Island)",
+      "latitude": 38.976513,
+      "longitude": -76.319509,
+      "address": "200 Kent Landing, Stevensville, MD 21666",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:3430",
+      "brandKey": "target",
+      "name": "Target (Pentagon City Army Navy Dr)",
+      "latitude": 38.865497,
+      "longitude": -77.062437,
+      "address": "900 Army Navy Dr, Ste a2, Arlington, VA 22202",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Fr 07:00-22:00; Sa-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:759",
+      "brandKey": "target",
+      "name": "Target (Potomac Mills)",
+      "latitude": 38.654476,
+      "longitude": -77.288786,
+      "address": "2460 Prince William Pkwy, Woodbridge, VA 22192",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:target_us:772",
+      "brandKey": "target",
+      "name": "Target (Fredericksburg)",
+      "latitude": 38.299852,
+      "longitude": -77.512493,
+      "address": "1180 Carl D Silver Pkwy, Fredericksburg, VA 22401",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 08:00-22:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1023",
+      "brandKey": "walmart",
+      "name": "Walmart (Galax Supercenter)",
+      "latitude": 36.692631,
+      "longitude": -80.881085,
+      "address": "1140 E Stuart Dr, Galax, VA 24333",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1243",
+      "brandKey": "walmart",
+      "name": "Walmart (Martinsville Supercenter)",
+      "latitude": 36.694051,
+      "longitude": -79.902381,
+      "address": "976 Commonwealth Blvd, Martinsville, VA 24112",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1292",
+      "brandKey": "walmart",
+      "name": "Walmart (Christiansburg Supercenter)",
+      "latitude": 37.160551,
+      "longitude": -80.425764,
+      "address": "2400 N Franklin St, Christiansburg, VA 24073",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1301",
+      "brandKey": "walmart",
+      "name": "Walmart (Roanoke Supercenter)",
+      "latitude": 37.206757,
+      "longitude": -79.950787,
+      "address": "5350 Clearbrook Village Ln, Roanoke, VA 24014",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1302",
+      "brandKey": "walmart",
+      "name": "Walmart (Norton Supercenter)",
+      "latitude": 36.956107,
+      "longitude": -82.601448,
+      "address": "780 Commonwealth Dr, Norton, VA 24273",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1309",
+      "brandKey": "walmart",
+      "name": "Walmart (Salem Supercenter)",
+      "latitude": 37.290049,
+      "longitude": -80.089027,
+      "address": "1851 W Main St, Salem, VA 24153",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1335",
+      "brandKey": "walmart",
+      "name": "Walmart (Lexington Supercenter)",
+      "latitude": 37.805879,
+      "longitude": -79.409875,
+      "address": "1233 N Lee Hwy, Lexington, VA 24450",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1336",
+      "brandKey": "walmart",
+      "name": "Walmart (Marion Store)",
+      "latitude": 36.846533,
+      "longitude": -81.500801,
+      "address": "1193 N Main St, Marion, VA 24354",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1344",
+      "brandKey": "walmart",
+      "name": "Walmart (Staunton Supercenter)",
+      "latitude": 38.134716,
+      "longitude": -79.048172,
+      "address": "1028 Richmond Ave, Staunton, VA 24401",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1345",
+      "brandKey": "walmart",
+      "name": "Walmart (South Boston Supercenter)",
+      "latitude": 36.735782,
+      "longitude": -78.910591,
+      "address": "3471 Old Halifax Rd, South Boston, VA 24592",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1350",
+      "brandKey": "walmart",
+      "name": "Walmart (Lynchburg Supercenter)",
+      "latitude": 37.353858,
+      "longitude": -79.185642,
+      "address": "3900 Wards Rd, Lynchburg, VA 24502",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1399",
+      "brandKey": "walmart",
+      "name": "Walmart (Bedford Supercenter)",
+      "latitude": 37.325966,
+      "longitude": -79.496971,
+      "address": "1126 E Lynchburg Salem Tpke, Bedford, VA 24523",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1406",
+      "brandKey": "walmart",
+      "name": "Walmart (Winchester Supercenter)",
+      "latitude": 39.155859,
+      "longitude": -78.172435,
+      "address": "2350 S Pleasant Valley Rd, Winchester, VA 22601",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1424",
+      "brandKey": "walmart",
+      "name": "Walmart (Colonial Heights Supercenter)",
+      "latitude": 37.245829,
+      "longitude": -77.386344,
+      "address": "671 Southpark Blvd, Colonial Heights, VA 23834",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1465",
+      "brandKey": "walmart",
+      "name": "Walmart (Danville Supercenter)",
+      "latitude": 36.596821,
+      "longitude": -79.430521,
+      "address": "515 Mount Cross Rd, Danville, VA 24540",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1523",
+      "brandKey": "walmart",
+      "name": "Walmart (Glen Allen Supercenter)",
+      "latitude": 37.652049,
+      "longitude": -77.608158,
+      "address": "11400 W Broad St Rd, Glen Allen, VA 23060",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1524",
+      "brandKey": "walmart",
+      "name": "Walmart (Chester Supercenter)",
+      "latitude": 37.350273,
+      "longitude": -77.482847,
+      "address": "12000 Iron Bridge Rd, Chester, VA 23831",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1525",
+      "brandKey": "walmart",
+      "name": "Walmart (Mechanicsville Supercenter)",
+      "latitude": 37.613893,
+      "longitude": -77.355454,
+      "address": "7430 Bell Creek Rd, Mechanicsville, VA 23111",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:154",
+      "brandKey": "walmart",
+      "name": "Walmart (Abingdon Supercenter)",
+      "latitude": 36.714643,
+      "longitude": -81.927722,
+      "address": "16032 Fifteen Mile Boulevard, Abingdon, VA 24211",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1631",
+      "brandKey": "walmart",
+      "name": "Walmart (Hampton Supercenter)",
+      "latitude": 37.040757,
+      "longitude": -76.379054,
+      "address": "1900 Cunningham Dr, Hampton, VA 23666",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1652",
+      "brandKey": "walmart",
+      "name": "Walmart (Dublin Supercenter)",
+      "latitude": 37.084046,
+      "longitude": -80.694436,
+      "address": "5225 Alexander Rd, Dublin, VA 24084",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1674",
+      "brandKey": "walmart",
+      "name": "Walmart (Hagerstown Supercenter)",
+      "latitude": 39.658153,
+      "longitude": -77.749286,
+      "address": "17850 Garland Groh Blvd, Hagerstown, MD 21740",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1682",
+      "brandKey": "walmart",
+      "name": "Walmart (Chesapeake Supercenter)",
+      "latitude": 36.829994,
+      "longitude": -76.418086,
+      "address": "2448 Chesapeake Square Ring Rd, Chesapeake, VA 23321",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1687",
+      "brandKey": "walmart",
+      "name": "Walmart (Suffolk Supercenter)",
+      "latitude": 36.746071,
+      "longitude": -76.580473,
+      "address": "1200 N Main St, Suffolk, VA 23434",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1688",
+      "brandKey": "walmart",
+      "name": "Walmart (Virginia Beach Supercenter)",
+      "latitude": 36.823503,
+      "longitude": -76.071643,
+      "address": "657 Phoenix Dr, Virginia Beach, VA 23452",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1715",
+      "brandKey": "walmart",
+      "name": "Walmart (Easton Store)",
+      "latitude": 38.772711,
+      "longitude": -76.054342,
+      "address": "8155 Elliott Rd, Easton, MD 21601",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1716",
+      "brandKey": "walmart",
+      "name": "Walmart (Prince Frederick Store)",
+      "latitude": 38.540822,
+      "longitude": -76.591415,
+      "address": "150 Solomons Island Rd N, Prince Frederick, MD 20678",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1717",
+      "brandKey": "walmart",
+      "name": "Walmart (Waldorf Store)",
+      "latitude": 38.639212,
+      "longitude": -76.895044,
+      "address": "11930 Acton Ln, Waldorf, MD 20601",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1726",
+      "brandKey": "walmart",
+      "name": "Walmart (Harrisonburg Supercenter)",
+      "latitude": 38.435273,
+      "longitude": -78.853116,
+      "address": "171 Burgess Road, Harrisonburg, VA 22801",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1730",
+      "brandKey": "walmart",
+      "name": "Walmart (Tappahannock Supercenter)",
+      "latitude": 37.904105,
+      "longitude": -76.863373,
+      "address": "1660 Tappahannock Blvd, Tappahannock, VA 22560",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1759",
+      "brandKey": "walmart",
+      "name": "Walmart (Gloucester Supercenter)",
+      "latitude": 37.400521,
+      "longitude": -76.528754,
+      "address": "6819 Walton Ln, Gloucester, VA 23061",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1763",
+      "brandKey": "walmart",
+      "name": "Walmart (Bluefield Supercenter)",
+      "latitude": 37.237836,
+      "longitude": -81.254067,
+      "address": "4001 College Ave, Bluefield, VA 24605",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1773",
+      "brandKey": "walmart",
+      "name": "Walmart (Newport News Supercenter)",
+      "latitude": 37.118651,
+      "longitude": -76.506225,
+      "address": "12401 Jefferson Ave, Newport News, VA 23602",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1780",
+      "brandKey": "walmart",
+      "name": "Walmart (Charlottesville Supercenter)",
+      "latitude": 38.097353,
+      "longitude": -78.467124,
+      "address": "975 Hilton Heights Rd, Charlottesville, VA 22901",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1811",
+      "brandKey": "walmart",
+      "name": "Walmart (Norfolk Supercenter)",
+      "latitude": 36.862901,
+      "longitude": -76.207376,
+      "address": "1170 N Military Hwy, Norfolk, VA 23502",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1825",
+      "brandKey": "walmart",
+      "name": "Walmart (Manassas Supercenter)",
+      "latitude": 38.771544,
+      "longitude": -77.507534,
+      "address": "8386 Sudley Rd, Manassas, VA 20109",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1833",
+      "brandKey": "walmart",
+      "name": "Walmart (Fredericksburg Supercenter)",
+      "latitude": 38.306568,
+      "longitude": -77.513898,
+      "address": "1800 Carl D Silver Pkwy, Fredericksburg, VA 22401",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1841",
+      "brandKey": "walmart",
+      "name": "Walmart (Chesapeake Supercenter)",
+      "latitude": 36.772969,
+      "longitude": -76.248737,
+      "address": "1521 Sams Cir, Chesapeake, VA 23320",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1852",
+      "brandKey": "walmart",
+      "name": "Walmart (Woodbridge Supercenter)",
+      "latitude": 38.648664,
+      "longitude": -77.297219,
+      "address": "14000 Worth Ave, Woodbridge, VA 22192",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1860",
+      "brandKey": "walmart",
+      "name": "Walmart (Elkton Supercenter)",
+      "latitude": 39.603188,
+      "longitude": -75.792787,
+      "address": "1000 E Pulaski Hwy, Elkton, MD 21921",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1867",
+      "brandKey": "walmart",
+      "name": "Walmart (Westminster Store)",
+      "latitude": 39.585466,
+      "longitude": -76.983983,
+      "address": "280 Woodward Rd, Westminster, MD 21157",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1875",
+      "brandKey": "walmart",
+      "name": "Walmart (Severn Supercenter)",
+      "latitude": 39.146365,
+      "longitude": -76.646671,
+      "address": "407 George Claus Blvd, Severn, MD 21144",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1890",
+      "brandKey": "walmart",
+      "name": "Walmart (Salisbury Supercenter)",
+      "latitude": 38.417487,
+      "longitude": -75.569152,
+      "address": "2702 N Salisbury Blvd, Salisbury, MD 21801",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1893",
+      "brandKey": "walmart",
+      "name": "Walmart (Bowie Store)",
+      "latitude": 38.935612,
+      "longitude": -76.720485,
+      "address": "3300 Crain Hwy, Bowie, MD 20716",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1904",
+      "brandKey": "walmart",
+      "name": "Walmart (Leesburg Supercenter)",
+      "latitude": 39.080589,
+      "longitude": -77.561874,
+      "address": "19360 Compass Crk Pkwy Se, Leesburg, VA 20175",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1934",
+      "brandKey": "walmart",
+      "name": "Walmart (South Hill Supercenter)",
+      "latitude": 36.712043,
+      "longitude": -78.104844,
+      "address": "315 Furr St, South Hill, VA 23970",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1969",
+      "brandKey": "walmart",
+      "name": "Walmart (Midlothian Supercenter)",
+      "latitude": 37.504076,
+      "longitude": -77.629874,
+      "address": "900 Walmart Way, Midlothian, VA 23113",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1981",
+      "brandKey": "walmart",
+      "name": "Walmart (California Supercenter)",
+      "latitude": 38.292897,
+      "longitude": -76.503334,
+      "address": "45485 Miramar Way, California, MD 20619",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:1985",
+      "brandKey": "walmart",
+      "name": "Walmart (Laurel Supercenter)",
+      "latitude": 39.098675,
+      "longitude": -76.802477,
+      "address": "3549 Russett Grn, Laurel, MD 20724",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2009",
+      "brandKey": "walmart",
+      "name": "Walmart (Abingdon Store)",
+      "latitude": 39.462158,
+      "longitude": -76.314835,
+      "address": "401 Constant Friendship Blvd, Abingdon, MD 21009",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2015",
+      "brandKey": "walmart",
+      "name": "Walmart (Fairfax Supercenter)",
+      "latitude": 38.854254,
+      "longitude": -77.396601,
+      "address": "13059 Fair Lakes Parkway, Fairfax, VA 22033",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2027",
+      "brandKey": "walmart",
+      "name": "Walmart (Lavale Supercenter)",
+      "latitude": 39.624903,
+      "longitude": -78.835052,
+      "address": "12500 Country Club Mall Rd, Lavale, MD 21502",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2038",
+      "brandKey": "walmart",
+      "name": "Walmart (Sterling Supercenter)",
+      "latitude": 39.022774,
+      "longitude": -77.428921,
+      "address": "45415 Dulles Crossing Plz, Sterling, VA 20166",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2045",
+      "brandKey": "walmart",
+      "name": "Walmart (Nottingham Supercenter)",
+      "latitude": 39.379223,
+      "longitude": -76.510165,
+      "address": "8118 Perry Hills Ct, Nottingham, MD 21236",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2089",
+      "brandKey": "walmart",
+      "name": "Walmart (Bristol Supercenter)",
+      "latitude": 36.634918,
+      "longitude": -82.124397,
+      "address": "13245 Lee Hwy, Bristol, VA 24202",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2136",
+      "brandKey": "walmart",
+      "name": "Walmart (Culpeper Supercenter)",
+      "latitude": 38.480524,
+      "longitude": -77.973335,
+      "address": "801 James Madison Hwy, Culpeper, VA 22701",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2160",
+      "brandKey": "walmart",
+      "name": "Walmart (Petersburg Supercenter)",
+      "latitude": 37.179571,
+      "longitude": -77.367429,
+      "address": "3500 S Crater Rd, Petersburg, VA 23805",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2194",
+      "brandKey": "walmart",
+      "name": "Walmart (Alexandria Store)",
+      "latitude": 38.769322,
+      "longitude": -77.136081,
+      "address": "5885 Kingstowne Blvd, Alexandria, VA 22315",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2233",
+      "brandKey": "walmart",
+      "name": "Walmart (Frederick Supercenter)",
+      "latitude": 39.396461,
+      "longitude": -77.411081,
+      "address": "7400 Guilford Dr, Frederick, MD 21704",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2248",
+      "brandKey": "walmart",
+      "name": "Walmart (Catonsville Store)",
+      "latitude": 39.281722,
+      "longitude": -76.751192,
+      "address": "6205 Baltimore National Pike, Catonsville, MD 21228",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 07:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2258",
+      "brandKey": "walmart",
+      "name": "Walmart (Alexandria Store)",
+      "latitude": 38.743777,
+      "longitude": -77.087462,
+      "address": "7910 Richmond Hwy, Alexandria, VA 22306",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2272",
+      "brandKey": "walmart",
+      "name": "Walmart (Cambridge Supercenter)",
+      "latitude": 38.553138,
+      "longitude": -76.052818,
+      "address": "2775 Dorchester Sq, Cambridge, MD 21613",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2279",
+      "brandKey": "walmart",
+      "name": "Walmart (Glen Burnie Supercenter)",
+      "latitude": 39.190088,
+      "longitude": -76.605793,
+      "address": "6721 Chesapeake Center Dr, Glen Burnie, MD 21060",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2295",
+      "brandKey": "walmart",
+      "name": "Walmart (Richmond Supercenter)",
+      "latitude": 37.631137,
+      "longitude": -77.456544,
+      "address": "7901 Brook Rd, Richmond, VA 23227",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2312",
+      "brandKey": "walmart",
+      "name": "Walmart (Roanoke Supercenter)",
+      "latitude": 37.300852,
+      "longitude": -79.960681,
+      "address": "4807 Valley View Blvd Nw, Roanoke, VA 24012",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2337",
+      "brandKey": "walmart",
+      "name": "Walmart (Rocky Mount Supercenter)",
+      "latitude": 37.013618,
+      "longitude": -79.863379,
+      "address": "550 Old Franklin Tpke, Rocky Mount, VA 24151",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2357",
+      "brandKey": "walmart",
+      "name": "Walmart (Germantown Supercenter)",
+      "latitude": 39.198822,
+      "longitude": -77.252444,
+      "address": "20910 Frederick Rd, Germantown, MD 20876",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2412",
+      "brandKey": "walmart",
+      "name": "Walmart (Ellicott City Supercenter)",
+      "latitude": 39.282802,
+      "longitude": -76.820703,
+      "address": "3200 North Ridge Rd, Ellicott City, MD 21043",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2435",
+      "brandKey": "walmart",
+      "name": "Walmart (Dundalk Supercenter)",
+      "latitude": 39.285475,
+      "longitude": -76.498353,
+      "address": "2399 North Point Blvd, Dundalk, MD 21222",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2436",
+      "brandKey": "walmart",
+      "name": "Walmart (Sykesville Supercenter)",
+      "latitude": 39.396537,
+      "longitude": -76.934712,
+      "address": "6400a Ridge Rd, Sykesville, MD 21784",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2437",
+      "brandKey": "walmart",
+      "name": "Walmart (Warrenton Supercenter)",
+      "latitude": 38.697243,
+      "longitude": -77.789772,
+      "address": "700 James Madison Hwy, Warrenton, VA 20186",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2438",
+      "brandKey": "walmart",
+      "name": "Walmart (Stafford Supercenter)",
+      "latitude": 38.470886,
+      "longitude": -77.417949,
+      "address": "217 Garrisonville Rd, Stafford, VA 22554",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2514",
+      "brandKey": "walmart",
+      "name": "Walmart (Pocomoke City Supercenter)",
+      "latitude": 38.072685,
+      "longitude": -75.554149,
+      "address": "2132 Old Snow Hill Rd, Pocomoke City, MD 21851",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2520",
+      "brandKey": "walmart",
+      "name": "Walmart (Fredericksburg Supercenter)",
+      "latitude": 38.283996,
+      "longitude": -77.438543,
+      "address": "125 Washington Square Plz, Fredericksburg, VA 22405",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2529",
+      "brandKey": "walmart",
+      "name": "Walmart (Virginia Beach Supercenter)",
+      "latitude": 36.794051,
+      "longitude": -76.122735,
+      "address": "2021 Lynnhaven Pkwy, Virginia Beach, VA 23456",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2551",
+      "brandKey": "walmart",
+      "name": "Walmart (Mount Airy Store)",
+      "latitude": 39.367014,
+      "longitude": -77.162379,
+      "address": "209 E Ridgeville Blvd, Mount Airy, MD 21771",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2560",
+      "brandKey": "walmart",
+      "name": "Walmart (Berlin Supercenter)",
+      "latitude": 38.339382,
+      "longitude": -75.162674,
+      "address": "11416 Ocean Gtwy, Berlin, MD 21811",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2564",
+      "brandKey": "walmart",
+      "name": "Walmart (Luray Supercenter)",
+      "latitude": 38.662488,
+      "longitude": -78.493811,
+      "address": "1036 Us Highway 211 W, Luray, VA 22835",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2565",
+      "brandKey": "walmart",
+      "name": "Walmart (Madison Heights Supercenter)",
+      "latitude": 37.461433,
+      "longitude": -79.115598,
+      "address": "197 Madison Heights Sq, Madison Heights, VA 24572",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2577",
+      "brandKey": "walmart",
+      "name": "Walmart (Cockeysville Supercenter)",
+      "latitude": 39.470667,
+      "longitude": -76.643246,
+      "address": "1 Frankel Way, Cockeysville, MD 21030",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2645",
+      "brandKey": "walmart",
+      "name": "Walmart (Blackstone Supercenter)",
+      "latitude": 37.060797,
+      "longitude": -78.004293,
+      "address": "1451 S Main St, Blackstone, VA 23824",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2646",
+      "brandKey": "walmart",
+      "name": "Walmart (Pearisburg Supercenter)",
+      "latitude": 37.329419,
+      "longitude": -80.708539,
+      "address": "160 Kinter Way, Pearisburg, VA 24134",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2647",
+      "brandKey": "walmart",
+      "name": "Walmart (Woodstock Supercenter)",
+      "latitude": 38.868956,
+      "longitude": -78.531107,
+      "address": "461 W Reservoir Rd, Woodstock, VA 22664",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2662",
+      "brandKey": "walmart",
+      "name": "Walmart (Covington Supercenter)",
+      "latitude": 37.767378,
+      "longitude": -79.990957,
+      "address": "313 Thacker Ave, Covington, VA 24426",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2705",
+      "brandKey": "walmart",
+      "name": "Walmart (Franklin Supercenter)",
+      "latitude": 36.669841,
+      "longitude": -76.955321,
+      "address": "1500 Armory Dr, Franklin, VA 23851",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2756",
+      "brandKey": "walmart",
+      "name": "Walmart (Frederick Supercenter)",
+      "latitude": 39.449274,
+      "longitude": -77.390166,
+      "address": "2421 Monocacy Blvd, Frederick, MD 21701",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2761",
+      "brandKey": "walmart",
+      "name": "Walmart (Pounding Mill Supercenter)",
+      "latitude": 37.065436,
+      "longitude": -81.731763,
+      "address": "13320 G.c. Peery Hwy, Pounding Mill, VA 24637",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2762",
+      "brandKey": "walmart",
+      "name": "Walmart (Fairlawn Supercenter)",
+      "latitude": 37.152051,
+      "longitude": -80.584059,
+      "address": "7373 Peppers Ferry Blvd, Fairlawn, VA 24141",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2790",
+      "brandKey": "walmart",
+      "name": "Walmart (Hagerstown Supercenter)",
+      "latitude": 39.600832,
+      "longitude": -77.731627,
+      "address": "10420 Walmart Drive, Hagerstown, MD 21740",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2795",
+      "brandKey": "walmart",
+      "name": "Walmart (Ashland Supercenter)",
+      "latitude": 37.755338,
+      "longitude": -77.459691,
+      "address": "145 Hill Carter Pkwy, Ashland, VA 23005",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2799",
+      "brandKey": "walmart",
+      "name": "Walmart (Clinton Supercenter)",
+      "latitude": 38.772345,
+      "longitude": -76.889549,
+      "address": "8745 Branch Ave, Clinton, MD 20735",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2805",
+      "brandKey": "walmart",
+      "name": "Walmart (Emporia Supercenter)",
+      "latitude": 36.707349,
+      "longitude": -77.544623,
+      "address": "303 Market Dr, Emporia, VA 23847",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2807",
+      "brandKey": "walmart",
+      "name": "Walmart (Harrisonburg Supercenter)",
+      "latitude": 38.433395,
+      "longitude": -78.910329,
+      "address": "2160 John Wayland Hwy, Harrisonburg, VA 22801",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2808",
+      "brandKey": "walmart",
+      "name": "Walmart (Midlothian Supercenter)",
+      "latitude": 37.431919,
+      "longitude": -77.621472,
+      "address": "12200 Chattanooga Plz, Midlothian, VA 23112",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2821",
+      "brandKey": "walmart",
+      "name": "Walmart (Richmond Supercenter)",
+      "latitude": 37.531971,
+      "longitude": -77.531673,
+      "address": "2410 Sheila Ln, Richmond, VA 23225",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2850",
+      "brandKey": "walmart",
+      "name": "Walmart (Hampstead Supercenter)",
+      "latitude": 39.636313,
+      "longitude": -76.869283,
+      "address": "2320 No. Hanover Pike, Hampstead, MD 21074",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2853",
+      "brandKey": "walmart",
+      "name": "Walmart (La Plata Store)",
+      "latitude": 38.550606,
+      "longitude": -76.982505,
+      "address": "40 Drury Dr, La Plata, MD 20646",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2894",
+      "brandKey": "walmart",
+      "name": "Walmart (Oakland Supercenter)",
+      "latitude": 39.422278,
+      "longitude": -79.391102,
+      "address": "13164 Garrett Hwy, Oakland, MD 21550",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:2931",
+      "brandKey": "walmart",
+      "name": "Walmart (Salisbury Supercenter)",
+      "latitude": 38.328242,
+      "longitude": -75.610443,
+      "address": "409 N Fruitland Blvd, Salisbury, MD 21801",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3035",
+      "brandKey": "walmart",
+      "name": "Walmart (Washington Supercenter)",
+      "latitude": 38.958041,
+      "longitude": -77.002202,
+      "address": "310 Riggs Rd Ne, Washington, DC 20011",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3077",
+      "brandKey": "walmart",
+      "name": "Walmart (Haymarket Supercenter)",
+      "latitude": 38.818625,
+      "longitude": -77.644932,
+      "address": "6530 Trading Sq, Haymarket, VA 20169",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3156",
+      "brandKey": "walmart",
+      "name": "Walmart (Hampton Neighborhood Market)",
+      "latitude": 37.036737,
+      "longitude": -76.403591,
+      "address": "117 Marketplace Drive, Hampton, VA 23666",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3157",
+      "brandKey": "walmart",
+      "name": "Walmart (Newport News Neighborhood Market)",
+      "latitude": 37.061613,
+      "longitude": -76.465113,
+      "address": "11214 Jefferson Ave, Newport News, VA 23601",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3214",
+      "brandKey": "walmart",
+      "name": "Walmart (Suffolk Supercenter)",
+      "latitude": 36.882979,
+      "longitude": -76.428848,
+      "address": "6259 College Dr, Suffolk, VA 23435",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3216",
+      "brandKey": "walmart",
+      "name": "Walmart (Virginia Beach Supercenter)",
+      "latitude": 36.758951,
+      "longitude": -76.009231,
+      "address": "1149 Nimmo Pkwy, Virginia Beach, VA 23456",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3219",
+      "brandKey": "walmart",
+      "name": "Walmart (Williamsburg Supercenter)",
+      "latitude": 37.345574,
+      "longitude": -76.737206,
+      "address": "731 E Rochambeau Dr, Williamsburg, VA 23188",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3243",
+      "brandKey": "walmart",
+      "name": "Walmart (Roanoke Supercenter)",
+      "latitude": 37.325497,
+      "longitude": -79.873406,
+      "address": "4524 Challenger Ave, Roanoke, VA 24012",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3265",
+      "brandKey": "walmart",
+      "name": "Walmart (Yorktown Supercenter)",
+      "latitude": 37.119432,
+      "longitude": -76.459373,
+      "address": "2601 George Washington Memorial Hwy, Yorktown, VA 23693",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3270",
+      "brandKey": "walmart",
+      "name": "Walmart (Wytheville Supercenter)",
+      "latitude": 36.956265,
+      "longitude": -81.099002,
+      "address": "345 Commonwealth Dr, Wytheville, VA 24382",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3299",
+      "brandKey": "walmart",
+      "name": "Walmart (Chesapeake Neighborhood Market)",
+      "latitude": 36.743898,
+      "longitude": -76.225669,
+      "address": "475 Kempsville Road, Chesapeake, VA 23320",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3303",
+      "brandKey": "walmart",
+      "name": "Walmart (Grundy Supercenter)",
+      "latitude": 37.277939,
+      "longitude": -82.102083,
+      "address": "1179 Riverview St, Grundy, VA 24614",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3330",
+      "brandKey": "walmart",
+      "name": "Walmart (Chesapeake Neighborhood Market)",
+      "latitude": 36.709466,
+      "longitude": -76.263746,
+      "address": "673 Cedar Road, Chesapeake, VA 23322",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3344",
+      "brandKey": "walmart",
+      "name": "Walmart (Winchester Supercenter)",
+      "latitude": 39.193917,
+      "longitude": -78.205538,
+      "address": "501 Wal Mart Dr, Winchester, VA 22603",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3480",
+      "brandKey": "walmart",
+      "name": "Walmart (Lebanon Supercenter)",
+      "latitude": 36.900374,
+      "longitude": -82.043985,
+      "address": "1050 Regional Park Rd, Lebanon, VA 24266",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3481",
+      "brandKey": "walmart",
+      "name": "Walmart (Baltimore Store)",
+      "latitude": 39.336616,
+      "longitude": -76.400912,
+      "address": "112 Carroll Island Rd, Baltimore, MD 21220",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3489",
+      "brandKey": "walmart",
+      "name": "Walmart (Baltimore Supercenter)",
+      "latitude": 39.337266,
+      "longitude": -76.487847,
+      "address": "6420 Petrie Way, Baltimore, MD 21237",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3490",
+      "brandKey": "walmart",
+      "name": "Walmart (Hanover Store)",
+      "latitude": 39.155739,
+      "longitude": -76.732475,
+      "address": "7081 Arundel Mills Cir, Hanover, MD 21076",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3573",
+      "brandKey": "walmart",
+      "name": "Walmart (Manassas Supercenter)",
+      "latitude": 38.752905,
+      "longitude": -77.448523,
+      "address": "9401 Liberia Ave, Manassas, VA 20110",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3588",
+      "brandKey": "walmart",
+      "name": "Walmart (Dumfries Supercenter)",
+      "latitude": 38.581207,
+      "longitude": -77.308178,
+      "address": "17041 Richmond Hwy, Dumfries, VA 22026",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3603",
+      "brandKey": "walmart",
+      "name": "Walmart (Forest Neighborhood Market)",
+      "latitude": 37.365439,
+      "longitude": -79.262471,
+      "address": "16807 Forest Rd, Forest, VA 24551",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3605",
+      "brandKey": "walmart",
+      "name": "Walmart (Lynchburg Neighborhood Market)",
+      "latitude": 37.322584,
+      "longitude": -79.252851,
+      "address": "22088 Timberlake Rd, Lynchburg, VA 24502",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3614",
+      "brandKey": "walmart",
+      "name": "Walmart (Roanoke Neighborhood Market)",
+      "latitude": 37.272951,
+      "longitude": -79.909687,
+      "address": "2141 Dale Ave, Roanoke, VA 24013",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3622",
+      "brandKey": "walmart",
+      "name": "Walmart (Roanoke Neighborhood Market)",
+      "latitude": 37.322204,
+      "longitude": -79.935944,
+      "address": "4950 Plantation Rd, Roanoke, VA 24019",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3639",
+      "brandKey": "walmart",
+      "name": "Walmart (Dulles Supercenter)",
+      "latitude": 38.935831,
+      "longitude": -77.523536,
+      "address": "24635 Dulles Landing Dr, Dulles, VA 20166",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3644",
+      "brandKey": "walmart",
+      "name": "Walmart (Chesapeake Supercenter)",
+      "latitude": 36.653829,
+      "longitude": -76.233604,
+      "address": "201 Hillcrest Pkwy, Chesapeake, VA 23322",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3720",
+      "brandKey": "walmart",
+      "name": "Walmart (Arbutus Supercenter)",
+      "latitude": 39.248504,
+      "longitude": -76.667441,
+      "address": "3601 Washington Blvd, Arbutus, MD 21227",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3768",
+      "brandKey": "walmart",
+      "name": "Walmart (Altavista Supercenter)",
+      "latitude": 37.143292,
+      "longitude": -79.269715,
+      "address": "125 Clarion Rd, Altavista, VA 24517",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3770",
+      "brandKey": "walmart",
+      "name": "Walmart (Stuart Supercenter)",
+      "latitude": 36.638695,
+      "longitude": -80.244444,
+      "address": "19265 Jeb Stuart Hwy, Stuart, VA 24171",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3772",
+      "brandKey": "walmart",
+      "name": "Walmart (Jonesville Supercenter)",
+      "latitude": 36.725113,
+      "longitude": -83.103413,
+      "address": "468 Trade Center Ln, Jonesville, VA 24263",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3780",
+      "brandKey": "walmart",
+      "name": "Walmart (Fallston Supercenter)",
+      "latitude": 39.498449,
+      "longitude": -76.384659,
+      "address": "303 Fallston Blvd, Fallston, MD 21047",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3804",
+      "brandKey": "walmart",
+      "name": "Walmart (Randallstown Supercenter)",
+      "latitude": 39.365989,
+      "longitude": -76.781604,
+      "address": "8730 Liberty Rd, Randallstown, MD 21133",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3831",
+      "brandKey": "walmart",
+      "name": "Walmart (Portsmouth Supercenter)",
+      "latitude": 36.829307,
+      "longitude": -76.342301,
+      "address": "1098 Frederick Blvd, Portsmouth, VA 23707",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3843",
+      "brandKey": "walmart",
+      "name": "Walmart (Denton Supercenter)",
+      "latitude": 38.874403,
+      "longitude": -75.821694,
+      "address": "610 Legion Rd, Denton, MD 21629",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3869",
+      "brandKey": "walmart",
+      "name": "Walmart (Richmond Supercenter)",
+      "latitude": 37.604054,
+      "longitude": -77.566082,
+      "address": "1504 N Parham Rd, Richmond, VA 23229",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:3880",
+      "brandKey": "walmart",
+      "name": "Walmart (Ashland Neighborhood Market)",
+      "latitude": 37.693228,
+      "longitude": -77.439732,
+      "address": "9714 Sliding Hill Rd, Ashland, VA 23005",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4064",
+      "brandKey": "walmart",
+      "name": "Walmart (Virginia Beach Supercenter)",
+      "latitude": 36.842772,
+      "longitude": -76.143022,
+      "address": "4821 Virginia Beach Blvd, Virginia Beach, VA 23462",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4191",
+      "brandKey": "walmart",
+      "name": "Walmart (Richmond Supercenter)",
+      "latitude": 37.60291,
+      "longitude": -77.521992,
+      "address": "6920 Forest Ave, Richmond, VA 23230",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4220",
+      "brandKey": "walmart",
+      "name": "Walmart (Virginia Beach Neighborhood Market)",
+      "latitude": 36.792295,
+      "longitude": -76.082727,
+      "address": "3201 Holland Rd, Virginia Beach, VA 23453",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4258",
+      "brandKey": "walmart",
+      "name": "Walmart (Fredericksburg Supercenter)",
+      "latitude": 38.369257,
+      "longitude": -77.529196,
+      "address": "11 Village Pkwy, Fredericksburg, VA 22406",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4350",
+      "brandKey": "walmart",
+      "name": "Walmart (Kilmarnock Supercenter)",
+      "latitude": 37.727119,
+      "longitude": -76.385093,
+      "address": "200 Old Fairgrounds Way, Kilmarnock, VA 22482",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4378",
+      "brandKey": "walmart",
+      "name": "Walmart (Onley Supercenter)",
+      "latitude": 37.685551,
+      "longitude": -75.724003,
+      "address": "26036 Lankford Hwy, Onley, VA 23418",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4388",
+      "brandKey": "walmart",
+      "name": "Walmart (Waynesboro Neighborhood Market)",
+      "latitude": 38.071412,
+      "longitude": -78.894642,
+      "address": "1211 W Broad St Ste A, Waynesboro, VA 22980",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4476",
+      "brandKey": "walmart",
+      "name": "Walmart (Chesterfield Supercenter)",
+      "latitude": 37.400835,
+      "longitude": -77.673146,
+      "address": "14501 Hancock Village St, Chesterfield, VA 23832",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4514",
+      "brandKey": "walmart",
+      "name": "Walmart (Winchester Supercenter)",
+      "latitude": 39.083847,
+      "longitude": -78.150385,
+      "address": "201 Maranto Manor Dr, Winchester, VA 22602",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4623",
+      "brandKey": "walmart",
+      "name": "Walmart (Newport News Supercenter)",
+      "latitude": 37.021946,
+      "longitude": -76.448584,
+      "address": "6111 Jefferson Ave, Newport News, VA 23605",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4636",
+      "brandKey": "walmart",
+      "name": "Walmart (Appomattox Supercenter)",
+      "latitude": 37.366026,
+      "longitude": -78.841242,
+      "address": "505 Oakville Rd, Appomattox, VA 24522",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4638",
+      "brandKey": "walmart",
+      "name": "Walmart (Ruckersville Supercenter)",
+      "latitude": 38.235827,
+      "longitude": -78.372899,
+      "address": "135 Stoneridge Dr, Ruckersville, VA 22968",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4682",
+      "brandKey": "walmart",
+      "name": "Walmart (Gordonsville Supercenter)",
+      "latitude": 37.977441,
+      "longitude": -78.209147,
+      "address": "164 Camp Creek Pkwy, Gordonsville, VA 22942",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:4697",
+      "brandKey": "walmart",
+      "name": "Walmart (Lynchburg Supercenter)",
+      "latitude": 37.410758,
+      "longitude": -79.209474,
+      "address": "3227 Old Forest Rd, Lynchburg, VA 24501",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5105",
+      "brandKey": "walmart",
+      "name": "Walmart (Front Royal Supercenter)",
+      "latitude": 38.960135,
+      "longitude": -78.187744,
+      "address": "10 Riverton Commons Dr, Front Royal, VA 22630",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5117",
+      "brandKey": "walmart",
+      "name": "Walmart (Waynesboro Supercenter)",
+      "latitude": 38.067831,
+      "longitude": -78.933084,
+      "address": "116 Lucy Ln, Waynesboro, VA 22980",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5129",
+      "brandKey": "walmart",
+      "name": "Walmart (Landover Hills Store)",
+      "latitude": 38.942875,
+      "longitude": -76.907956,
+      "address": "6210 Annapolis Rd, Landover Hills, MD 20784",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5227",
+      "brandKey": "walmart",
+      "name": "Walmart (Burke Store)",
+      "latitude": 38.789179,
+      "longitude": -77.299847,
+      "address": "6000 Burke Commons Rd, Burke, VA 22015",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5228",
+      "brandKey": "walmart",
+      "name": "Walmart (Columbia Store)",
+      "latitude": 39.195779,
+      "longitude": -76.819756,
+      "address": "6405 Dobbin Rd, Columbia, MD 21045",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5253",
+      "brandKey": "walmart",
+      "name": "Walmart (Chesapeake Supercenter)",
+      "latitude": 36.721077,
+      "longitude": -76.309236,
+      "address": "632 Grassfield Pkwy, Chesapeake, VA 23322",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5343",
+      "brandKey": "walmart",
+      "name": "Walmart (Fredericksburg Supercenter)",
+      "latitude": 38.237098,
+      "longitude": -77.508998,
+      "address": "10001 Southpoint Pkwy, Fredericksburg, VA 22407",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5345",
+      "brandKey": "walmart",
+      "name": "Walmart (Dunkirk Store)",
+      "latitude": 38.722477,
+      "longitude": -76.656934,
+      "address": "10600 Towne Center Blvd, Dunkirk, MD 20754",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5382",
+      "brandKey": "walmart",
+      "name": "Walmart (Pasadena Supercenter)",
+      "latitude": 39.127134,
+      "longitude": -76.587172,
+      "address": "8107 Governor Ritchie Hwy, Pasadena, MD 21122",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5450",
+      "brandKey": "walmart",
+      "name": "Walmart (North East Supercenter)",
+      "latitude": 39.610029,
+      "longitude": -75.951518,
+      "address": "75 North East Plz, North East, MD 21901",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5488",
+      "brandKey": "walmart",
+      "name": "Walmart (Norfolk Supercenter)",
+      "latitude": 36.912722,
+      "longitude": -76.251986,
+      "address": "7530 Tidewater Dr, Norfolk, VA 23505",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5731",
+      "brandKey": "walmart",
+      "name": "Walmart (Locust Grove Supercenter)",
+      "latitude": 38.371732,
+      "longitude": -77.767965,
+      "address": "2533 Germanna Hwy, Locust Grove, VA 22508",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5753",
+      "brandKey": "walmart",
+      "name": "Walmart (Alexandria Supercenter)",
+      "latitude": 38.780065,
+      "longitude": -77.076541,
+      "address": "6303 Richmond Hwy, Alexandria, VA 22306",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5754",
+      "brandKey": "walmart",
+      "name": "Walmart (Williamsburg Neighborhood Market)",
+      "latitude": 37.275613,
+      "longitude": -76.751323,
+      "address": "4670 Casey Blvd, Williamsburg, VA 23188",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5755",
+      "brandKey": "walmart",
+      "name": "Walmart (Norfolk Neighborhood Market)",
+      "latitude": 36.918347,
+      "longitude": -76.228171,
+      "address": "1720 E Little Creek Rd, Norfolk, VA 23518",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5779",
+      "brandKey": "walmart",
+      "name": "Walmart (King George Supercenter)",
+      "latitude": 38.351997,
+      "longitude": -77.057343,
+      "address": "16375 Merchant Ln, King George, VA 22485",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5829",
+      "brandKey": "walmart",
+      "name": "Walmart (Danville Neighborhood Market)",
+      "latitude": 36.627419,
+      "longitude": -79.399419,
+      "address": "211 Nor Dan Dr Unit 1010, Danville, VA 24540",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5847",
+      "brandKey": "walmart",
+      "name": "Walmart (Powhatan Supercenter)",
+      "latitude": 37.514563,
+      "longitude": -77.776035,
+      "address": "1950 Anderson Hwy, Powhatan, VA 23139",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5880",
+      "brandKey": "walmart",
+      "name": "Walmart (Fairfax Supercenter)",
+      "latitude": 38.849747,
+      "longitude": -77.331973,
+      "address": "11181 Lee Hwy, Fairfax, VA 22030",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5922",
+      "brandKey": "walmart",
+      "name": "Walmart (Virginia Beach Supercenter)",
+      "latitude": 36.847062,
+      "longitude": -76.019743,
+      "address": "546 First Colonial Rd, Virginia Beach, VA 23451",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5936",
+      "brandKey": "walmart",
+      "name": "Walmart (Vienna Supercenter)",
+      "latitude": 38.929998,
+      "longitude": -77.245424,
+      "address": "1500 B Cornerside Blvd, Vienna, VA 22182",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5968",
+      "brandKey": "walmart",
+      "name": "Walmart (Washington Supercenter)",
+      "latitude": 38.961986,
+      "longitude": -77.027284,
+      "address": "5929 Georgia Ave Nw, Washington, DC 20011",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:5969",
+      "brandKey": "walmart",
+      "name": "Walmart (Chantilly Supercenter)",
+      "latitude": 38.889104,
+      "longitude": -77.443029,
+      "address": "4368 Chantilly Shopping Center Dr, Chantilly, VA 20151",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:6226",
+      "brandKey": "walmart",
+      "name": "Walmart (Virginia Beach Neighborhood Market)",
+      "latitude": 36.780566,
+      "longitude": -76.189295,
+      "address": "1832 Kempsville Road, Virginia Beach, VA 23464",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:6798",
+      "brandKey": "walmart",
+      "name": "Walmart (Norfolk Neighborhood Market)",
+      "latitude": 36.863511,
+      "longitude": -76.246211,
+      "address": "3350 E Princess Anne Road, Norfolk, VA 23502",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:6936",
+      "brandKey": "walmart",
+      "name": "Walmart (Stafford Neighborhood Market)",
+      "latitude": 38.476905,
+      "longitude": -77.472878,
+      "address": "14 N Stafford Complex Ctr, Stafford, VA 22556",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:6952",
+      "brandKey": "walmart",
+      "name": "Walmart (Timberville Supercenter)",
+      "latitude": 38.630429,
+      "longitude": -78.775344,
+      "address": "375 S Main St, Timberville, VA 22853",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:7032",
+      "brandKey": "walmart",
+      "name": "Walmart (Henrico Supercenter)",
+      "latitude": 37.544562,
+      "longitude": -77.364604,
+      "address": "5001 Nine Mile Rd, Henrico, VA 23223",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:7174",
+      "brandKey": "walmart",
+      "name": "Walmart (North Chesterfield Neighborhood Market)",
+      "latitude": 37.442623,
+      "longitude": -77.473577,
+      "address": "5700 Hopkins Rd, North Chesterfield, VA 23234",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
+    },
+    {
+      "sourceID": "atp:walmart_us:7177",
+      "brandKey": "walmart",
+      "name": "Walmart (Rockingham Neighborhood Market)",
+      "latitude": 38.405186,
+      "longitude": -78.864097,
+      "address": "1942 Port Republic Rd, Rockingham, VA 22801",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 06:00-23:00"
     }
   ]
 }

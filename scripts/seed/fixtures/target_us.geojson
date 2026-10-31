@@ -1,0 +1,74 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id3430",
+   "properties": {
+    "ref": "3430",
+    "@spider": "target_us",
+    "name": "Target",
+    "brand": "Target",
+    "addr:street_address": "900 Army Navy Dr",
+    "addr:city": "Arlington",
+    "addr:state": "VA",
+    "addr:postcode": "20000-1234",
+    "opening_hours": "Mo-Su 08:00-22:00",
+    "branch": "Pentagon City"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.062437,
+     38.865497
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id3328",
+   "properties": {
+    "ref": "3328",
+    "@spider": "target_us",
+    "name": "Target",
+    "brand": "Target",
+    "addr:street_address": "7828 Georgia Ave NW",
+    "addr:city": "Washington",
+    "addr:state": "DC",
+    "addr:postcode": "20000-1234",
+    "opening_hours": "Mo-Fr 07:00-22:00; Sa-Su 08:00-22:00",
+    "branch": "Georgia and Eastern"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.026993,
+     38.984459
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id1800",
+   "properties": {
+    "ref": "1800",
+    "@spider": "target_us",
+    "name": "Target",
+    "brand": "Target",
+    "addr:street_address": "1 Main St",
+    "addr:city": "Harrisburg",
+    "addr:state": "PA",
+    "addr:postcode": "20000-1234",
+    "opening_hours": "Mo-Su 08:00-22:00",
+    "branch": "Harrisburg"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -76.8867,
+     40.2732
+    ]
+   }
+  }
+ ]
+}

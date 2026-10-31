@@ -60,7 +60,7 @@ python3 scripts/seed/build_seed.py                       # download, filter, wri
 uv run --no-project --with pytest pytest scripts/seed    # tests, offline, on saved fixtures
 ```
 
-The script prints counts per brand and per state, and bumps the seed version only when the records change. The app imports a newer version on the next launch. Brand reliability levels live in [`BrandProfile.swift`](Pitstop/Pitstop/BrandProfile.swift).
+The script prints counts per brand and per state, and bumps the seed version only when the records change. Spiders sometimes stop partway through a weekly run, so for each brand the script uses the newest run that reached a full nationwide count (`min_features` in `SOURCES`) and prints which run that was. Walmart's last full scrape is from 2026-01-31; every run since has returned only part of the chain. The app imports a newer version on the next launch. Brand reliability levels live in [`BrandProfile.swift`](Pitstop/Pitstop/BrandProfile.swift).
 
 ## Releasing to TestFlight
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Builds Pitstop's bundled seed of unvisited chain locations in Virginia, Maryland and DC.
 
-Downloads each brand's GeoJSON from the latest All The Places run (CC-0 data), keeps points in
+Downloads each brand's GeoJSON from the newest All The Places run (CC-0 data) where that brand's
+spider finished its scrape, keeps points in
 the region, normalizes names and addresses, removes same-brand duplicates within 50 m, and writes
 the seed JSON the app imports on launch. The seed version goes up only when the records change.
 
@@ -19,11 +20,12 @@ import sys
 import urllib.request
 from collections import Counter
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "Pitstop" / "Pitstop" / "CandidateSeed.json"
-ATP_LATEST_RUN = "https://data.alltheplaces.xyz/runs/latest.json"
+ATP_RUN_HISTORY = "https://data.alltheplaces.xyz/runs/history.json"
 USER_AGENT = "Pitstop seed builder (github.com/danielgentile22/Pitstop)"
 
 DUPLICATE_RADIUS_METERS = 50
@@ -36,10 +38,16 @@ class AtpSource:
     spider: str
     brand_key: str
     display_name: str
+    # Nationwide feature count a full scrape reaches. Spiders often stop early (walmart_us returned
+    # 540 of about 4,400 stores on 2026-10-17), so runs below this are skipped for that brand.
+    min_features: int
 
 
 SOURCES = [
-    AtpSource("barnes_and_noble_us", "barnes_and_noble", "Barnes & Noble"),
+    AtpSource("barnes_and_noble_us", "barnes_and_noble", "Barnes & Noble", min_features=550),
+    AtpSource("target_us", "target", "Target", min_features=1_900),
+    # One brand for Supercenters and Neighborhood Markets; the branch keeps them apart in the name.
+    AtpSource("walmart_us", "walmart", "Walmart", min_features=4_000),
 ]
 
 STATES = {
@@ -64,10 +72,24 @@ def fetch_json(url: str):
         return json.load(response)
 
 
+def newest_complete_run(source: AtpSource, runs: list[dict], feature_counts) -> dict:
+    """The newest run where the source's spider reached min_features. feature_counts(run) maps spider to count."""
+    for run in sorted(runs, key=lambda r: r["run_id"], reverse=True):
+        if feature_counts(run).get(source.spider, 0) >= source.min_features:
+            return run
+    sys.exit(f"No All The Places run has a complete {source.spider} scrape (at least {source.min_features}).")
+
+
+@cache
+def run_feature_counts(stats_url: str) -> dict[str, int]:
+    return {r["spider"]: r["features"] for r in fetch_json(stats_url)["results"]}
+
+
 def load_features(source: AtpSource, fixtures: Path | None) -> list[dict]:
     if fixtures is not None:
         return json.loads((fixtures / f"{source.spider}.geojson").read_text())["features"]
-    run = fetch_json(ATP_LATEST_RUN)
+    run = newest_complete_run(source, fetch_json(ATP_RUN_HISTORY), lambda r: run_feature_counts(r["stats_url"]))
+    print(f"{source.spider}: run {run['run_id']}")
     base = run["output_url"].rsplit("/", 1)[0]
     return fetch_json(f"{base}/output/{source.spider}.geojson")["features"]
 

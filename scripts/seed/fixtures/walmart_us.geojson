@@ -1,0 +1,97 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id1860",
+   "properties": {
+    "ref": "1860",
+    "@spider": "walmart_us",
+    "name": "Walmart Supercenter",
+    "brand": "Walmart Supercenter",
+    "addr:street_address": "1000 E Pulaski Hwy",
+    "addr:city": "Elkton",
+    "addr:state": "MD",
+    "addr:postcode": "20000-1234",
+    "opening_hours": "Mo-Su 06:00-23:00",
+    "branch": "Elkton Supercenter"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.792787,
+     39.603188
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id3622",
+   "properties": {
+    "ref": "3622",
+    "@spider": "walmart_us",
+    "name": "Walmart Neighborhood Market",
+    "brand": "Walmart Neighborhood Market",
+    "addr:street_address": "4950 Plantation Rd",
+    "addr:city": "Roanoke",
+    "addr:state": "VA",
+    "addr:postcode": "20000-1234",
+    "opening_hours": "Mo-Su 06:00-23:00",
+    "branch": "Roanoke Neighborhood Market"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -79.935944,
+     37.322204
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id5968",
+   "properties": {
+    "ref": "5968",
+    "@spider": "walmart_us",
+    "name": "Walmart Supercenter",
+    "brand": "Walmart Supercenter",
+    "addr:street_address": "7830 Georgia Ave NW",
+    "addr:city": "Washington",
+    "addr:state": "DC",
+    "addr:postcode": "20000-1234",
+    "opening_hours": "Mo-Su 06:00-23:00",
+    "branch": "Georgia Ave NW Supercenter"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.026993,
+     38.984639
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id2662",
+   "properties": {
+    "ref": "2662",
+    "@spider": "walmart_us",
+    "name": "Walmart Supercenter",
+    "brand": "Walmart Supercenter",
+    "addr:street_address": "800 Foxcroft Ave",
+    "addr:city": "Martinsburg",
+    "addr:state": "WV",
+    "addr:postcode": "20000-1234",
+    "opening_hours": "Mo-Su 06:00-23:00",
+    "branch": "Martinsburg Supercenter"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.9636,
+     39.4562
+    ]
+   }
+  }
+ ]
+}
