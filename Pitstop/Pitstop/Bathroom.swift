@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 import SwiftData
 
-extension SchemaV1 {
+extension SchemaV2 {
 
     @Model
     final class Bathroom {
@@ -37,6 +37,10 @@ extension SchemaV1 {
         var accessType: BathroomAccess
         var requiresReceiptCode: Bool
         var isOpen24Hours: Bool
+
+        /// False when the hours are unknown, as for a visit logged from a Candidate with no hours.
+        /// Nil, which every record from before this field gets, means known.
+        var isOpen24HoursKnown: Bool? = nil
 
         // MARK: - Layout
 
@@ -138,6 +142,11 @@ extension SchemaV1 {
         }
 
         // MARK: - Computed Properties
+
+        /// `isOpen24Hours`, or nil when the hours are unknown.
+        var isOpen24HoursIfKnown: Bool? {
+            isOpen24HoursKnown == false ? nil : isOpen24Hours
+        }
 
         /// SwiftData can't persist CLLocationCoordinate2D, so it's stored as two Doubles.
         var coordinate: CLLocationCoordinate2D {

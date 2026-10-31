@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 import Testing
 @testable import Pitstop
@@ -36,14 +37,15 @@ struct SchemaVersionTests {
 
     @Test func currentModelsAreTheLatestSchemaVersion() {
         let latest = PitstopMigrationPlan.schemas.last
-        #expect(latest == SchemaV1.self)
-        #expect(Bathroom.self == SchemaV1.Bathroom.self)
+        #expect(latest == SchemaV2.self)
+        #expect(LatestSchema.self == SchemaV2.self)
+        #expect(Bathroom.self == SchemaV2.Bathroom.self)
         #expect(Candidate.self == SchemaV1.Candidate.self)
     }
 
     @Test func containerOpensThroughTheMigrationPlan() throws {
         let container = try ModelContainer(
-            for: Schema(versionedSchema: SchemaV1.self),
+            for: Schema(versionedSchema: LatestSchema.self),
             migrationPlan: PitstopMigrationPlan.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -51,5 +53,29 @@ struct SchemaVersionTests {
         context.insert(Bathroom(name: "Test", latitude: 1, longitude: 2))
         try context.save()
         #expect(try context.fetchCount(FetchDescriptor<Bathroom>()) == 1)
+    }
+
+    @Test func versionOneStoreMigratesWithKnownHours() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("SchemaMigration-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("store.sqlite")
+
+        do {
+            let v1 = try ModelContainer(for: Schema(versionedSchema: SchemaV1.self),
+                                        configurations: ModelConfiguration(url: url))
+            let context = ModelContext(v1)
+            context.insert(SchemaV1.Bathroom(name: "Closes", latitude: 1, longitude: 2, isOpen24Hours: false))
+            context.insert(SchemaV1.Bathroom(name: "All night", latitude: 1, longitude: 2, isOpen24Hours: true))
+            try context.save()
+        }
+
+        let v2 = try ModelContainer(for: Schema(versionedSchema: SchemaV2.self),
+                                    migrationPlan: PitstopMigrationPlan.self,
+                                    configurations: ModelConfiguration(url: url))
+        let migrated = try ModelContext(v2).fetch(FetchDescriptor<Bathroom>(sortBy: [SortDescriptor(\.name)]))
+        #expect(migrated.map(\.name) == ["All night", "Closes"])
+        #expect(migrated.map(\.isOpen24HoursKnown) == [nil, nil])
+        #expect(migrated.map(\.isOpen24HoursIfKnown) == [true, false])
     }
 }

@@ -12,7 +12,7 @@ struct PitstopApp: App {
         let configuration = ModelConfiguration()
         do {
             let container = try ModelContainer(
-                for: Schema(versionedSchema: SchemaV1.self),
+                for: Schema(versionedSchema: LatestSchema.self),
                 migrationPlan: PitstopMigrationPlan.self,
                 configurations: configuration
             )
