@@ -257,7 +257,7 @@ struct DetailView: View {
     }
 
     private func openInMaps() {
-        MapURLHelper.openDirections(toLatitude: bathroom.latitude, longitude: bathroom.longitude)
+        Task { await MapURLHelper.openDirections(toLatitude: bathroom.latitude, longitude: bathroom.longitude) }
     }
 
     private func deleteBathroom() {

@@ -155,7 +155,7 @@ struct CandidateDetailView: View {
     }
 
     private func openDirections() {
-        MapURLHelper.openDirections(toLatitude: candidate.latitude, longitude: candidate.longitude, mode: .driving)
+        Task { await MapURLHelper.openDirections(toLatitude: candidate.latitude, longitude: candidate.longitude, mode: .driving) }
     }
 
     /// Straight-line distance, as a rough guide before driving there.
