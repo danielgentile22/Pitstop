@@ -157,15 +157,8 @@ struct ContentView: View {
             return
         }
 
-        let visited: [EmergencyRanker.VisitedPlace] = bathrooms.map {
-            .init(id: $0.id, sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
-                  rating: $0.rating, isOpen24Hours: $0.isOpen24Hours)
-        }
-        let unvisited: [EmergencyRanker.UnvisitedPlace] = candidates.map {
-            .init(sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
-                  reliability: $0.brand.reliability, isOpen24Hours: $0.isOpen24HoursIfKnown,
-                  isDismissed: $0.isDismissed)
-        }
+        let visited = bathrooms.map(EmergencyRanker.VisitedPlace.init)
+        let unvisited = candidates.map(EmergencyRanker.UnvisitedPlace.init)
 
         // Driving times for the closest few; anything that misses the deadline (or has no signal)
         // falls back to straight-line distance inside the ranker.
@@ -183,11 +176,15 @@ struct ContentView: View {
         )
 
         guard let best = ranked.first else {
-            emergencyAlertMsg = "No saved bathrooms or unvisited places to go to. Add a bathroom so one is ready in an emergency."
+            emergencyAlertMsg = "Nothing is in range. No saved bathroom or unvisited place is close enough to send you to."
             showEmergencyAlert = true
             return
         }
-        MapURLHelper.openDirections(toLatitude: best.latitude, longitude: best.longitude, mode: .driving)
+        guard await MapURLHelper.openDirections(toLatitude: best.latitude, longitude: best.longitude, mode: .driving) else {
+            emergencyAlertMsg = "Apple Maps could not be opened. Try again, or open Maps yourself."
+            showEmergencyAlert = true
+            return
+        }
     }
 }
 
