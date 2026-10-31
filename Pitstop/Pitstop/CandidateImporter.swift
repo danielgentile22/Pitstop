@@ -46,10 +46,8 @@ nonisolated enum CandidateImporter {
 
     /// Inserts new records, updates changed ones, deletes unprotected ones missing from the seed. Does not save.
     static func apply(_ seed: CandidateSeed, to context: ModelContext) throws {
-        let linkedIDs = Set(
-            try context.fetch(FetchDescriptor<Bathroom>(predicate: #Predicate { $0.sourceID != nil }))
-                .compactMap(\.sourceID)
-        )
+        let linkedIDs = try context.fetch(FetchDescriptor<Bathroom>(predicate: #Predicate { $0.sourceID != nil }))
+            .linkedSourceIDs
         var existing = Dictionary(
             try context.fetch(FetchDescriptor<Candidate>()).map { ($0.sourceID, $0) },
             uniquingKeysWith: { first, _ in first }

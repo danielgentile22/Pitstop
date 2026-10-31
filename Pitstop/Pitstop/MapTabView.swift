@@ -23,17 +23,13 @@ struct MapTabView: View {
 
     // MARK: - Derived
 
-    /// Skips the max-distance filter: pins appearing and disappearing as the user moves is confusing on a map.
-    /// Candidates still honor it (see `filteredCandidates`), since the spec applies it to unvisited places.
-    private var filteredBathrooms: [Bathroom] {
-        guard filter.isActive else { return allBathrooms }
-        return allBathrooms.filter { filter.applies(to: $0) }
+    /// The same places the list shows, max distance included.
+    private var visiblePlaces: (bathrooms: [Bathroom], candidates: [Candidate]) {
+        filter.visiblePlaces(bathrooms: allBathrooms, candidates: candidates, userLocation: locationManager.userLocation)
     }
 
-    private var filteredCandidates: [Candidate] {
-        candidates.unlinked(from: allBathrooms).filter {
-            filter.applies(to: $0) && filter.isWithinMaxDistance($0.coordinate, of: locationManager.userLocation)
-        }
+    private var filteredBathrooms: [Bathroom] {
+        visiblePlaces.bathrooms
     }
 
     /// Within 50 km of the user, so zoom-to-fit ignores pins saved in other cities.
@@ -41,19 +37,20 @@ struct MapTabView: View {
         guard let userCoord = locationManager.userLocation else {
             return filteredBathrooms
         }
-        let origin = CLLocation(latitude: userCoord.latitude, longitude: userCoord.longitude)
-        return filteredBathrooms.filter { $0.distance(from: origin) <= 50_000 }
+        return filteredBathrooms.filter { Distance.meters(from: userCoord, to: $0.coordinate) <= 50_000 }
     }
 
     // MARK: - Body
 
     var body: some View {
+        let visible = visiblePlaces
+
         ZStack(alignment: .top) {
 
             ClusteredMapView(
                 cameraPosition: $cameraPosition,
-                bathrooms: filteredBathrooms,
-                candidates: filteredCandidates,
+                bathrooms: visible.bathrooms,
+                candidates: visible.candidates,
                 selection: selection,
                 onSelect: select
             )

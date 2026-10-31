@@ -40,19 +40,10 @@ struct ListTabView: View {
 
     /// Visited and unvisited places together. Computed once per render; there can be thousands of Candidates.
     private var displayedPlaces: [MapSelection] {
-        let userLocation = locationManager.userLocation
-
-        // BathroomFilter.applies(to:) has no user location, so max distance is checked separately.
-        let visited = bathrooms.filter {
-            matchesSearch($0.name)
-            && filter.applies(to: $0)
-            && filter.isWithinMaxDistance($0.coordinate, of: userLocation)
-        }
-        let unvisited = candidates.unlinked(from: bathrooms).filter {
-            matchesSearch($0.name)
-            && filter.applies(to: $0)
-            && filter.isWithinMaxDistance($0.coordinate, of: userLocation)
-        }
+        let visible = filter.visiblePlaces(bathrooms: bathrooms, candidates: candidates,
+                                           userLocation: locationManager.userLocation)
+        let visited   = visible.bathrooms.filter { matchesSearch($0.name) }
+        let unvisited = visible.candidates.filter { matchesSearch($0.name) }
 
         return sorted(visited.map(MapSelection.bathroom) + unvisited.map(MapSelection.candidate))
     }
@@ -204,10 +195,9 @@ struct ListTabView: View {
         switch sortOption {
         case .distance:
             guard let coord = locationManager.userLocation else { return list }
-            let origin = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
             // Measure each place once, not on every comparison.
             return list
-                .map { place in (place, CLLocation(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude).distance(from: origin)) }
+                .map { place in (place, Distance.meters(from: coord, to: place.coordinate)) }
                 .sorted { $0.1 < $1.1 }
                 .map(\.0)
 
