@@ -136,17 +136,22 @@ nonisolated enum ImageStorage {
         try? FileManager.default.removeItem(at: dir.appendingPathComponent(thumbnailName(for: fileName)))
     }
 
-    static func deleteAllImages(bathroomID: UUID) {
+    static func deleteAllImages(bathroomID: UUID, root: URL = defaultRoot) {
         let keys = keysByBathroom.withLock { $0.removeValue(forKey: bathroomID) } ?? []
         for key in keys {
             thumbnailCache.removeObject(forKey: key as NSString)
             fullImageCache.removeObject(forKey: key as NSString)
         }
 
-        try? FileManager.default.removeItem(at: bathroomDirectory(id: bathroomID))
+        try? FileManager.default.removeItem(at: bathroomDirectory(id: bathroomID, root: root))
     }
 
     // MARK: - Private Helpers
+
+    static func thumbnailName(for fileName: String) -> String {
+        let base = (fileName as NSString).deletingPathExtension
+        return "\(base)_thumb.jpg"
+    }
 
     private static func load(bathroomID: UUID, fileName: String, isThumb: Bool) -> UIImage? {
         let key   = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: isThumb) as NSString
@@ -164,11 +169,6 @@ nonisolated enum ImageStorage {
         let key = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: isThumb)
         (isThumb ? thumbnailCache : fullImageCache).setObject(image, forKey: key as NSString)
         keysByBathroom.withLock { _ = $0[bathroomID, default: []].insert(key) }
-    }
-
-    private static func thumbnailName(for fileName: String) -> String {
-        let base = (fileName as NSString).deletingPathExtension
-        return "\(base)_thumb.jpg"
     }
 
     private static func cacheKey(bathroomID: UUID, fileName: String, isThumb: Bool) -> String {
