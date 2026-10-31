@@ -99,10 +99,10 @@ struct BathroomFilter: Equatable {
             if isSet { checks.append(passes) }
         }
         let filter = self
-        check(minimumRating > 0)         { $0.rating >= filter.minimumRating }
-        check(!accessTypes.isEmpty)      { filter.accessTypes.contains($0.accessType) }
-        check(!stallTypes.isEmpty)       { filter.stallTypes.contains($0.stallType) }
-        check(!genderTypes.isEmpty)      { filter.genderTypes.contains($0.genderType) }
+        check(minimumRating > 0)            { $0.rating >= filter.minimumRating }
+        check(!accessTypes.isEmpty)         { filter.accessTypes.contains($0.accessType) }
+        check(!stallTypes.isEmpty)          { filter.stallTypes.contains($0.stallType) }
+        check(!genderTypes.isEmpty)         { filter.genderTypes.contains($0.genderType) }
         check(requiresIndoor)               { $0.isIndoor }
         check(requiresWheelchairAccessible) { $0.isWheelchairAccessible }
         check(requiresChangingTable)        { $0.hasChangingTable }
@@ -111,7 +111,7 @@ struct BathroomFilter: Equatable {
         check(requiresBidet)                { $0.bidetType != .none }
         check(requiresSoap)                 { $0.hasSoap }
         check(requiresDryingOption)         { $0.hasDryingOption }
-        check(!waitTimes.isEmpty)        { filter.waitTimes.contains($0.waitTime) }
+        check(!waitTimes.isEmpty)           { filter.waitTimes.contains($0.waitTime) }
         return checks
     }
 

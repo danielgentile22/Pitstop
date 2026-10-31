@@ -406,7 +406,7 @@ def remove_duplicates(records: list[dict], previous_ids: set[str], stats: Counte
 
 
 def check_unique_ids(records: list[dict]) -> None:
-    repeated = sorted(id for id, count in Counter(r["sourceID"] for r in records).items() if count > 1)
+    repeated = sorted(source_id for source_id, count in Counter(r["sourceID"] for r in records).items() if count > 1)
     if repeated:
         sys.exit("Records share a source ID: " + ", ".join(repeated))
 

@@ -87,8 +87,7 @@ nonisolated struct BathroomForm: Equatable {
 
     /// True when the pin sits more than `pinTolerance` from `origin`.
     func pinMoved(from origin: CLLocationCoordinate2D) -> Bool {
-        let pin = CLLocation(latitude: latitude, longitude: longitude)
-        return pin.distance(from: CLLocation(latitude: origin.latitude, longitude: origin.longitude)) > Self.pinTolerance
+        Distance.meters(from: origin, to: coordinate) > Self.pinTolerance
     }
 
     // MARK: - Changes
