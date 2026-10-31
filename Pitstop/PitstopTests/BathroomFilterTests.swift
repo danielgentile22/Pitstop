@@ -21,22 +21,31 @@ struct BathroomFilterTests {
         )
     }
 
-    /// One filter per rating, access, layout, amenity, and wait-time criterion: everything a Candidate has no data for.
-    private static let visitOnlyCriteria: [(String, (inout BathroomFilter) -> Void)] = [
-        ("minimum rating",        { $0.minimumRating = 3 }),
-        ("access type",           { $0.accessTypes = [.free] }),
-        ("stall type",            { $0.stallTypes = [.single] }),
-        ("gender",                { $0.genderTypes = [.allGender] }),
-        ("indoor",                { $0.requiresIndoor = true }),
-        ("wheelchair accessible", { $0.requiresWheelchairAccessible = true }),
-        ("changing table",        { $0.requiresChangingTable = true }),
-        ("toilet paper",          { $0.requiresToiletPaper = true }),
-        ("heated seat",           { $0.requiresHeatedSeat = true }),
-        ("bidet",                 { $0.requiresBidet = true }),
-        ("soap",                  { $0.requiresSoap = true }),
-        ("drying option",         { $0.requiresDryingOption = true }),
-        ("wait time",             { $0.waitTimes = [.usuallyEmpty] }),
-    ]
+    /// Every rating, access, layout, amenity, and wait-time criterion: everything a Candidate has no data for.
+    nonisolated enum VisitOnlyCriterion: CaseIterable {
+        case minimumRating, accessType, stallType, gender, indoor, wheelchairAccessible, changingTable
+        case toiletPaper, heatedSeat, bidet, soap, dryingOption, waitTime
+    }
+
+    private func filter(setting criterion: VisitOnlyCriterion) -> BathroomFilter {
+        var filter = BathroomFilter()
+        switch criterion {
+        case .minimumRating:        filter.minimumRating = 3
+        case .accessType:           filter.accessTypes = [.free]
+        case .stallType:            filter.stallTypes = [.single]
+        case .gender:               filter.genderTypes = [.allGender]
+        case .indoor:               filter.requiresIndoor = true
+        case .wheelchairAccessible: filter.requiresWheelchairAccessible = true
+        case .changingTable:        filter.requiresChangingTable = true
+        case .toiletPaper:          filter.requiresToiletPaper = true
+        case .heatedSeat:           filter.requiresHeatedSeat = true
+        case .bidet:                filter.requiresBidet = true
+        case .soap:                 filter.requiresSoap = true
+        case .dryingOption:         filter.requiresDryingOption = true
+        case .waitTime:             filter.waitTimes = [.usuallyEmpty]
+        }
+        return filter
+    }
 
     // MARK: - Show Unvisited
 
@@ -73,13 +82,12 @@ struct BathroomFilterTests {
 
     // MARK: - Rating and Amenity Criteria
 
-    @Test(arguments: visitOnlyCriteria.indices)
-    func visitOnlyCriterionDropsEveryCandidate(index: Int) {
-        let (name, set) = Self.visitOnlyCriteria[index]
-        var filter = BathroomFilter()
-        set(&filter)
-        #expect(!filter.applies(to: candidate()), "\(name)")
-        #expect(!filter.applies(to: candidate(isOpen24Hours: true)), "\(name)")
+    @Test(arguments: VisitOnlyCriterion.allCases)
+    func visitOnlyCriterionDropsEveryCandidate(_ criterion: VisitOnlyCriterion) {
+        let filter = filter(setting: criterion)
+        #expect(filter.isActive)
+        #expect(!filter.applies(to: candidate()))
+        #expect(!filter.applies(to: candidate(isOpen24Hours: true)))
     }
 
     // MARK: - Max Distance
