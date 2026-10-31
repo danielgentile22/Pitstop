@@ -24,9 +24,22 @@
 		4E36BDC12F62EA9A002100C9 /* PitstopTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PitstopTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4E36BDD02F62EA9A002100C9 /* Exceptions for "Pitstop" folder in "Pitstop" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4E36BDA22F62EA98002100C9 /* Pitstop */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4E36BDA52F62EA98002100C9 /* Pitstop */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4E36BDD02F62EA9A002100C9 /* Exceptions for "Pitstop" folder in "Pitstop" target */,
+			);
 			path = Pitstop;
 			sourceTree = "<group>";
 		};
@@ -328,6 +341,7 @@
 				DEVELOPMENT_TEAM = 58N856BAX8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Pitstop/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pitstop;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
@@ -365,6 +379,7 @@
 				DEVELOPMENT_TEAM = 58N856BAX8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Pitstop/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pitstop;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";

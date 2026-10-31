@@ -147,6 +147,9 @@ struct ContentView: View {
 
     // MARK: - Emergency Logic
 
+    /// Fresh fix plus driving times, from tap to answer.
+    private static let emergencyDeadline: Duration = .seconds(3)
+
     /// Opens driving directions to the place with the fewest effective minutes.
     private func handleEmergencyTap() async {
         // A second tap during the lookup would open Maps twice.
@@ -158,7 +161,14 @@ struct ContentView: View {
             return
         }
 
-        guard let userCoord = locationManager.userLocation else {
+        isFindingRoute = true
+        defer { isFindingRoute = false }
+
+        // The prompt waits on the user, so the deadline starts after it.
+        await locationManager.requestTemporaryFullAccuracy()
+        let deadline = ContinuousClock.now + Self.emergencyDeadline
+
+        guard let userCoord = await locationManager.freshFix(timeout: .seconds(2))?.coordinate else {
             emergencyAlertMsg = "Waiting for your location. Please try again in a moment."
             showEmergencyAlert = true
             return
@@ -170,9 +180,11 @@ struct ContentView: View {
         // Driving times for the closest few; anything that misses the deadline (or has no signal)
         // falls back to straight-line distance inside the ranker.
         let nearest = EmergencyRanker.nearest(8, from: userCoord, visited: visited, unvisited: unvisited)
-        isFindingRoute = true
-        let drivingTimes = await DrivingTimeLookup.drivingTimes(from: userCoord, to: nearest)
-        isFindingRoute = false
+        let drivingTimes = await DrivingTimeLookup.drivingTimes(
+            from: userCoord,
+            to: nearest,
+            deadline: ContinuousClock.now.duration(to: deadline)
+        )
 
         let ranked = EmergencyRanker.rank(
             from: userCoord,
