@@ -99,6 +99,24 @@ struct BathroomSaverTests {
         #expect(try files(of: bathroom).count == 2)   // full size and thumbnail
     }
 
+    @Test func photosAreStoredAtTheirIntendedPixelSize() async throws {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let large = UIGraphicsImageRenderer(size: CGSize(width: 3000, height: 2000), format: format).image { ctx in
+            UIColor.blue.setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 3000, height: 2000))
+        }
+
+        let bathroom = try await saver().save(form(), to: .new(from: nil), photos: .init(added: [large]))
+
+        let dir = photoRoot.appendingPathComponent(bathroom.id.uuidString)
+        let name = try #require(bathroom.imageFileNames.first)
+        let full  = try #require(UIImage(contentsOfFile: dir.appendingPathComponent(name).path)?.cgImage)
+        let thumb = try #require(UIImage(contentsOfFile: dir.appendingPathComponent(name.replacingOccurrences(of: ".jpg", with: "_thumb.jpg")).path)?.cgImage)
+        #expect(full.width == 1200 && full.height == 800)
+        #expect(thumb.width == 200 && thumb.height == 133)
+    }
+
     @Test func editCommitsBeforeDeletingRemovedPhotos() async throws {
         let bathroom = try storedBathroom()
         let kept = bathroom.imageFileNames[0]

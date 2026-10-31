@@ -39,6 +39,9 @@ struct AddBathroomView: View {
     @State private var existingFileNames: [String]  = []
     @State private var selectedPhotos: [UIImage]    = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
+    /// Picked items not loaded yet. One loader drains them, so picking again during a load queues instead of racing.
+    @State private var pendingPickerItems: [PhotosPickerItem] = []
+    @State private var pickerLoad: Task<Void, Never>?
 
     // MARK: - UI State
 
@@ -244,6 +247,7 @@ struct AddBathroomView: View {
         .onChange(of: photoPickerItems) { _, newItems in
             loadPickerItems(newItems)
         }
+        .onDisappear { pickerLoad?.cancel() }
     }
 
     // MARK: - Section Container
@@ -611,26 +615,18 @@ struct AddBathroomView: View {
     }
 
     private func existingPhotoThumbnail(fileName: String, index: Int) -> some View {
-        let image = editing.flatMap { ImageStorage.loadThumbnail(bathroomID: $0.id, fileName: fileName) }
-        return Group {
-            if let image {
-                Image(uiImage: image).resizable().scaledToFill()
-            } else {
-                Rectangle().fill(Color(.systemGray5))
-                    .overlay(Image(systemName: "photo").foregroundStyle(.secondary))
-            }
-        }
-        .frame(width: 72, height: 72)
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(alignment: .topTrailing) {
-            removeButton {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    existingFileNames = existingFileNames.enumerated()
-                        .filter { $0.offset != index }.map { $0.element }
+        StoredPhotoTile(bathroomID: editing?.id, fileName: fileName)
+            .frame(width: 72, height: 72)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(alignment: .topTrailing) {
+                removeButton {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        existingFileNames = existingFileNames.enumerated()
+                            .filter { $0.offset != index }.map { $0.element }
+                    }
                 }
+                .accessibilityLabel("Remove photo \(index + 1)")
             }
-            .accessibilityLabel("Remove photo \(index + 1)")
-        }
     }
 
     private func newPhotoThumbnail(image: UIImage, index: Int) -> some View {
@@ -671,15 +667,20 @@ struct AddBathroomView: View {
 
     private func loadPickerItems(_ items: [PhotosPickerItem]) {
         guard !items.isEmpty else { return }
-        Task {
-            for item in items {
-                guard totalPhotoCount < 10 else { break }
-                if let data  = try? await item.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
-                    selectedPhotos.append(image)
-                }
+        pendingPickerItems += items
+        photoPickerItems = []
+        guard pickerLoad == nil else { return }
+        pickerLoad = Task {
+            while !pendingPickerItems.isEmpty, !Task.isCancelled {
+                let item = pendingPickerItems.removeFirst()
+                guard let data  = try? await item.loadTransferable(type: Data.self),
+                      let image = await ImageStorage.downsampledImage(from: data) else { continue }
+                // Checked again after the awaits: a camera photo may have been added meanwhile.
+                guard !Task.isCancelled, totalPhotoCount < 10 else { break }
+                selectedPhotos.append(image)
             }
-            photoPickerItems = []
+            pendingPickerItems = []
+            pickerLoad = nil
         }
     }
 
@@ -759,6 +760,33 @@ struct AddBathroomView: View {
         }
     }
 }
+
+// MARK: - StoredPhotoTile
+
+/// An existing photo's thumbnail, loaded off the main actor like the carousel's.
+private struct StoredPhotoTile: View {
+
+    let bathroomID: UUID?
+    let fileName:   String
+
+    @State private var image: UIImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
+                Rectangle().fill(Color(.systemGray5))
+                    .overlay(Image(systemName: "photo").foregroundStyle(.secondary))
+            }
+        }
+        .task(id: fileName) {
+            guard let bathroomID else { return }
+            image = await ImageStorage.loadThumbnailAsync(bathroomID: bathroomID, fileName: fileName)
+        }
+    }
+}
+
 
 // MARK: - Previews
 
