@@ -15,10 +15,11 @@ struct MapTabView: View {
     // MARK: - Data
 
     @Query(sort: \Bathroom.dateCreated, order: .reverse) private var allBathrooms: [Bathroom]
+    @Query private var candidates: [Candidate]
 
     // MARK: - State
 
-    @State private var selectedBathroom: Bathroom?
+    @State private var selection: MapSelection?
 
     // MARK: - Derived
 
@@ -46,6 +47,23 @@ struct MapTabView: View {
 
                 UserAnnotation()
 
+                // Before bathrooms, so a visited pin draws on top of an unvisited one at the same spot.
+                ForEach(candidates) { candidate in
+                    Annotation(
+                        candidate.name,
+                        coordinate: candidate.coordinate,
+                        anchor: .center
+                    ) {
+                        CandidateAnnotation(
+                            brand: candidate.brand,
+                            isSelected: selection?.id == candidate.persistentModelID
+                        )
+                        .onTapGesture {
+                            toggleSelection(.candidate(candidate))
+                        }
+                    }
+                }
+
                 ForEach(filteredBathrooms) { bathroom in
                     Annotation(
                         bathroom.name,
@@ -54,10 +72,10 @@ struct MapTabView: View {
                     ) {
                         BathroomAnnotation(
                             rating: bathroom.rating,
-                            isSelected: selectedBathroom?.id == bathroom.id
+                            isSelected: selection?.id == bathroom.persistentModelID
                         )
                         .onTapGesture {
-                            toggleSelection(bathroom)
+                            toggleSelection(.bathroom(bathroom))
                         }
                     }
                 }
@@ -87,11 +105,15 @@ struct MapTabView: View {
             fitCameraToNearbyBathrooms()
         }
 
-        .sheet(item: $selectedBathroom) { bathroom in
-            DetailView(
-                bathroom: bathroom,
-                userLocation: locationManager.userLocation
-            )
+        .sheet(item: $selection) { selection in
+            Group {
+                switch selection {
+                case .bathroom(let bathroom):
+                    DetailView(bathroom: bathroom, userLocation: locationManager.userLocation)
+                case .candidate(let candidate):
+                    CandidateDetailView(candidate: candidate, userLocation: locationManager.userLocation)
+                }
+            }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
@@ -99,9 +121,9 @@ struct MapTabView: View {
 
     // MARK: - Selection
 
-    private func toggleSelection(_ bathroom: Bathroom) {
+    private func toggleSelection(_ tapped: MapSelection) {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-            selectedBathroom = (selectedBathroom?.id == bathroom.id) ? nil : bathroom
+            selection = (selection?.id == tapped.id) ? nil : tapped
         }
     }
 
@@ -114,6 +136,21 @@ struct MapTabView: View {
         let region = MKCoordinateRegion(fittingCoordinates: candidates.map(\.coordinate))
         withAnimation(.easeInOut(duration: 0.6)) {
             cameraPosition = .region(region)
+        }
+    }
+}
+
+// MARK: - Map Selection
+
+/// The pin whose detail sheet is open. One sheet for both kinds, so they never fight over presentation.
+private enum MapSelection: Identifiable {
+    case bathroom(Bathroom)
+    case candidate(Candidate)
+
+    var id: PersistentIdentifier {
+        switch self {
+        case .bathroom(let bathroom):   return bathroom.persistentModelID
+        case .candidate(let candidate): return candidate.persistentModelID
         }
     }
 }
@@ -194,5 +231,5 @@ extension MKCoordinateRegion {
         cameraPosition: .constant(.userLocation(followsHeading: false, fallback: .automatic)),
         filter: BathroomFilter()
     )
-    .modelContainer(for: Bathroom.self, inMemory: true)
+    .modelContainer(for: [Bathroom.self, Candidate.self], inMemory: true)
 }

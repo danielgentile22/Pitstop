@@ -168,5 +168,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Bathroom.self, inMemory: true)
+        .modelContainer(for: [Bathroom.self, Candidate.self], inMemory: true)
 }

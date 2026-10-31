@@ -37,37 +37,37 @@ struct DetailView: View {
                         .padding(.vertical, 16)
                 }
 
-                detailSection("Location") {
+                DetailSection("Location") {
                     if let address = bathroom.address, !address.isEmpty {
-                        metaRow(icon: "location.fill", color: .red, text: address)
+                        MetaRow(icon: "location.fill", color: .red, text: address)
                     }
-                    metaRow(
+                    MetaRow(
                         icon: "calendar",
                         color: .blue,
                         text: bathroom.dateVisited.formatted(date: .long, time: .omitted)
                     )
                     if let dist = formattedDistance {
-                        metaRow(icon: "figure.walk", color: .green, text: dist)
+                        MetaRow(icon: "figure.walk", color: .green, text: dist)
                     }
                 }
 
-                detailSection("Access") {
-                    metaRow(
+                DetailSection("Access") {
+                    MetaRow(
                         icon: bathroom.accessType.icon,
                         color: bathroom.accessType.color,
                         text: bathroom.accessType.displayName
                     )
                     if bathroom.requiresReceiptCode {
-                        metaRow(icon: "doc.text", color: .blue,
+                        MetaRow(icon: "doc.text", color: .blue,
                                 text: "Code printed on receipt")
                     }
-                    metaRow(
+                    MetaRow(
                         icon: bathroom.isOpen24Hours ? "clock.fill" : "clock",
                         color: bathroom.isOpen24Hours ? .blue : Color(.systemGray3),
                         text: bathroom.isOpen24Hours ? "Open 24 hours" : "Standard hours"
                     )
                     if bathroom.waitTime != .unknown {
-                        metaRow(
+                        MetaRow(
                             icon: bathroom.waitTime.icon,
                             color: bathroom.waitTime.color,
                             text: bathroom.waitTime.displayName
@@ -75,29 +75,29 @@ struct DetailView: View {
                     }
                 }
 
-                detailSection("Facilities") {
-                    metaRow(
+                DetailSection("Facilities") {
+                    MetaRow(
                         icon: bathroom.stallType.icon,
                         color: .purple,
                         text: bathroom.stallType.displayName
                     )
-                    metaRow(
+                    MetaRow(
                         icon: bathroom.genderType.icon,
                         color: .indigo,
                         text: bathroom.genderType.displayName
                     )
-                    metaRow(
+                    MetaRow(
                         icon: bathroom.isIndoor ? "building.2" : "tree",
                         color: bathroom.isIndoor ? .blue : .green,
                         text: bathroom.isIndoor ? "Indoor" : "Outdoor"
                     )
-                    metaRow(
+                    MetaRow(
                         icon: "figure.roll",
                         color: bathroom.isWheelchairAccessible ? .blue : Color(.systemGray3),
                         text: bathroom.isWheelchairAccessible
                             ? "Wheelchair accessible" : "Not wheelchair accessible"
                     )
-                    metaRow(
+                    MetaRow(
                         icon: "figure.and.child.holdinghands",
                         color: bathroom.hasChangingTable ? .green : Color(.systemGray3),
                         text: bathroom.hasChangingTable
@@ -105,14 +105,14 @@ struct DetailView: View {
                     )
                 }
 
-                detailSection("Toilet Paper") {
-                    metaRow(
+                DetailSection("Toilet Paper") {
+                    MetaRow(
                         icon: "roll",
                         color: bathroom.hasToiletPaper ? .brown : Color(.systemGray3),
                         text: bathroom.hasToiletPaper ? "Toilet paper available" : "No toilet paper"
                     )
                     if bathroom.hasToiletPaper {
-                        metaRow(
+                        MetaRow(
                             icon: bathroom.hasExtraToiletPaper ? "plus.circle.fill" : "plus.circle",
                             color: bathroom.hasExtraToiletPaper ? .brown : Color(.systemGray3),
                             text: bathroom.hasExtraToiletPaper
@@ -120,7 +120,7 @@ struct DetailView: View {
                         )
                     }
                     if bathroom.dispenserRating == 0 {
-                        metaRow(icon: "cylinder", color: Color(.systemGray3),
+                        MetaRow(icon: "cylinder", color: Color(.systemGray3),
                                 text: "No dedicated dispenser")
                     } else {
                         metaRowWithStars(
@@ -132,27 +132,27 @@ struct DetailView: View {
                     }
                 }
 
-                detailSection("Amenities") {
-                    metaRow(
+                DetailSection("Amenities") {
+                    MetaRow(
                         icon: "thermometer.medium",
                         color: bathroom.hasHeatedSeat ? .orange : Color(.systemGray3),
                         text: bathroom.hasHeatedSeat ? "Heated seat" : "No heated seat"
                     )
                     if bathroom.bidetType != .none {
-                        metaRow(
+                        MetaRow(
                             icon: bathroom.bidetType.icon,
                             color: .cyan,
                             text: "Bidet: \(bathroom.bidetType.displayName)"
                         )
                     } else {
-                        metaRow(icon: "xmark.circle", color: Color(.systemGray3), text: "No bidet")
+                        MetaRow(icon: "xmark.circle", color: Color(.systemGray3), text: "No bidet")
                     }
-                    metaRow(
+                    MetaRow(
                         icon: "hands.sparkles",
                         color: bathroom.hasSoap ? .teal : Color(.systemGray3),
                         text: bathroom.hasSoap ? "Soap available" : "No soap"
                     )
-                    metaRow(
+                    MetaRow(
                         icon: "wind",
                         color: bathroom.hasDryingOption ? .teal : Color(.systemGray3),
                         text: bathroom.hasDryingOption
@@ -161,7 +161,7 @@ struct DetailView: View {
                 }
 
                 if !bathroom.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    detailSection("Notes") {
+                    DetailSection("Notes") {
                         Text(bathroom.notes)
                             .font(.body)
                             .fixedSize(horizontal: false, vertical: true)
@@ -208,39 +208,7 @@ struct DetailView: View {
         }
     }
 
-    // MARK: - Section Container
-
-    private func detailSection<Content: View>(
-        _ title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Divider()
-            VStack(alignment: .leading, spacing: 14) {
-                Text(title.uppercased())
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.8)
-                content()
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-        }
-    }
-
     // MARK: - Metadata Row Helpers
-
-    private func metaRow(icon: String, color: Color, text: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(color)
-                .frame(width: 20)
-            Text(text)
-                .font(.subheadline)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
 
     private func metaRowWithStars(icon: String, color: Color, label: String, rating: Int) -> some View {
         HStack(alignment: .center, spacing: 12) {
