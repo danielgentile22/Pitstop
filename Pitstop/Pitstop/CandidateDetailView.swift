@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftData
 import MapKit
 
-/// Detail sheet for an unvisited place. "I went here" logs it as a Bathroom.
+/// Detail sheet for an unvisited place. "I went here" logs it as a Bathroom; "No public restroom here"
+/// dismisses it, and a dismissed place offers the undo.
 struct CandidateDetailView: View {
 
     // MARK: - Environment
@@ -77,6 +78,26 @@ struct CandidateDetailView: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(.green)
+
+                    if candidate.isDismissed {
+                        Button { candidate.isDismissed = false } label: {
+                            Label("Undo: has a public restroom", systemImage: "arrow.uturn.backward.circle.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
+                    } else {
+                        // The pin disappears unless "Show dismissed" is on, so close the sheet with it.
+                        Button {
+                            candidate.isDismissed = true
+                            dismiss()
+                        } label: {
+                            Label("No public restroom here", systemImage: "xmark.circle.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
+                    }
                 }
                 .controlSize(.large)
                 .padding(.horizontal, 20)
@@ -100,9 +121,15 @@ struct CandidateDetailView: View {
                 Text(brand.displayName)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Label("Not visited yet", systemImage: "questionmark.circle")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(brand.reliability.tint)
+                if candidate.isDismissed {
+                    Label("No public restroom", systemImage: "xmark.circle")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.red)
+                } else {
+                    Label("Not visited yet", systemImage: "questionmark.circle")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(brand.reliability.tint)
+                }
             }
         }
     }

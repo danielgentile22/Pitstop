@@ -220,6 +220,7 @@ struct FilterSheetView: View {
     private var unvisitedToggles: some View {
         VStack(alignment: .leading, spacing: 0) {
             mustHaveRow("Show Unvisited", icon: "questionmark.circle", color: .teal, isOn: $filter.showUnvisited)
+            mustHaveRow("Show Dismissed", icon: "xmark.circle", color: .red, isOn: $filter.showDismissed)
             Text("Rating, access, and amenity filters hide unvisited places, since you have not visited them yet. Distance and Open 24 Hours apply to them.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
