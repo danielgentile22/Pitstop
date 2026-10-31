@@ -585,13 +585,13 @@ struct AddBathroomView: View {
                         maxSelectionCount: max(0, 10 - totalPhotoCount),
                         matching: .images
                     ) {
-                        photoActionButton(icon: "photo.on.rectangle.angled", label: "Library")
+                        Self.photoActionButton(icon: "photo.on.rectangle.angled", label: "Library")
                     }
                     .disabled(totalPhotoCount >= 10)
 
                     if CameraAccess.isAvailable {
                         Button { Task { await openCamera() } } label: {
-                            photoActionButton(icon: "camera.fill", label: "Camera")
+                            Self.photoActionButton(icon: "camera.fill", label: "Camera")
                         }
                         .disabled(totalPhotoCount >= 10)
                     }
@@ -631,7 +631,7 @@ struct AddBathroomView: View {
 
     // MARK: - Photo Subviews
 
-    private func photoActionButton(icon: String, label: String) -> some View {
+    nonisolated private static func photoActionButton(icon: String, label: String) -> some View {
         VStack(spacing: 6) {
             Image(systemName: icon).font(.system(size: 22)).foregroundStyle(.blue)
             Text(label).font(.caption2.weight(.medium)).foregroundStyle(.blue)

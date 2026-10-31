@@ -142,7 +142,7 @@ struct BathroomSaverTests {
         edited.rating = 5
 
         await #expect(throws: BathroomSaver.SaveError.commitFailed) {
-            try await saver(commit: { _ in throw CommitFailed() })
+            _ = try await saver(commit: { _ in throw CommitFailed() })
                 .save(edited, to: .edit(bathroom), photos: .init(kept: [bathroom.imageFileNames[0]], added: [photo()]))
         }
 
@@ -155,7 +155,7 @@ struct BathroomSaverTests {
 
     @Test func failedNewBathroomCommitInsertsNothing() async throws {
         await #expect(throws: BathroomSaver.SaveError.commitFailed) {
-            try await saver(commit: { _ in throw CommitFailed() })
+            _ = try await saver(commit: { _ in throw CommitFailed() })
                 .save(form(), to: .new(from: nil), photos: .init(added: [photo(), photo()]))
         }
 
@@ -171,7 +171,7 @@ struct BathroomSaverTests {
         try Data().write(to: blocked)
 
         await #expect(throws: BathroomSaver.SaveError.photoWriteFailed) {
-            try await saver(root: blocked).save(form(), to: .new(from: nil), photos: .init(added: [photo()]))
+            _ = try await saver(root: blocked).save(form(), to: .new(from: nil), photos: .init(added: [photo()]))
         }
         #expect(try context.fetchCount(FetchDescriptor<Bathroom>()) == 0)
         #expect(try committedBathrooms().isEmpty)
@@ -200,7 +200,7 @@ struct BathroomSaverTests {
         try context.save()
 
         await #expect(throws: BathroomSaver.SaveError.alreadyLogged) {
-            try await saver().save(BathroomForm(candidate: candidate), to: .new(from: candidate), photos: .init(added: [photo()]))
+            _ = try await saver().save(BathroomForm(candidate: candidate), to: .new(from: candidate), photos: .init(added: [photo()]))
         }
         #expect(try context.fetchCount(FetchDescriptor<Bathroom>()) == 1)
         #expect(try FileManager.default.contentsOfDirectory(atPath: photoRoot.path).isEmpty)
