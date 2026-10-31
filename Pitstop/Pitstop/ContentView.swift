@@ -94,7 +94,7 @@ struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .topBarLeading) {
-                    let isFiltering = filter.isActive(locationAvailable: locationManager.hasLocationPermission)
+                    let isFiltering = filter.isActive(locationAvailable: locationManager.canMeasureDistance)
                     Button {
                         showFilterSheet = true
                     } label: {
