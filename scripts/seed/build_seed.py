@@ -250,7 +250,7 @@ def format_address(props: dict, state: str) -> str | None:
     return ", ".join(filter(None, [street, city, region]))
 
 
-def format_name(source: AtpSource, props: dict) -> str:
+def format_name(source: AtpSource | OsmSource, props: dict) -> str:
     branch = clean(props.get("branch"))
     return f"{source.display_name} ({branch})" if branch else source.display_name
 
