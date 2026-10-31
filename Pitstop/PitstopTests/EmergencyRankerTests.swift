@@ -140,6 +140,26 @@ struct EmergencyRankerTests {
         #expect(ids == [.bathroom(sameSide), .bathroom(acrossRiver)])
     }
 
+    @Test func nearestPicksClosestEligiblePlacesByStraightLine() {
+        let far = UUID()
+        let near = UUID()
+        let nearest = EmergencyRanker.nearest(
+            3,
+            from: origin,
+            visited: [
+                visited(far, minutesAway: 40, rating: 5),
+                visited(near, minutesAway: 2, rating: 1, sourceID: "linked"),
+            ],
+            unvisited: [
+                unvisited("dismissed", minutesAway: 1, reliability: .reliable, isDismissed: true),
+                unvisited("linked", minutesAway: 1, reliability: .reliable),
+                unvisited("middle", minutesAway: 10, reliability: .uncertain),
+                unvisited("closest", minutesAway: 1.5, reliability: .uncertain),
+            ]
+        )
+        #expect(nearest.map(\.id) == [.candidate("closest"), .bathroom(near), .candidate("middle")])
+    }
+
     @Test func effectiveMinutesAddTravelAndPenalties() {
         let ranked = EmergencyRanker.rank(
             from: origin, at: time(hour: 23), calendar: Self.calendar,

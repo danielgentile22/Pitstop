@@ -72,6 +72,13 @@ enum EmergencyRanker {
         let effectiveMinutes: Double
     }
 
+    /// A place the user could be sent to, before any travel time is known.
+    struct Destination {
+        let id: PlaceID
+        let latitude: Double
+        let longitude: Double
+    }
+
     // MARK: - Ranking
 
     /// - Parameters:
@@ -90,29 +97,61 @@ enum EmergencyRanker {
         let hour = calendar.component(.hour, from: now)
         let isLateNight = hour >= Penalty.lateNightStartHour || hour < Penalty.lateNightEndHour
 
-        func ranked(_ id: PlaceID, _ latitude: Double, _ longitude: Double,
-                    penalty: Double, isOpen24Hours: Bool) -> RankedPlace {
-            let travelMinutes = drivingTimes[id].map { $0 / 60 }
-                ?? CLLocation(latitude: latitude, longitude: longitude).distance(from: originLocation)
-                    / fallbackMetersPerMinute
-            let lateNight = isLateNight && !isOpen24Hours ? Penalty.closedLateNight : 0
-            return RankedPlace(id: id, latitude: latitude, longitude: longitude,
-                               effectiveMinutes: travelMinutes + penalty + lateNight)
-        }
+        return eligible(visited: visited, unvisited: unvisited)
+            .map { place in
+                let travelMinutes = drivingTimes[place.destination.id].map { $0 / 60 }
+                    ?? distance(from: originLocation, to: place.destination) / fallbackMetersPerMinute
+                let lateNight = isLateNight && !place.isOpen24Hours ? Penalty.closedLateNight : 0
+                return RankedPlace(id: place.destination.id,
+                                   latitude: place.destination.latitude,
+                                   longitude: place.destination.longitude,
+                                   effectiveMinutes: travelMinutes + place.penalty + lateNight)
+            }
+            .sorted { $0.effectiveMinutes < $1.effectiveMinutes }
+    }
 
+    /// The `limit` places `rank` could return that are closest in a straight line: the ones worth
+    /// asking a directions service about.
+    static func nearest(
+        _ limit: Int,
+        from origin: CLLocationCoordinate2D,
+        visited: [VisitedPlace],
+        unvisited: [UnvisitedPlace]
+    ) -> [Destination] {
+        let originLocation = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
+        return eligible(visited: visited, unvisited: unvisited)
+            .map { ($0.destination, distance(from: originLocation, to: $0.destination)) }
+            .sorted { $0.1 < $1.1 }
+            .prefix(limit)
+            .map(\.0)
+    }
+
+    // MARK: - Eligibility
+
+    private struct EligiblePlace {
+        let destination: Destination
+        let penalty: Double
+        let isOpen24Hours: Bool
+    }
+
+    /// Every Bathroom, plus every Candidate that is neither dismissed nor already logged as a Bathroom.
+    private static func eligible(visited: [VisitedPlace], unvisited: [UnvisitedPlace]) -> [EligiblePlace] {
         let linkedIDs = Set(visited.compactMap(\.sourceID))
 
-        let visitedRanked = visited.map {
-            ranked(.bathroom($0.id), $0.latitude, $0.longitude,
-                   penalty: Penalty.visited(rating: $0.rating), isOpen24Hours: $0.isOpen24Hours)
+        let visitedPlaces = visited.map {
+            EligiblePlace(destination: .init(id: .bathroom($0.id), latitude: $0.latitude, longitude: $0.longitude),
+                          penalty: Penalty.visited(rating: $0.rating), isOpen24Hours: $0.isOpen24Hours)
         }
-        let unvisitedRanked = unvisited
+        let unvisitedPlaces = unvisited
             .filter { !$0.isDismissed && !linkedIDs.contains($0.sourceID) }
             .map {
-                ranked(.candidate($0.sourceID), $0.latitude, $0.longitude,
-                       penalty: Penalty.unvisited($0.reliability), isOpen24Hours: $0.isOpen24Hours)
+                EligiblePlace(destination: .init(id: .candidate($0.sourceID), latitude: $0.latitude, longitude: $0.longitude),
+                              penalty: Penalty.unvisited($0.reliability), isOpen24Hours: $0.isOpen24Hours)
             }
+        return visitedPlaces + unvisitedPlaces
+    }
 
-        return (visitedRanked + unvisitedRanked).sorted { $0.effectiveMinutes < $1.effectiveMinutes }
+    private static func distance(from origin: CLLocation, to destination: Destination) -> CLLocationDistance {
+        CLLocation(latitude: destination.latitude, longitude: destination.longitude).distance(from: origin)
     }
 }
