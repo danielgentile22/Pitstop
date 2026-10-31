@@ -30,7 +30,7 @@ struct MapTabView: View {
     }
 
     private var filteredCandidates: [Candidate] {
-        candidates.filter { filter.applies(to: $0) }
+        candidates.unlinked(from: allBathrooms).filter { filter.applies(to: $0) }
     }
 
     /// Within 50 km of the user, so zoom-to-fit ignores pins saved in other cities.

@@ -97,6 +97,27 @@ struct CandidateImporterTests {
         #expect(stored["dismissed"]?.seedVersion == 1)
     }
 
+    @Test func aLinkedCandidateStaysHiddenAcrossRefreshes() throws {
+        try apply(version: 1, [record("linked"), record("other")])
+        let bathroom = Bathroom(name: "B&N", latitude: 38.8, longitude: -77.0)
+        bathroom.sourceID = "linked"
+        context.insert(bathroom)
+        try context.save()
+
+        func visibleIDs() throws -> Set<String> {
+            let all = try context.fetch(FetchDescriptor<Candidate>())
+            return Set(all.unlinked(from: try context.fetch(FetchDescriptor<Bathroom>())).map(\.sourceID))
+        }
+        #expect(try visibleIDs() == ["other"])
+
+        try apply(version: 2, [record("linked", name: "Barnes & Noble (Renamed)"), record("other")])
+        #expect(try visibleIDs() == ["other"])
+
+        try apply(version: 3, [record("other")])
+        #expect(Set(try candidates().keys) == ["linked", "other"])
+        #expect(try visibleIDs() == ["other"])
+    }
+
     @Test func applyingTheSameSeedTwiceChangesNothing() throws {
         let seed = CandidateSeed(version: 1, records: [record("a"), record("b", isOpen24Hours: true)])
         try CandidateImporter.apply(seed, to: context)
