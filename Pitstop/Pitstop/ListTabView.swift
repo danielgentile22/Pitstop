@@ -11,6 +11,52 @@ enum SortOption: String, CaseIterable {
     case name      = "Name"
 }
 
+// MARK: - Sort Logic
+
+extension SortOption {
+
+    /// Every sort breaks ties with this, so equal places always land in the same order.
+    static func nameOrder(_ lhs: MapSelection, _ rhs: MapSelection) -> Bool {
+        lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+    }
+
+    /// Distance falls back to name order without a location to measure from.
+    func sorted(_ list: [MapSelection], from userLocation: CLLocationCoordinate2D?) -> [MapSelection] {
+        switch self {
+        case .distance:
+            guard let coord = userLocation else { return list.sorted { Self.nameOrder($0, $1) } }
+            // Measure each place once, not on every comparison.
+            return list
+                .map { place in (place, Distance.meters(from: coord, to: place.coordinate)) }
+                .sorted { $0.1 == $1.1 ? Self.nameOrder($0.0, $1.0) : $0.1 < $1.1 }
+                .map(\.0)
+
+        case .rating:
+            // Highest first; unrated (0) and unvisited sort last.
+            return list.sorted {
+                if $0.rating == $1.rating { return Self.nameOrder($0, $1) }
+                if $0.rating == 0 { return false }
+                if $1.rating == 0 { return true }
+                return $0.rating > $1.rating
+            }
+
+        case .dateAdded:
+            // Newest first; unvisited places have no date and sort last.
+            return list.sorted {
+                switch ($0.dateCreated, $1.dateCreated) {
+                case let (lhs?, rhs?) where lhs != rhs: return lhs > rhs
+                case (.some, nil):                      return true
+                case (nil, .some):                      return false
+                default:                                return Self.nameOrder($0, $1)
+                }
+            }
+
+        case .name:
+            return list.sorted { Self.nameOrder($0, $1) }
+        }
+    }
+}
+
 // MARK: - ListTabView
 
 struct ListTabView: View {
@@ -24,7 +70,7 @@ struct ListTabView: View {
     // MARK: - Data
 
     @Query(sort: \Bathroom.dateCreated, order: .reverse) private var bathrooms: [Bathroom]
-    @Query private var candidates: [Candidate]
+    @Query(sort: \Candidate.sourceID) private var candidates: [Candidate]
 
     @Environment(\.modelContext)       private var modelContext
 
@@ -35,17 +81,33 @@ struct ListTabView: View {
     @State private var selectedPlace:    PlaceKey?
     @State private var bathroomToDelete: Bathroom?
     @State private var showDeleteAlert  = false
+    @State private var cache            = PlaceListCache()
+    @State private var deleteError:      BathroomSaver.SaveError?
 
     // MARK: - Derived
 
-    /// Visited and unvisited places together. Computed once per render; there can be thousands of Candidates.
+    /// Visited and unvisited places together, filtered and sorted. There can be thousands of Candidates,
+    /// so the result is reused until an input changes; a GPS fix counts only when distance matters.
     private var displayedPlaces: [MapSelection] {
-        let visible = filter.visiblePlaces(bathrooms: bathrooms, candidates: candidates,
-                                           userLocation: locationManager.userLocation)
+        let needsLocation = sortOption == .distance || filter.maxDistance != nil
+        let origin = needsLocation ? locationManager.userLocation : nil
+        let inputs = PlaceListCache.Inputs(
+            filter: filter,
+            searchText: searchText,
+            sortOption: sortOption,
+            coarseLocation: origin.map { PlaceListCache.CoarseLocation($0) },
+            places: MapSelection.fingerprint(bathrooms: bathrooms, candidates: candidates)
+        )
+        if let cached = cache.places(for: inputs) { return cached }
+
+        let visible = filter.visiblePlaces(bathrooms: bathrooms, candidates: candidates, userLocation: origin)
         let visited   = visible.bathrooms.filter { matchesSearch($0.name) }
         let unvisited = visible.candidates.filter { matchesSearch($0.name) }
 
-        return sorted(visited.map(MapSelection.bathroom) + unvisited.map(MapSelection.candidate))
+        let places = sortOption.sorted(visited.map(MapSelection.bathroom) + unvisited.map(MapSelection.candidate),
+                                       from: origin)
+        cache.store(places, for: inputs)
+        return places
     }
 
     private func matchesSearch(_ name: String) -> Bool {
@@ -83,6 +145,11 @@ struct ListTabView: View {
             }
         } message: {
             Text("This will permanently remove \"\(bathroomToDelete?.name ?? "")\" and all its photos.")
+        }
+        .alert("Couldn't Delete", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError?.errorDescription ?? "")
         }
     }
 
@@ -189,51 +256,54 @@ struct ListTabView: View {
         }
     }
 
-    // MARK: - Sort Logic
-
-    private func sorted(_ list: [MapSelection]) -> [MapSelection] {
-        switch sortOption {
-        case .distance:
-            guard let coord = locationManager.userLocation else { return list }
-            // Measure each place once, not on every comparison.
-            return list
-                .map { place in (place, Distance.meters(from: coord, to: place.coordinate)) }
-                .sorted { $0.1 < $1.1 }
-                .map(\.0)
-
-        case .rating:
-            // Highest first; unrated (0) and unvisited sort last.
-            return list.sorted {
-                if $0.rating == $1.rating { return $0.name < $1.name }
-                if $0.rating == 0 { return false }
-                if $1.rating == 0 { return true }
-                return $0.rating > $1.rating
-            }
-
-        case .dateAdded:
-            // Newest first; unvisited places have no date and sort last, by name.
-            return list.sorted {
-                switch ($0.dateCreated, $1.dateCreated) {
-                case let (lhs?, rhs?): return lhs > rhs
-                case (.some, nil):     return true
-                case (nil, .some):     return false
-                case (nil, nil):       return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-                }
-            }
-
-        case .name:
-            return list.sorted {
-                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            }
-        }
-    }
-
     // MARK: - Delete
 
     private func deleteBathroom(_ bathroom: Bathroom) {
-        ImageStorage.deleteAllImages(bathroomID: bathroom.id)
-        modelContext.delete(bathroom)
+        do {
+            try BathroomSaver.delete(bathroom, from: modelContext)
+        } catch {
+            deleteError = error as? BathroomSaver.SaveError ?? .deleteFailed
+        }
         bathroomToDelete = nil
+    }
+}
+
+// MARK: - Place List Cache
+
+/// The list's last filtered and sorted result. A reference type, so `body` can fill it without
+/// triggering another render.
+private final class PlaceListCache {
+
+    /// About 100 m of latitude, so GPS drift does not re-sort thousands of places.
+    struct CoarseLocation: Equatable {
+        let latitude: Int
+        let longitude: Int
+
+        init(_ coordinate: CLLocationCoordinate2D) {
+            latitude  = Int((coordinate.latitude  * 1_000).rounded())
+            longitude = Int((coordinate.longitude * 1_000).rounded())
+        }
+    }
+
+    struct Inputs: Equatable {
+        let filter: BathroomFilter
+        let searchText: String
+        let sortOption: SortOption
+        let coarseLocation: CoarseLocation?
+        /// `MapSelection.fingerprint` of the query results.
+        let places: Int
+    }
+
+    private var inputs: Inputs?
+    private var places: [MapSelection] = []
+
+    func places(for inputs: Inputs) -> [MapSelection]? {
+        inputs == self.inputs ? places : nil
+    }
+
+    func store(_ places: [MapSelection], for inputs: Inputs) {
+        self.inputs = inputs
+        self.places = places
     }
 }
 

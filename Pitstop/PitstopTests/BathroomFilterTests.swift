@@ -144,6 +144,15 @@ struct BathroomFilterTests {
         #expect(!filter.isWithinMaxDistance(far.coordinate, of: home))
     }
 
+    @Test func maxDistanceCountsAsActiveOnlyWithALocation() {
+        var filter = BathroomFilter()
+        filter.maxDistance = .oneMile
+        #expect(filter.isActive(locationAvailable: true))
+        #expect(!filter.isActive(locationAvailable: false))
+        filter.requiresOpen24Hours = true
+        #expect(filter.isActive(locationAvailable: false))
+    }
+
     @Test func maxDistanceKeepsEverythingWithoutALocationOrARadius() {
         var filter = BathroomFilter()
         let far = candidate(latitude: 40.0)

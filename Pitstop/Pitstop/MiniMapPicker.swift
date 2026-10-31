@@ -2,7 +2,7 @@ import MapKit
 import SwiftUI
 
 /// Compact location picker: the pin stays fixed at the center and the user pans the map under it.
-/// `selectedCoordinate` tracks the map center continuously.
+/// `selectedCoordinate` takes the map center once each gesture ends, so dragging stays smooth.
 struct MiniMapPicker: View {
 
     /// A request to move the map, e.g. after the user searches for an address.
@@ -32,7 +32,7 @@ struct MiniMapPicker: View {
         ZStack(alignment: .center) {
 
             Map(position: $position)
-                .onMapCameraChange(frequency: .continuous) { context in
+                .onMapCameraChange(frequency: .onEnd) { context in
                     selectedCoordinate = context.camera.centerCoordinate
                 }
                 .onChange(of: jumpTo) { _, target in

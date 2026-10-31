@@ -18,6 +18,7 @@ struct PitstopApp: App {
             )
             store = .success(container)
             Self.importBundledSeed(into: container)
+            Self.sweepOrphanedPhotos(in: container)
         } catch {
             store = .failure(StoreRecovery.recover(storeAt: configuration.url, from: error))
         }
@@ -31,6 +32,20 @@ struct PitstopApp: App {
                     .modelContainer(container)
             case .failure(let failure):
                 StoreOpenFailureView(failure: failure)
+            }
+        }
+    }
+
+    /// Once per launch, off the main thread. Files written after launch belong to a save in flight, so they stay.
+    private static func sweepOrphanedPhotos(in container: ModelContainer) {
+        let root = ImageStorage.defaultRoot
+        let launched = Date()
+        Task.detached(priority: .background) {
+            do {
+                try BathroomSaver.sweepOrphanedPhotos(in: container, root: root, writtenBefore: launched)
+            } catch {
+                Logger(subsystem: "com.danielgentile.GeoPoop", category: "PhotoSweep")
+                    .error("Photo sweep failed: \(String(describing: error), privacy: .public)")
             }
         }
     }

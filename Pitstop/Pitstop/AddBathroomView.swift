@@ -15,7 +15,8 @@ struct AddBathroomView: View {
 
     // MARK: - Input
 
-    let userLocation: CLLocationCoordinate2D?
+    /// Add mode only: the pin starts at, or follows the first fix from, this manager.
+    let locationManager: LocationManager?
     let editing: Bathroom?
     let candidate: Candidate?
 
@@ -30,15 +31,28 @@ struct AddBathroomView: View {
     @State private var geocodedAddress = ""
     @State private var addressQuery = ""
     @State private var mapJump: MiniMapPicker.JumpTarget?
-    @State private var addressNotFound = false
+    @State private var searchProblem: SearchProblem?
     @State private var isGeocoding     = false
     @State private var geocodeTask: Task<Void, Never>?
+    @State private var searchTask: Task<Void, Never>?
+    /// Where the pin was last placed for the user. While it has not been dragged away from here,
+    /// a new bathroom's pin moves to the first location fix.
+    @State private var placedCoordinate: CLLocationCoordinate2D
+    @State private var pinFollowsLocation: Bool
+
+    private enum SearchProblem { case noMatch, needsConnection }
+
+    /// Washington DC, the center of the area the seed covers, for a new pin with no location yet.
+    static let defaultCoordinate = CLLocationCoordinate2D(latitude: 38.8895, longitude: -77.0353)
 
     // MARK: - Photos
 
     @State private var existingFileNames: [String]  = []
     @State private var selectedPhotos: [UIImage]    = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
+    /// Picked items not loaded yet. One loader drains them, so picking again during a load queues instead of racing.
+    @State private var pendingPickerItems: [PhotosPickerItem] = []
+    @State private var pickerLoad: Task<Void, Never>?
 
     // MARK: - UI State
 
@@ -63,8 +77,8 @@ struct AddBathroomView: View {
 
     // MARK: - Init
 
-    init(userLocation: CLLocationCoordinate2D?, editing: Bathroom? = nil, candidate: Candidate? = nil) {
-        self.userLocation = userLocation
+    init(locationManager: LocationManager? = nil, editing: Bathroom? = nil, candidate: Candidate? = nil) {
+        self.locationManager = editing == nil && candidate == nil ? locationManager : nil
         self.editing      = editing
         self.candidate    = editing == nil ? candidate : nil
 
@@ -77,10 +91,12 @@ struct AddBathroomView: View {
             form                = BathroomForm(candidate: c)
             _geocodedAddress    = State(initialValue: c.address ?? "")
         } else {
-            form = BathroomForm(coordinate: userLocation ?? CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855))
+            form = BathroomForm(coordinate: locationManager?.userLocation ?? Self.defaultCoordinate)
         }
         _form       = State(initialValue: form)
         initialForm = form
+        _placedCoordinate   = State(initialValue: form.coordinate)
+        _pinFollowsLocation = State(initialValue: self.locationManager != nil && self.locationManager?.userLocation == nil)
     }
 
     // MARK: - Body
@@ -92,8 +108,10 @@ struct AddBathroomView: View {
 
                     MiniMapPicker(selectedCoordinate: $form.coordinate, jumpTo: $mapJump)
                         .frame(height: 220)
-                        .onChange(of: form.coordinate.latitude)  { scheduleGeocode(for: form.coordinate) }
-                        .onChange(of: form.coordinate.longitude) { scheduleGeocode(for: form.coordinate) }
+                        .onChange(of: form.coordinate.latitude)  { pinChanged() }
+                        .onChange(of: form.coordinate.longitude) { pinChanged() }
+                        .onChange(of: locationManager?.userLocation?.latitude)  { followFirstFix() }
+                        .onChange(of: locationManager?.userLocation?.longitude) { followFirstFix() }
 
                     addressRow
                         .padding(.horizontal, 16)
@@ -241,6 +259,11 @@ struct AddBathroomView: View {
         .onAppear {
             if !isEditMode { scheduleGeocode(for: form.coordinate) }
         }
+        .onDisappear {
+            geocodeTask?.cancel()
+            searchTask?.cancel()
+            pickerLoad?.cancel()
+        }
         .onChange(of: photoPickerItems) { _, newItems in
             loadPickerItems(newItems)
         }
@@ -277,13 +300,15 @@ struct AddBathroomView: View {
                     .font(.subheadline)
                     .textContentType(.fullStreetAddress)
                     .submitLabel(.search)
-                    .onSubmit { Task { await searchAddress() } }
-                    .onChange(of: addressQuery) { addressNotFound = false }
+                    .onSubmit { searchAddress() }
+                    .onChange(of: addressQuery) { searchProblem = nil }
             }
             HStack(spacing: 8) {
                 Image(systemName: "location.fill").font(.caption).foregroundStyle(.blue)
-                if addressNotFound {
+                if searchProblem == .noMatch {
                     Text("No match for that address").font(.caption).foregroundStyle(.red)
+                } else if searchProblem == .needsConnection {
+                    Text("Address search needs a connection").font(.caption).foregroundStyle(.red)
                 } else if isGeocoding {
                     Text("Locating…").font(.caption).foregroundStyle(.secondary)
                 } else if geocodedAddress.isEmpty {
@@ -617,26 +642,18 @@ struct AddBathroomView: View {
     }
 
     private func existingPhotoThumbnail(fileName: String, index: Int) -> some View {
-        let image = editing.flatMap { ImageStorage.loadThumbnail(bathroomID: $0.id, fileName: fileName) }
-        return Group {
-            if let image {
-                Image(uiImage: image).resizable().scaledToFill()
-            } else {
-                Rectangle().fill(Color(.systemGray5))
-                    .overlay(Image(systemName: "photo").foregroundStyle(.secondary))
-            }
-        }
-        .frame(width: 72, height: 72)
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(alignment: .topTrailing) {
-            removeButton {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    existingFileNames = existingFileNames.enumerated()
-                        .filter { $0.offset != index }.map { $0.element }
+        StoredPhotoTile(bathroomID: editing?.id, fileName: fileName)
+            .frame(width: 72, height: 72)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(alignment: .topTrailing) {
+                removeButton {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        existingFileNames = existingFileNames.enumerated()
+                            .filter { $0.offset != index }.map { $0.element }
+                    }
                 }
+                .accessibilityLabel("Remove photo \(index + 1)")
             }
-            .accessibilityLabel("Remove photo \(index + 1)")
-        }
     }
 
     private func newPhotoThumbnail(image: UIImage, index: Int) -> some View {
@@ -677,48 +694,91 @@ struct AddBathroomView: View {
 
     private func loadPickerItems(_ items: [PhotosPickerItem]) {
         guard !items.isEmpty else { return }
-        Task {
-            for item in items {
-                guard totalPhotoCount < 10 else { break }
-                if let data  = try? await item.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
-                    selectedPhotos.append(image)
-                }
+        pendingPickerItems += items
+        photoPickerItems = []
+        guard pickerLoad == nil else { return }
+        pickerLoad = Task {
+            while !pendingPickerItems.isEmpty, !Task.isCancelled {
+                let item = pendingPickerItems.removeFirst()
+                guard let data  = try? await item.loadTransferable(type: Data.self),
+                      let image = await ImageStorage.downsampledImage(from: data) else { continue }
+                // Checked again after the awaits: a camera photo may have been added meanwhile.
+                guard !Task.isCancelled, totalPhotoCount < 10 else { break }
+                selectedPhotos.append(image)
             }
-            photoPickerItems = []
+            pendingPickerItems = []
+            pickerLoad = nil
         }
     }
 
     // MARK: - Geocoding
 
+    private func pinChanged() {
+        if form.pinMoved(from: placedCoordinate) { pinFollowsLocation = false }
+        scheduleGeocode(for: form.coordinate)
+    }
+
+    /// Moves a new bathroom's untouched pin to the first fix that arrives after the form opened.
+    private func followFirstFix() {
+        guard pinFollowsLocation, let location = locationManager?.userLocation else { return }
+        pinFollowsLocation = false
+        placePin(at: location)
+    }
+
+    private func placePin(at coordinate: CLLocationCoordinate2D) {
+        placedCoordinate = coordinate
+        form.coordinate  = coordinate
+        mapJump = .init(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    }
+
     private func scheduleGeocode(for coordinate: CLLocationCoordinate2D) {
         geocodeTask?.cancel()
         if let kept = keptAddress(at: coordinate) {
             geocodedAddress = kept
+            isGeocoding = false
             return
         }
         geocodeTask = Task {
             try? await Task.sleep(nanoseconds: 800_000_000)
             guard !Task.isCancelled else { return }
             isGeocoding = true
-            geocodedAddress = await reverseGeocode(coordinate) ?? geocodedAddress
+            let address = await reverseGeocode(coordinate)
+            // A newer pin position owns the address row now.
+            guard !Task.isCancelled else { return }
+            geocodedAddress = address ?? geocodedAddress
             isGeocoding = false
         }
     }
 
-    private func searchAddress() async {
+    /// Only the latest search may move the pin: starting one cancels the one before it.
+    private func searchAddress() {
+        searchTask?.cancel()
+        searchProblem = nil
         let query = addressQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return }
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
         request.region = MKCoordinateRegion(center: form.coordinate, latitudinalMeters: 50_000, longitudinalMeters: 50_000)
-        guard let item = try? await MKLocalSearch(request: request).start().mapItems.first else {
-            addressNotFound = true
-            return
+        searchTask = Task {
+            let item: MKMapItem?
+            do {
+                item = try await MKLocalSearch(request: request).start().mapItems.first
+            } catch let error as MKError where error.code == .placemarkNotFound {
+                item = nil
+            } catch {
+                guard !Task.isCancelled else { return }
+                searchProblem = .needsConnection
+                return
+            }
+            guard !Task.isCancelled else { return }
+            guard let item else {
+                searchProblem = .noMatch
+                return
+            }
+            pinFollowsLocation = false
+            placePin(at: item.location.coordinate)
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
-        let coordinate = item.location.coordinate
-        mapJump = .init(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func reverseGeocode(_ coordinate: CLLocationCoordinate2D) async -> String? {
@@ -748,6 +808,7 @@ struct AddBathroomView: View {
     private func save() async {
         isSaving = true
         geocodeTask?.cancel()
+        searchTask?.cancel()
 
         let target: BathroomSaver.Target = editing.map { .edit($0) } ?? .new(from: candidate)
         let saver = BathroomSaver(context: modelContext, geocode: reverseGeocode)
@@ -766,10 +827,37 @@ struct AddBathroomView: View {
     }
 }
 
+// MARK: - StoredPhotoTile
+
+/// An existing photo's thumbnail, loaded off the main actor like the carousel's.
+private struct StoredPhotoTile: View {
+
+    let bathroomID: UUID?
+    let fileName:   String
+
+    @State private var image: UIImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
+                Rectangle().fill(Color(.systemGray5))
+                    .overlay(Image(systemName: "photo").foregroundStyle(.secondary))
+            }
+        }
+        .task(id: fileName) {
+            guard let bathroomID else { return }
+            image = await ImageStorage.loadThumbnailAsync(bathroomID: bathroomID, fileName: fileName)
+        }
+    }
+}
+
+
 // MARK: - Previews
 
 #Preview("Add mode") {
-    AddBathroomView(userLocation: CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855))
+    AddBathroomView(locationManager: LocationManager())
         .modelContainer(for: Bathroom.self, inMemory: true)
 }
 
@@ -779,6 +867,6 @@ struct AddBathroomView: View {
         address: "123 Main St", rating: 4, accessType: .purchaseRequired,
         requiresReceiptCode: true, bidetType: .electronic, hasChangingTable: true
     )
-    return AddBathroomView(userLocation: nil, editing: b)
+    return AddBathroomView(editing: b)
         .modelContainer(for: Bathroom.self, inMemory: true)
 }

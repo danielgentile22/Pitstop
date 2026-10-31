@@ -25,12 +25,14 @@ struct BathroomSaver {
         case alreadyLogged
         case photoWriteFailed
         case commitFailed
+        case deleteFailed
 
         var errorDescription: String? {
             switch self {
             case .alreadyLogged:    return "You already logged a visit to this place."
             case .photoWriteFailed: return "A photo couldn't be saved, so nothing was changed. Try again."
             case .commitFailed:     return "The bathroom couldn't be saved, so nothing was changed. Try again."
+            case .deleteFailed:     return "The bathroom couldn't be deleted. Try again."
             }
         }
     }
@@ -68,7 +70,7 @@ struct BathroomSaver {
         var written: [String] = []
         do {
             for photo in photos.added {
-                written.append(try ImageStorage.saveImage(photo, bathroomID: bathroom.id, root: photoRoot))
+                written.append(try await ImageStorage.saveImageAsync(photo, bathroomID: bathroom.id, root: photoRoot))
             }
         } catch {
             discard(written, of: bathroom)
@@ -95,6 +97,68 @@ struct BathroomSaver {
 
         discard(removed, of: bathroom)
         return bathroom
+    }
+
+    // MARK: - Delete
+
+    /// Deletes `bathroom`, commits, and only then removes its photo folder. A Candidate it was logged from
+    /// is deleted too when a newer seed already dropped it (not dismissed, last seen before the latest import),
+    /// since the importer never deletes a linked Candidate and a closed store must not come back.
+    static func delete(
+        _ bathroom: Bathroom,
+        from context: ModelContext,
+        photoRoot: URL = ImageStorage.defaultRoot,
+        lastImportedVersion: Int = UserDefaults.standard.integer(forKey: CandidateImporter.lastImportedVersionKey),
+        commit: (ModelContext) throws -> Void = { try $0.save() }
+    ) throws {
+        let id = bathroom.id
+        do {
+            if let sourceID = bathroom.sourceID {
+                let dropped = try context.fetch(FetchDescriptor<Candidate>(predicate: #Predicate {
+                    $0.sourceID == sourceID && !$0.isDismissed && $0.seedVersion < lastImportedVersion
+                }))
+                dropped.forEach(context.delete)
+            }
+            context.delete(bathroom)
+            try commit(context)
+        } catch {
+            context.rollback()
+            throw SaveError.deleteFailed
+        }
+        ImageStorage.deleteAllImages(bathroomID: id, root: photoRoot)
+    }
+
+    // MARK: - Orphan Sweep
+
+    /// Removes photo folders with no matching Bathroom and files a Bathroom no longer lists. Skips anything
+    /// created at or after `cutoff`, so a save in flight while the sweep runs keeps its new files.
+    /// Runs in its own context so it can be called off the main thread.
+    nonisolated static func sweepOrphanedPhotos(in container: ModelContainer, root: URL, writtenBefore cutoff: Date) throws {
+        let listed = Dictionary(
+            try ModelContext(container).fetch(FetchDescriptor<Bathroom>()).map { bathroom in
+                (bathroom.id.uuidString, Set(bathroom.imageFileNames.flatMap { [$0, ImageStorage.thumbnailName(for: $0)] }))
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+
+        let fileManager = FileManager.default
+        func isOld(_ url: URL) -> Bool {
+            guard let created = try? url.resourceValues(forKeys: [.creationDateKey]).creationDate else { return false }
+            return created < cutoff
+        }
+        func contents(of url: URL) -> [URL] {
+            (try? fileManager.contentsOfDirectory(at: url, includingPropertiesForKeys: [.creationDateKey])) ?? []
+        }
+
+        for folder in contents(of: root) {
+            guard let names = listed[folder.lastPathComponent] else {
+                if isOld(folder) { try? fileManager.removeItem(at: folder) }
+                continue
+            }
+            for file in contents(of: folder) where !names.contains(file.lastPathComponent) && isOld(file) {
+                try? fileManager.removeItem(at: file)
+            }
+        }
     }
 
     // MARK: - Helpers

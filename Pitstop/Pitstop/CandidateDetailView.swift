@@ -103,7 +103,7 @@ struct CandidateDetailView: View {
         }
         // Once saved, this place is a Bathroom and its pin is gone, so close the sheet too.
         .fullScreenCover(isPresented: $showAddView, onDismiss: { if isLinked { dismiss() } }) {
-            AddBathroomView(userLocation: userLocation, candidate: candidate)
+            AddBathroomView(candidate: candidate)
         }
     }
 
