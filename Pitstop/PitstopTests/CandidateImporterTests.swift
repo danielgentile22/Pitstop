@@ -179,4 +179,12 @@ struct CandidateImporterTests {
         #expect(!seed.records.isEmpty)
         #expect(seed.records.allSatisfy { BrandProfile.table[$0.brandKey] != nil })
     }
+
+    /// The importer keys Candidates by source ID, so two records sharing one would merge two stores.
+    @Test func bundledSeedSourceIDsAreUnique() throws {
+        let ids = try CandidateImporter.loadBundledSeed().records.map(\.sourceID)
+        let repeated = Dictionary(grouping: ids, by: { $0 }).filter { $0.value.count > 1 }.keys
+
+        #expect(repeated.isEmpty, "Repeated source IDs: \(repeated.sorted())")
+    }
 }
