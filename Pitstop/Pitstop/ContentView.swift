@@ -94,15 +94,16 @@ struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .topBarLeading) {
+                    let isFiltering = filter.isActive(locationAvailable: locationManager.hasLocationPermission)
                     Button {
                         showFilterSheet = true
                     } label: {
-                        Image(systemName: filter.isActive
+                        Image(systemName: isFiltering
                               ? "line.3.horizontal.decrease.circle.fill"
                               : "line.3.horizontal.decrease.circle")
-                            .foregroundStyle(filter.isActive ? .blue : .primary)
+                            .foregroundStyle(isFiltering ? .blue : .primary)
                     }
-                    .accessibilityLabel(filter.isActive ? "Filters active" : "Filter bathrooms")
+                    .accessibilityLabel(isFiltering ? "Filters active" : "Filter bathrooms")
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -134,7 +135,7 @@ struct ContentView: View {
             AddBathroomView(userLocation: locationManager.userLocation)
         }
         .sheet(isPresented: $showFilterSheet) {
-            FilterSheetView(filter: $filter)
+            FilterSheetView(filter: $filter, hasLocationPermission: locationManager.hasLocationPermission)
         }
     }
 
