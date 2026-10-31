@@ -22,9 +22,10 @@ struct AddBathroomView: View {
 
     // MARK: - Fields
 
-    /// Every field, pin included. `initialForm` is the snapshot taken when the form opened.
+    /// Every field, pin included. `initialForm` is the snapshot taken when the form opened,
+    /// with its pin moved along when the pin follows the first location fix.
     @State private var form: BathroomForm
-    private let initialForm: BathroomForm
+    @State private var initialForm: BathroomForm
 
     // MARK: - Location
 
@@ -94,7 +95,7 @@ struct AddBathroomView: View {
             form = BathroomForm(coordinate: locationManager?.userLocation ?? Self.defaultCoordinate)
         }
         _form       = State(initialValue: form)
-        initialForm = form
+        _initialForm = State(initialValue: form)
         _placedCoordinate   = State(initialValue: form.coordinate)
         _pinFollowsLocation = State(initialValue: self.locationManager != nil && self.locationManager?.userLocation == nil)
     }
@@ -722,6 +723,8 @@ struct AddBathroomView: View {
     private func followFirstFix() {
         guard pinFollowsLocation, let location = locationManager?.userLocation else { return }
         pinFollowsLocation = false
+        // The app moved the pin, not the user, so Cancel has nothing to discard.
+        initialForm.coordinate = location
         placePin(at: location)
     }
 
