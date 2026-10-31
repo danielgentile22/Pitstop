@@ -18,11 +18,13 @@ seed even when writing elsewhere. The script refuses to write when any brand dro
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import math
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -40,6 +42,10 @@ DUPLICATE_RADIUS_METERS = 50
 # A brand losing more than this share of its records since the app's seed usually means its source
 # broke (a partial scrape, an outage), so the script stops unless --allow-drop is passed.
 MAX_BRAND_DROP = 0.3
+# Tries per download. Waits double from FETCH_FIRST_WAIT seconds; few tries, since a spider's GeoJSON
+# can take minutes to download.
+FETCH_ATTEMPTS = 4
+FETCH_FIRST_WAIT = 15
 
 
 @dataclass(frozen=True)
@@ -65,7 +71,7 @@ class AtpSource:
     def load(self, fixtures: Path | None) -> list[dict]:
         if fixtures is not None:
             return json.loads((fixtures / f"{self.spider}.geojson").read_text())["features"]
-        run = newest_complete_run(self, fetch_json(ATP_RUN_HISTORY), lambda r: run_feature_counts(r["stats_url"]))
+        run = newest_complete_run(self, run_history(), lambda r: run_feature_counts(r["stats_url"]))
         print(f"{self.spider}: run {run['run_id']}")
         base = run["output_url"].rsplit("/", 1)[0]
         return fetch_json(f"{base}/output/{self.spider}.geojson")["features"]
@@ -158,10 +164,37 @@ STATES = {
 # MARK: - Sources
 
 
-def fetch_json(url: str):
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return json.load(response)
+def fetch_json(url: str, data: bytes | None = None, timeout: int = 120):
+    """GETs url, or POSTs data to it, and parses the JSON answer.
+
+    Retries connection errors, server errors, rate limiting and unreadable answers with backoff,
+    and exits on other client errors or after FETCH_ATTEMPTS tries.
+    """
+    for attempt in range(1, FETCH_ATTEMPTS + 1):
+        request = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                answer = json.load(response)
+            if isinstance(answer, dict) and "remark" in answer:  # Overpass's timeout or memory error, with a partial answer
+                raise ValueError(answer["remark"])
+            return answer
+        except urllib.error.HTTPError as error:
+            if 400 <= error.code < 500 and error.code != 429:
+                sys.exit(f"{url}: {error}")
+            failure = error
+        except (OSError, ValueError, http.client.HTTPException) as error:  # busy servers also answer with an HTML page
+            failure = error
+        if attempt < FETCH_ATTEMPTS:
+            wait = FETCH_FIRST_WAIT * 2 ** (attempt - 1)
+            print(f"{url}: {failure}, retrying in {wait} s")
+            time.sleep(wait)
+    sys.exit(f"{url} failed {FETCH_ATTEMPTS} times, last with: {failure}")
+
+
+@cache
+def run_history() -> list[dict]:
+    """Fetched once, so every source picks from the same list of runs."""
+    return fetch_json(ATP_RUN_HISTORY)
 
 
 def newest_complete_run(source: AtpSource, runs: list[dict], feature_counts) -> dict:
@@ -213,21 +246,9 @@ area["ISO3166-2"="US-{state}"]->.region;
 nwr["brand:wikidata"~"^({wikidata})$"](area.region);
 out center tags;"""
     body = urllib.parse.urlencode({"data": query}).encode()
-    for attempt in range(5):
-        request = urllib.request.Request(OVERPASS_API, data=body, headers={"User-Agent": USER_AGENT})
-        try:
-            with urllib.request.urlopen(request, timeout=180) as response:
-                answer = json.load(response)
-            if "remark" in answer:  # a timeout or memory error, reported with a partial answer
-                raise ValueError(answer["remark"])
-            elements = answer["elements"]
-            print(f"overpass {state}: {len(elements)} elements")
-            return elements
-        except (OSError, ValueError) as error:  # the public server answers 429/504 or an HTML page when busy
-            wait = 15 * 2**attempt
-            print(f"overpass {state}: {error}, retrying in {wait} s")
-            time.sleep(wait)
-    sys.exit(f"Overpass did not answer for {state}.")
+    elements = fetch_json(OVERPASS_API, data=body, timeout=180)["elements"]
+    print(f"overpass {state}: {len(elements)} elements")
+    return elements
 
 
 # MARK: - Normalizing
@@ -253,9 +274,9 @@ def format_address(props: dict, state: str) -> str | None:
     postcode = clean(props.get("addr:postcode"))
     if postcode:
         postcode = postcode[:5]
-    if not street and not city:
-        return clean(props.get("addr:full"))
     region = " ".join(filter(None, [state, postcode]))
+    if not street and not city:
+        return clean(props.get("addr:full")) or region
     return ", ".join(filter(None, [street, city, region]))
 
 
@@ -350,19 +371,30 @@ def build_records(source: AtpSource | OsmSource, features: list[dict], stats: Co
     return records
 
 
-def remove_duplicates(records: list[dict], stats: Counter) -> list[dict]:
-    """Keeps the lowest source ID of any same-brand or same-parent group within DUPLICATE_RADIUS_METERS,
-    and drops fuel brands' stations that sit at a store selling them."""
+def remove_duplicates(records: list[dict], previous_ids: set[str], stats: Counter) -> list[dict]:
+    """Keeps one record of any same-brand or same-parent group within DUPLICATE_RADIUS_METERS, and one of
+    a fuel brand's station and a store selling its fuel.
+
+    The record kept is one from the previous seed when there is one, else the lowest source ID, so a
+    new listing nearby never changes a place's identity (the app links dismissals and visits by ID).
+    """
+
+    def rank(record: dict) -> tuple[bool, str]:
+        return record["sourceID"] not in previous_ids, record["sourceID"]
+
     stores = [r for r in records if r["brandKey"] in STORES_SELLING_OTHER_FUEL]
+    fuel = [r for r in records if r["brandKey"] in FUEL_BRANDS]
+    # The station is dropped, since the restroom is the store's, unless only the station was in the previous seed.
     fuel_at_store = {
-        r["sourceID"]
-        for r in records
-        if r["brandKey"] in FUEL_BRANDS and any(meters_between(s, r) <= DUPLICATE_RADIUS_METERS for s in stores)
+        (s if f["sourceID"] in previous_ids and s["sourceID"] not in previous_ids else f)["sourceID"]
+        for s in stores
+        for f in fuel
+        if meters_between(s, f) <= DUPLICATE_RADIUS_METERS
     }
     stats["skipped: fuel sold at a 7-Eleven"] += len(fuel_at_store)
     records = [r for r in records if r["sourceID"] not in fuel_at_store]
     kept: list[dict] = []
-    for record in sorted(records, key=lambda r: r["sourceID"]):
+    for record in sorted(records, key=rank):
         if any(
             k["_group"] == record["_group"] and meters_between(k, record) <= DUPLICATE_RADIUS_METERS
             for k in kept
@@ -430,14 +462,15 @@ def main(argv: list[str] | None = None) -> int:
     records = []
     for source in SOURCES:
         records.extend(build_records(source, source.load(args.fixtures), stats))
-    records = remove_duplicates(records, stats)
+    previous = json.loads(BUNDLED_SEED.read_text()) if BUNDLED_SEED.exists() else None
+    previous_ids = {r["sourceID"] for r in previous["records"]} if previous else set()
+    records = sorted(remove_duplicates(records, previous_ids, stats), key=lambda r: r["sourceID"])
     print_counts(records, stats)
 
     check_unique_ids(records)
 
     for record in records:
         del record["_state"], record["_group"]
-    previous = json.loads(BUNDLED_SEED.read_text()) if BUNDLED_SEED.exists() else None
     if (dropped := dropped_brands(previous, records)) and not args.allow_drop:
         sys.exit("Brands dropped since the app's seed (pass --allow-drop to write anyway): " + ", ".join(dropped))
     version = next_version(previous, records)
