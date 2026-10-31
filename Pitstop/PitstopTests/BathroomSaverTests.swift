@@ -218,9 +218,9 @@ struct BathroomSaverTests {
             do { try await saver.save(BathroomForm(candidate: candidate), to: .new(from: candidate), photos: photos); return nil }
             catch { return error as? BathroomSaver.SaveError }
         }
-        async let first  = attempt()
-        async let second = attempt()
-        let errors = await [first, second]
+        let first  = Task { await attempt() }
+        let second = Task { await attempt() }
+        let errors = [await first.value, await second.value]
 
         #expect(errors.filter { $0 == nil }.count == 1)
         #expect(errors.contains(.alreadyLogged))
