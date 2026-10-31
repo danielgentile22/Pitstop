@@ -4,7 +4,8 @@
 # Export signs with the distribution certificate named in Pitstop/ExportOptions.plist and the
 # "Pitstop App Store" profile, which must be installed once. The
 # distribution certificate lives in the shared tvhome-signing keychain, unlocked here with
-# SIGNING_KEYCHAIN_PASSWORD (passed on stdin, so it never shows in the process list) so signing
+# SIGNING_KEYCHAIN_PASSWORD (sent to `security -i` on stdin, so it never shows in the process list
+# and no terminal prompt swallows it) so signing
 # never stops on a password prompt, and locked again on every exit. Each build is numbered by
 # the UTC date and time to the second, so every upload is new.
 #
@@ -34,8 +35,11 @@ archive=build/Pitstop.xcarchive
 export_dir=build/export
 keychain=$HOME/Library/Keychains/tvhome-signing.keychain-db
 
+# Quotes a word for `security -i`, which reads backslash escapes inside double quotes.
+security_quote() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; printf '"%s"' "$s"; }
 trap 'security lock-keychain "$keychain"' EXIT
-env_value SIGNING_KEYCHAIN_PASSWORD | security unlock-keychain "$keychain"
+printf 'unlock-keychain -p %s %s\n' "$(security_quote "$(env_value SIGNING_KEYCHAIN_PASSWORD)")" \
+  "$(security_quote "$keychain")" | security -i
 
 xcodebuild archive -project Pitstop/Pitstop.xcodeproj -scheme Pitstop -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$archive" "${auth[@]}" \
