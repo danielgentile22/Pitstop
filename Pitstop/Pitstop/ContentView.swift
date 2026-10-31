@@ -35,6 +35,7 @@ struct ContentView: View {
         followsHeading: false,
         fallback: .region(.unitedStates)
     )
+    @State private var hasFittedMapCamera = false
     @State private var showAddBathroom    = false
     @State private var filter             = BathroomFilter()
     @State private var showFilterSheet    = false
@@ -54,6 +55,7 @@ struct ContentView: View {
                         MapTabView(
                             locationManager: locationManager,
                             cameraPosition: $mapCameraPosition,
+                            hasFittedCamera: $hasFittedMapCamera,
                             filter: filter
                         )
                         .transition(.opacity.combined(with: .scale(scale: 0.97)))

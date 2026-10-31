@@ -32,7 +32,7 @@ struct ListTabView: View {
 
     @State private var searchText       = ""
     @State private var sortOption       = SortOption.distance
-    @State private var selectedPlace:    MapSelection?
+    @State private var selectedPlace:    PlaceKey?
     @State private var bathroomToDelete: Bathroom?
     @State private var showDeleteAlert  = false
 
@@ -108,7 +108,7 @@ struct ListTabView: View {
                 row(for: place)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        selectedPlace = place
+                        selectedPlace = place.key
                     }
             }
         }

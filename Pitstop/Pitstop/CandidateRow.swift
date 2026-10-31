@@ -22,7 +22,7 @@ struct CandidateRow: View {
         let brand = candidate.brand
 
         HStack(alignment: .top, spacing: 12) {
-            CandidateAnnotation(brand: brand, isSelected: false, isDismissed: candidate.isDismissed)
+            CandidateAnnotation(reliability: brand.reliability, isSelected: false, isDismissed: candidate.isDismissed)
                 .frame(width: thumbSize, height: thumbSize)
                 .background(Color(.secondarySystemFill))
                 .clipShape(RoundedRectangle(cornerRadius: thumbRadius, style: .continuous))
