@@ -16,13 +16,13 @@ enum StoreRecovery {
     private static let backupsFolderName = "StoreBackups"
 
     static func recover(storeAt storeURL: URL, from error: Error) -> StoreOpenFailure {
-        logger.error("Could not open the SwiftData store at \(storeURL.path): \(error)")
+        logger.error("Could not open the SwiftData store at \(storeURL.path, privacy: .public): \(String(describing: error), privacy: .public)")
         do {
             let folder = try backUpStoreFiles(at: storeURL)
-            logger.notice("Backed up the store to \(folder.path)")
+            logger.notice("Backed up the store to \(folder.path, privacy: .public)")
             return StoreOpenFailure(isBackedUp: true)
         } catch {
-            logger.error("Could not back up the store: \(error)")
+            logger.error("Could not back up the store: \(String(describing: error), privacy: .public)")
             return StoreOpenFailure(isBackedUp: false)
         }
     }
