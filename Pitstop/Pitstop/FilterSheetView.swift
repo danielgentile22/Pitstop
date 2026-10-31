@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Filter sheet for the bathroom list. Edits apply live; there is no Apply button.
+/// Filter sheet for the map and the list. Edits apply live; there is no Apply button.
 struct FilterSheetView: View {
 
     @Binding var filter: BathroomFilter
@@ -11,6 +11,12 @@ struct FilterSheetView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
 
+                    sectionHeader("Unvisited Places")
+                    unvisitedToggles
+                        .padding(.horizontal, 20).padding(.bottom, 24)
+
+                    divider
+
                     sectionHeader("Minimum Rating")
                     ratingPicker
                         .padding(.horizontal, 20).padding(.bottom, 24)
@@ -18,7 +24,7 @@ struct FilterSheetView: View {
                     divider
 
                     sectionHeader("Max Distance")
-                    Text("Requires location access. Only shows bathrooms within the selected radius.")
+                    Text("Requires location access. Only shows places within the selected radius.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 20)
@@ -206,6 +212,18 @@ struct FilterSheetView: View {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - Unvisited Toggles
+
+    private var unvisitedToggles: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            mustHaveRow("Show Unvisited", icon: "questionmark.circle", color: .teal, isOn: $filter.showUnvisited)
+            Text("Rating, access, and amenity filters hide unvisited places, since you have not visited them yet. Distance and Open 24 Hours apply to them.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.top, 10)
         }
     }
 
