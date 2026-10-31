@@ -46,7 +46,7 @@ struct MapTabView: View {
             ClusteredMapView(
                 cameraPosition: $cameraPosition,
                 bathrooms: filteredBathrooms,
-                candidates: candidates,
+                candidates: candidates.unlinked(from: allBathrooms),
                 selection: selection,
                 onSelect: select
             )
