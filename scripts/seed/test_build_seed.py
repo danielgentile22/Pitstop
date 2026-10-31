@@ -1,5 +1,7 @@
 import json
 import re
+import shutil
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -9,9 +11,28 @@ import build_seed
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def run(output: Path) -> dict:
-    build_seed.main(["--fixtures", str(FIXTURES), "--output", str(output)])
+@pytest.fixture(autouse=True)
+def bundled_seed(tmp_path, monkeypatch):
+    """Points the bundled seed at a temporary path, so no test reads or writes the app's real seed."""
+    path = tmp_path / "bundled" / "CandidateSeed.json"
+    path.parent.mkdir()
+    monkeypatch.setattr(build_seed, "BUNDLED_SEED", path)
+    return path
+
+
+def run(output: Path, *flags: str, fixtures: Path = FIXTURES) -> dict:
+    build_seed.main(["--fixtures", str(fixtures), "--output", str(output), *flags])
     return json.loads(output.read_text())
+
+
+def edited_fixtures(tmp_path, name: str, edit) -> Path:
+    """A copy of the fixtures folder with edit(data) applied to one file's parsed JSON."""
+    folder = tmp_path / "fixtures"
+    shutil.copytree(FIXTURES, folder)
+    data = json.loads((folder / name).read_text())
+    edit(data)
+    (folder / name).write_text(json.dumps(data))
+    return folder
 
 
 @pytest.fixture
@@ -99,16 +120,121 @@ def test_records_are_sorted_by_source_id(seed):
     assert ids == sorted(ids)
 
 
-def test_version_bumps_only_when_records_change(tmp_path):
+def test_version_bumps_only_when_records_change(tmp_path, bundled_seed):
     output = tmp_path / "seed.json"
     first = run(output)
     assert first["version"] == 1
-    assert run(output)["version"] == 1
 
-    stale = json.loads(output.read_text())
-    stale["records"] = stale["records"][1:]
-    output.write_text(json.dumps(stale))
-    assert run(output)["version"] == 2
+    bundled_seed.write_text(json.dumps({"version": 7, "records": first["records"]}))
+    assert run(output)["version"] == 7
+
+    bundled_seed.write_text(json.dumps({"version": 7, "records": first["records"][1:]}))
+    assert run(output)["version"] == 8
+
+
+def test_version_is_based_on_the_bundled_seed_not_the_output(tmp_path, bundled_seed):
+    output = tmp_path / "seed.json"
+    records = run(output)["records"]
+    bundled_seed.write_text(json.dumps({"version": 41, "records": records[1:]}))
+    output.write_text(json.dumps({"version": 3, "records": records[1:]}))
+    assert run(tmp_path / "new.json")["version"] == 42
+    assert run(output)["version"] == 42
+
+
+def test_fixture_mode_requires_an_output_path():
+    with pytest.raises(SystemExit) as exit:
+        build_seed.main(["--fixtures", str(FIXTURES)])
+    assert exit.value.code != 0
+
+
+def test_fixture_mode_refuses_to_write_the_bundled_seed(bundled_seed):
+    bundled_seed.write_text('{"version": 5, "records": []}')
+    with pytest.raises(SystemExit) as exit:
+        build_seed.main(["--fixtures", str(FIXTURES), "--output", str(bundled_seed.parent / "." / bundled_seed.name)])
+    assert exit.value.code != 0
+    assert bundled_seed.read_text() == '{"version": 5, "records": []}'
+
+
+def previous_seed(records: list[dict], brand_key: str, count: int) -> dict:
+    """A previous seed with this run's records, but `count` records of one brand."""
+    template = next(r for r in records if r["brandKey"] == brand_key)
+    others = [r for r in records if r["brandKey"] != brand_key]
+    brand = [{**template, "sourceID": f"{template['sourceID']}-old{i}"} for i in range(count)]
+    return {"version": 1, "records": others + brand}
+
+
+@pytest.mark.parametrize("previous_count, fails", [(7, False), (8, True)])
+def test_a_brand_dropping_more_than_30_percent_fails(tmp_path, bundled_seed, previous_count, fails):
+    output = tmp_path / "seed.json"
+    records = run(output)["records"]
+    output.unlink()
+    assert Counter(r["brandKey"] for r in records)["barnes_and_noble"] == 5
+    # 7 to 5 is a 29 percent drop, 8 to 5 is 38 percent.
+    bundled_seed.write_text(json.dumps(previous_seed(records, "barnes_and_noble", previous_count)))
+    if fails:
+        with pytest.raises(SystemExit) as exit:
+            run(output)
+        assert "barnes_and_noble 8 -> 5" in str(exit.value.code)
+        assert not output.exists()
+    else:
+        assert run(output)["version"] == 2
+
+
+@pytest.mark.parametrize(
+    "before, after, fails",
+    [(10, 7, False), (10, 6, True), (1, 1, False), (1, 0, True), (3, 2, True), (100, 150, False)],
+)
+def test_drop_threshold(before, after, fails):
+    previous = {"records": [{"brandKey": "wawa"}] * before}
+    assert bool(build_seed.dropped_brands(previous, [{"brandKey": "wawa"}] * after)) is fails
+
+
+def test_a_brand_dropping_to_zero_fails(tmp_path, bundled_seed):
+    output = tmp_path / "seed.json"
+    records = run(output)["records"]
+    output.unlink()
+    previous = {"version": 1, "records": records}
+    bundled_seed.write_text(json.dumps(previous))
+    without_target = edited_fixtures(tmp_path, "target_us.geojson", lambda data: data.update(features=[]))
+    with pytest.raises(SystemExit) as exit:
+        run(output, fixtures=without_target)
+    assert exit.value.code != 0
+    assert not output.exists()
+
+
+def test_allow_drop_writes_a_seed_that_drops_a_brand(tmp_path, bundled_seed):
+    output = tmp_path / "seed.json"
+    records = run(output)["records"]
+    bundled_seed.write_text(json.dumps({"version": 1, "records": records}))
+    without_target = edited_fixtures(tmp_path, "target_us.geojson", lambda data: data.update(features=[]))
+    seed = run(output, "--allow-drop", fixtures=without_target)
+    assert seed["version"] == 2
+    assert not any(r["brandKey"] == "target" for r in seed["records"])
+
+
+def test_an_empty_openstreetmap_result_fails(tmp_path):
+    output = tmp_path / "seed.json"
+    empty_maryland = edited_fixtures(tmp_path, "osm_md.json", lambda data: data.update(elements=[]))
+    with pytest.raises(SystemExit) as exit:
+        run(output, fixtures=empty_maryland)
+    assert exit.value.code != 0
+    assert not output.exists()
+
+
+def test_duplicate_source_ids_fail_and_name_the_ids(tmp_path):
+    output = tmp_path / "seed.json"
+
+    def add_far_copy_of_store_100(data):
+        store = next(f for f in data["features"] if f["properties"]["ref"] == "100")
+        copy = json.loads(json.dumps(store))
+        copy["geometry"]["coordinates"][1] += 0.01  # about 1.1 km north, too far to count as a duplicate
+        data["features"].append(copy)
+
+    duplicated = edited_fixtures(tmp_path, "barnes_and_noble_us.geojson", add_far_copy_of_store_100)
+    with pytest.raises(SystemExit) as exit:
+        run(output, fixtures=duplicated)
+    assert "atp:barnes_and_noble_us:100" in str(exit.value.code)
+    assert not output.exists()
 
 
 def test_maps_target_and_walmart_to_their_brands(seed):
