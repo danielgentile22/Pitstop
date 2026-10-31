@@ -34,6 +34,10 @@ enum EmergencyRanker {
         // Dismissed Candidates are never chosen: `rank` drops them instead of penalizing them.
     }
 
+    /// Places that cost more effective minutes than this are out of range: `rank` drops them, so the
+    /// button says nothing is in range instead of sending the user on a long drive.
+    static let maxEffectiveMinutes: Double = 45
+
     /// Speed assumed for places without a driving time.
     static let fallbackMilesPerHour: Double = 20
     static let fallbackMetersPerMinute = fallbackMilesPerHour * 1609.344 / 60
@@ -108,6 +112,7 @@ enum EmergencyRanker {
                                    longitude: place.destination.longitude,
                                    effectiveMinutes: travelMinutes + place.penalty + lateNight)
             }
+            .filter { $0.effectiveMinutes <= maxEffectiveMinutes }
             .sorted { $0.effectiveMinutes < $1.effectiveMinutes }
     }
 
