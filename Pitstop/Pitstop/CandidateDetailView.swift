@@ -107,7 +107,7 @@ struct CandidateDetailView: View {
         }
         // Once saved, this place is a Bathroom and its pin is gone, so close the sheet too.
         .fullScreenCover(isPresented: $showAddView, onDismiss: { if isLinked { dismiss() } }) {
-            AddBathroomView(userLocation: userLocation, candidate: candidate)
+            AddBathroomView(candidate: candidate)
         }
     }
 
@@ -155,7 +155,7 @@ struct CandidateDetailView: View {
     }
 
     private func openDirections() {
-        MapURLHelper.openDirections(toLatitude: candidate.latitude, longitude: candidate.longitude, mode: .driving)
+        Task { await MapURLHelper.openDirections(toLatitude: candidate.latitude, longitude: candidate.longitude, mode: .driving) }
     }
 
     /// Straight-line distance, as a rough guide before driving there.
