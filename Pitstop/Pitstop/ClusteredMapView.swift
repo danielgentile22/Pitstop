@@ -133,7 +133,7 @@ struct ClusteredMapView: UIViewRepresentable {
                 if mapView.userLocation.location == nil, let fallback = position.fallbackPosition?.region {
                     mapView.setRegion(fallback, animated: false)
                 }
-                mapView.setUserTrackingMode(.follow, animated: animated)
+                mapView.setUserTrackingMode(position.followsUserHeading ? .followWithHeading : .follow, animated: animated)
             }
         }
 
@@ -159,9 +159,16 @@ struct ClusteredMapView: UIViewRepresentable {
             }
         }
 
-        /// Keeps the binding current so the map comes back where the user left it after the List tab.
+        /// Keeps the binding current so the map comes back where the user left it after the List tab,
+        /// still following the user if it was.
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-            let position = MapCameraPosition.region(mapView.region)
+            let region = MapCameraPosition.region(mapView.region)
+            let position: MapCameraPosition
+            switch mapView.userTrackingMode {
+            case .follow:            position = .userLocation(followsHeading: false, fallback: region)
+            case .followWithHeading: position = .userLocation(followsHeading: true, fallback: region)
+            default:                 position = region
+            }
             appliedPosition = position
             // Can fire inside updateUIView (an unanimated setRegion), where SwiftUI state must not change.
             DispatchQueue.main.async { [weak self] in
