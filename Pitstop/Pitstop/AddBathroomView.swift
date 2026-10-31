@@ -746,6 +746,7 @@ struct AddBathroomView: View {
     /// Only the latest search may move the pin: starting one cancels the one before it.
     private func searchAddress() {
         searchTask?.cancel()
+        searchProblem = nil
         let query = addressQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return }
         let request = MKLocalSearch.Request()
