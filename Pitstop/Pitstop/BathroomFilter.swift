@@ -66,7 +66,7 @@ struct BathroomFilter: Equatable {
 
     // MARK: - Distance
 
-    /// Not checked by `applies(to:)`; ListTabView applies it with `isWithinMaxDistance` because it needs the user's location.
+    /// Not checked by `applies(to:)`; the views apply it with `isWithinMaxDistance` because it needs the user's location.
     var maxDistance: MaxDistance? = nil
 
     // MARK: - Derived
