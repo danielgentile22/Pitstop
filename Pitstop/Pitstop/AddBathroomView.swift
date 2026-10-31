@@ -806,6 +806,8 @@ struct AddBathroomView: View {
     }
 
     private func save() async {
+        // A second tap can land before the disabled Save button redraws.
+        guard !isSaving else { return }
         isSaving = true
         geocodeTask?.cancel()
         searchTask?.cancel()

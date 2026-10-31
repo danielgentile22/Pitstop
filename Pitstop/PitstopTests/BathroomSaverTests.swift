@@ -206,6 +206,33 @@ struct BathroomSaverTests {
         #expect(try FileManager.default.contentsOfDirectory(atPath: photoRoot.path).isEmpty)
     }
 
+    @Test func concurrentSavesOfOneCandidateLogOneVisit() async throws {
+        let candidate = Candidate(sourceID: "atp:a", brandKey: "target", name: "Target", latitude: 38.8, longitude: -77.0, seedVersion: 1)
+        context.insert(candidate)
+        try context.save()
+        // A slow geocode keeps both saves past the first duplicate check before either inserts.
+        let saver = saver(geocode: { _ in try? await Task.sleep(for: .milliseconds(100)); return "Geocoded St" })
+        let photos = BathroomSaver.PhotoChanges(added: [photo()])
+
+        func attempt() async -> BathroomSaver.SaveError? {
+            do { try await saver.save(BathroomForm(candidate: candidate), to: .new(from: candidate), photos: photos); return nil }
+            catch { return error as? BathroomSaver.SaveError }
+        }
+        async let first  = attempt()
+        async let second = attempt()
+        let errors = await [first, second]
+
+        #expect(errors.filter { $0 == nil }.count == 1)
+        #expect(errors.contains(.alreadyLogged))
+        let committed = try committedBathrooms()
+        #expect(committed.count == 1)
+        // The refused save removed its photos, so every file on disk belongs to the logged Bathroom.
+        let folders = try FileManager.default.contentsOfDirectory(atPath: photoRoot.path)
+        let stored = try folders.flatMap { try FileManager.default.contentsOfDirectory(atPath: photoRoot.appendingPathComponent($0).path) }
+        #expect(Set(stored) == (try files(of: committed[0])))
+        #expect(stored.count == 2)
+    }
+
     @Test func loggingACandidateLinksItAndClearsItsDismissal() async throws {
         let candidate = Candidate(sourceID: "atp:a", brandKey: "target", name: "Target", latitude: 38.8, longitude: -77.0,
                                   address: "2 Store Rd", isDismissed: true, seedVersion: 1)

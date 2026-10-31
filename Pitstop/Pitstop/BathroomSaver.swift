@@ -77,6 +77,16 @@ struct BathroomSaver {
             throw SaveError.photoWriteFailed
         }
 
+        // A second save of the same Candidate may have committed while this one awaited, so check again.
+        if case .new(let candidate?) = target {
+            do {
+                if try isLogged(candidate) { throw SaveError.alreadyLogged }
+            } catch {
+                discard(written, of: bathroom)
+                throw error
+            }
+        }
+
         form.apply(to: bathroom)
         bathroom.address        = address
         bathroom.imageFileNames = photos.kept + written
