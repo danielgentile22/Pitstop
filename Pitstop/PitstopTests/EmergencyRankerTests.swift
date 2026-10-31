@@ -30,7 +30,7 @@ struct EmergencyRankerTests {
         _ id: UUID = UUID(),
         minutesAway: Double,
         rating: Int,
-        isOpen24Hours: Bool = true,
+        isOpen24Hours: Bool? = true,
         sourceID: String? = nil
     ) -> EmergencyRanker.VisitedPlace {
         let c = coordinate(minutesAway: minutesAway)
@@ -117,6 +117,22 @@ struct EmergencyRankerTests {
         // 7 driving + 5 likely brand, plus 20 only for the place known to close at night.
         #expect(ranked.map(\.id) == [.candidate("unknown"), .candidate("closes")])
         #expect(ranked.map(\.effectiveMinutes) == [12, 32])
+    }
+
+    @Test func lateNightPenaltySkipsBathroomsWithUnknownHours() {
+        let unknown = UUID(), closes = UUID()
+        let ranked = EmergencyRanker.rank(
+            from: origin, at: time(hour: 2), calendar: Self.calendar,
+            visited: [
+                visited(unknown, minutesAway: 0, rating: 5, isOpen24Hours: nil),
+                visited(closes, minutesAway: 0, rating: 5, isOpen24Hours: false),
+            ],
+            unvisited: [],
+            drivingTimes: [.bathroom(unknown): 7 * 60, .bathroom(closes): 7 * 60]
+        )
+        // 7 driving + 0 for five stars, plus 20 only for the place known to close at night.
+        #expect(ranked.map(\.id) == [.bathroom(unknown), .bathroom(closes)])
+        #expect(ranked.map(\.effectiveMinutes) == [7, 27])
     }
 
     @Test(arguments: [
@@ -256,16 +272,23 @@ struct EmergencyRankerTests {
 
     // MARK: - Mapping stored places
 
-    @Test func visitedPlaceCopiesBathroom() {
-        let bathroom = Bathroom(name: "Shop", latitude: 38.9, longitude: -77.1, rating: 4, isOpen24Hours: true)
+    @Test(arguments: [
+        (isOpen24Hours: true, isOpen24HoursKnown: Bool?.none, expected: Bool?.some(true)),
+        (isOpen24Hours: false, isOpen24HoursKnown: Bool?.none, expected: Bool?.some(false)),
+        (isOpen24Hours: false, isOpen24HoursKnown: Bool?.some(true), expected: Bool?.some(false)),
+        (isOpen24Hours: false, isOpen24HoursKnown: Bool?.some(false), expected: Bool?.none),
+    ])
+    func visitedPlaceCopiesBathroom(isOpen24Hours: Bool, isOpen24HoursKnown: Bool?, expected: Bool?) {
+        let bathroom = Bathroom(name: "Shop", latitude: 38.9, longitude: -77.1, rating: 4, isOpen24Hours: isOpen24Hours)
         bathroom.sourceID = "node/1"
+        bathroom.isOpen24HoursKnown = isOpen24HoursKnown
         let place = EmergencyRanker.VisitedPlace(bathroom)
         #expect(place.id == bathroom.id)
         #expect(place.sourceID == "node/1")
         #expect(place.latitude == 38.9)
         #expect(place.longitude == -77.1)
         #expect(place.rating == 4)
-        #expect(place.isOpen24Hours == true)
+        #expect(place.isOpen24Hours == expected)
     }
 
     @Test(arguments: [
