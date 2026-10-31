@@ -400,6 +400,122 @@ def test_flags_24_hour_gas_stations(seed):
     assert ids["atp:exxon_mobil:200310061"]["isOpen24Hours"] is False  # Mo-Sa 05:00-24:00; Su 06:00-24:00
 
 
+@pytest.mark.parametrize(
+    "hours",
+    [
+        "Fr-Mo 00:00-24:00; Tu-Th 00:00-24:00",  # a day range that wraps past Sunday
+        "Sa-Fr 00:00-24:00",
+        "Su-Sa 00:00-23:59",
+    ],
+)
+def test_is_open_24_hours_wraps_day_ranges_past_sunday(hours):
+    assert build_seed.is_open_24_hours(hours) is True
+
+
+@pytest.mark.parametrize(
+    "hours",
+    [
+        "Fr-Mo 00:00-24:00",  # wraps, but only covers four days
+        "Mo-Xx 00:00-24:00",
+        "Mo-Tu-We 00:00-24:00",
+        "Mo-Su",
+        "always open",
+        "24/7; PH off",
+        "Mo-Su 00:00-24:00 open",
+        ";",
+    ],
+)
+def test_is_open_24_hours_rejects_partial_and_malformed_hours(hours):
+    assert build_seed.is_open_24_hours(hours) is False
+
+
+@pytest.mark.parametrize(
+    "props, address",
+    [
+        ({"addr:full": "Route 40, Hagerstown", "addr:postcode": "21740"}, "Route 40, Hagerstown"),
+        ({"addr:postcode": "21740-1234"}, "MD 21740"),
+        ({}, "MD"),
+        ({"addr:city": "Hagerstown"}, "Hagerstown, MD"),
+    ],
+)
+def test_address_falls_back_to_the_full_address_then_state_and_postcode(props, address):
+    assert build_seed.format_address(props, "MD") == address
+
+
+def add_nearby_feature(near_ref: str, ref: str, wikidata: str | None):
+    """An edit that adds a copy of the fixture feature with near_ref, about 20 m north, as ref and wikidata."""
+
+    def edit(data):
+        near = next(f for f in features_of(near_ref) if f["properties"]["ref"] == near_ref)
+        feature = json.loads(json.dumps(near))
+        feature["properties"].update(ref=ref, **{"brand:wikidata": wikidata})
+        feature["geometry"]["coordinates"][1] += 0.00018
+        data["features"].append(feature)
+
+    return edit
+
+
+def features_of(ref: str) -> list[dict]:
+    return [
+        f
+        for path in FIXTURES.glob("*.geojson")
+        for f in json.loads(path.read_text())["features"]
+        if (f.get("properties") or {}).get("ref") == ref
+    ]
+
+
+@pytest.mark.parametrize(
+    "file, near_ref, ref, wikidata, kept, dropped",
+    [
+        ("exxon_mobil.geojson", "200310061", "200310062", "Q109676002", "atp:exxon_mobil:200310061", "atp:exxon_mobil:200310062"),
+        ("bp.geojson", "US-128668", "US-128669", "Q465952", "atp:bp:US-128668", "atp:bp:US-128669"),
+        ("speedway_us.geojson", "40063_SHOP", "1", "Q7575683", "atp:seven_eleven_ca_us:40063_SHOP", "atp:speedway_us:1"),
+    ],
+    ids=["exxon and mobil", "bp and amoco", "7-eleven and speedway"],
+)
+def test_removes_duplicates_between_sibling_brands(tmp_path, file, near_ref, ref, wikidata, kept, dropped):
+    folder = edited_fixtures(tmp_path, file, add_nearby_feature(near_ref, ref, wikidata))
+    ids = by_id(run(tmp_path / "seed.json", fixtures=folder))
+    assert kept in ids
+    assert dropped not in ids
+
+
+def test_sibling_brands_far_apart_are_both_kept(tmp_path):
+    ids = by_id(run(tmp_path / "seed.json"))
+    assert "atp:exxon_mobil:200310061" in ids
+    assert "atp:exxon_mobil:200331860" in ids  # a Mobil about 300 km away
+
+
+def previous_with(records: list[dict], new_id: str, previous_id: str) -> dict:
+    """A previous seed of these records, with new_id's record shipped as previous_id's brand and ID instead."""
+    spider = previous_id.split(":")[1]
+    brand_key = next(s.brand_key for s in build_seed.SOURCES if getattr(s, "spider", None) == spider)
+    swapped = [{**r, "sourceID": previous_id, "brandKey": brand_key} if r["sourceID"] == new_id else r for r in records]
+    return {"version": 1, "records": swapped}
+
+
+@pytest.mark.parametrize(
+    "previous_id, new_id",
+    [
+        ("atp:barnes_and_noble_us:104", "atp:barnes_and_noble_us:100"),  # same brand
+        ("atp:giant_food_us:#0900", "atp:food_lion_us:900"),  # same parent company
+        ("atp:sunoco_us:8003437499", "atp:seven_eleven_ca_us:40063_SHOP"),  # fuel sold at a 7-Eleven
+    ],
+    ids=["same brand", "same parent", "fuel at a 7-eleven"],
+)
+def test_a_record_from_the_previous_seed_keeps_winning_its_duplicate_cluster(tmp_path, bundled_seed, previous_id, new_id):
+    output = tmp_path / "seed.json"
+    first = by_id(run(output))
+    assert new_id in first and previous_id not in first  # the lowest ID wins without a previous seed
+
+    # The previous seed shipped previous_id; new_id is a listing that appeared since.
+    bundled_seed.write_text(json.dumps(previous_with(list(first.values()), new_id, previous_id)))
+    second = by_id(run(output))
+    assert previous_id in second
+    assert new_id not in second
+    assert second.keys() - {previous_id} == first.keys() - {new_id}
+
+
 def test_run_history_is_fetched_once_per_run(monkeypatch):
     history = [{"run_id": "2026-10-17", "stats_url": "stats", "output_url": "https://example/runs/x/output.zip"}]
     fetched = Counter()

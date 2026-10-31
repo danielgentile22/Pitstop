@@ -273,9 +273,9 @@ def format_address(props: dict, state: str) -> str | None:
     postcode = clean(props.get("addr:postcode"))
     if postcode:
         postcode = postcode[:5]
-    if not street and not city:
-        return clean(props.get("addr:full"))
     region = " ".join(filter(None, [state, postcode]))
+    if not street and not city:
+        return clean(props.get("addr:full")) or region
     return ", ".join(filter(None, [street, city, region]))
 
 
@@ -370,19 +370,30 @@ def build_records(source: AtpSource | OsmSource, features: list[dict], stats: Co
     return records
 
 
-def remove_duplicates(records: list[dict], stats: Counter) -> list[dict]:
-    """Keeps the lowest source ID of any same-brand or same-parent group within DUPLICATE_RADIUS_METERS,
-    and drops fuel brands' stations that sit at a store selling them."""
+def remove_duplicates(records: list[dict], previous_ids: set[str], stats: Counter) -> list[dict]:
+    """Keeps one record of any same-brand or same-parent group within DUPLICATE_RADIUS_METERS, and one of
+    a fuel brand's station and a store selling its fuel.
+
+    The record kept is one from the previous seed when there is one, else the lowest source ID, so a
+    new listing nearby never changes a place's identity (the app links dismissals and visits by ID).
+    """
+
+    def rank(record: dict) -> tuple[bool, str]:
+        return record["sourceID"] not in previous_ids, record["sourceID"]
+
     stores = [r for r in records if r["brandKey"] in STORES_SELLING_OTHER_FUEL]
+    fuel = [r for r in records if r["brandKey"] in FUEL_BRANDS]
+    # The station is dropped, since the restroom is the store's, unless only the station was in the previous seed.
     fuel_at_store = {
-        r["sourceID"]
-        for r in records
-        if r["brandKey"] in FUEL_BRANDS and any(meters_between(s, r) <= DUPLICATE_RADIUS_METERS for s in stores)
+        (s if f["sourceID"] in previous_ids and s["sourceID"] not in previous_ids else f)["sourceID"]
+        for s in stores
+        for f in fuel
+        if meters_between(s, f) <= DUPLICATE_RADIUS_METERS
     }
     stats["skipped: fuel sold at a 7-Eleven"] += len(fuel_at_store)
     records = [r for r in records if r["sourceID"] not in fuel_at_store]
     kept: list[dict] = []
-    for record in sorted(records, key=lambda r: r["sourceID"]):
+    for record in sorted(records, key=rank):
         if any(
             k["_group"] == record["_group"] and meters_between(k, record) <= DUPLICATE_RADIUS_METERS
             for k in kept
@@ -450,14 +461,15 @@ def main(argv: list[str] | None = None) -> int:
     records = []
     for source in SOURCES:
         records.extend(build_records(source, source.load(args.fixtures), stats))
-    records = remove_duplicates(records, stats)
+    previous = json.loads(BUNDLED_SEED.read_text()) if BUNDLED_SEED.exists() else None
+    previous_ids = {r["sourceID"] for r in previous["records"]} if previous else set()
+    records = sorted(remove_duplicates(records, previous_ids, stats), key=lambda r: r["sourceID"])
     print_counts(records, stats)
 
     check_unique_ids(records)
 
     for record in records:
         del record["_state"], record["_group"]
-    previous = json.loads(BUNDLED_SEED.read_text()) if BUNDLED_SEED.exists() else None
     if (dropped := dropped_brands(previous, records)) and not args.allow_drop:
         sys.exit("Brands dropped since the app's seed (pass --allow-drop to write anyway): " + ", ".join(dropped))
     version = next_version(previous, records)
