@@ -3,6 +3,8 @@ import SwiftUI
 /// Floating button that triggers the nearest-bathroom flow in ContentView.
 struct EmergencyButton: View {
 
+    /// True while driving times load. Swaps the icon for a spinner so a tap never looks ignored.
+    var isWorking = false
     var onTap: () -> Void
 
     @State private var isPulsing = false
@@ -14,9 +16,16 @@ struct EmergencyButton: View {
 
     var body: some View {
         Button(action: onTap) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: iconSize, weight: .bold))
-                .foregroundStyle(.white)
+            Group {
+                if isWorking {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: iconSize, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+            }
                 .frame(width: buttonSize, height: buttonSize)
                 .background(
                     Circle()
@@ -25,7 +34,7 @@ struct EmergencyButton: View {
                 )
                 .clipShape(Circle())
         }
-        .accessibilityLabel("Emergency: find nearest bathroom")
+        .accessibilityLabel(isWorking ? "Finding the fastest bathroom" : "Emergency: find nearest bathroom")
         .onAppear {
             guard !reduceMotion else { return }
             withAnimation(
@@ -47,6 +56,7 @@ struct EmergencyButton: View {
             Spacer()
             HStack {
                 Spacer()
+                EmergencyButton(isWorking: true) {}
                 EmergencyButton {}
                     .padding(20)
             }

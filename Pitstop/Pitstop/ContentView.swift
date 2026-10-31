@@ -25,6 +25,7 @@ struct ContentView: View {
     // MARK: - Data
 
     @Query private var bathrooms: [Bathroom]
+    @Query private var candidates: [Candidate]
 
     // MARK: - State
 
@@ -39,6 +40,7 @@ struct ContentView: View {
     @State private var showFilterSheet    = false
     @State private var showEmergencyAlert = false
     @State private var emergencyAlertMsg  = ""
+    @State private var isFindingRoute     = false
 
     // MARK: - Body
 
@@ -68,7 +70,9 @@ struct ContentView: View {
                     Spacer()
                     HStack {
                         Spacer()
-                        EmergencyButton(onTap: handleEmergencyTap)
+                        EmergencyButton(isWorking: isFindingRoute) {
+                            Task { await handleEmergencyTap() }
+                        }
                         .padding(.trailing, 20)
                         .padding(.bottom, 20)
                     }
@@ -136,8 +140,11 @@ struct ContentView: View {
 
     // MARK: - Emergency Logic
 
-    /// Opens walking directions to the nearest saved bathroom.
-    private func handleEmergencyTap() {
+    /// Opens driving directions to the place with the fewest effective minutes.
+    private func handleEmergencyTap() async {
+        // A second tap during the lookup would open Maps twice.
+        guard !isFindingRoute else { return }
+
         guard locationManager.hasLocationPermission else {
             emergencyAlertMsg = "Enable location access in Settings to find the nearest bathroom."
             showEmergencyAlert = true
@@ -150,17 +157,37 @@ struct ContentView: View {
             return
         }
 
-        let origin = CLLocation(latitude: userCoord.latitude, longitude: userCoord.longitude)
+        let visited: [EmergencyRanker.VisitedPlace] = bathrooms.map {
+            .init(id: $0.id, sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
+                  rating: $0.rating, isOpen24Hours: $0.isOpen24Hours)
+        }
+        let unvisited: [EmergencyRanker.UnvisitedPlace] = candidates.map {
+            .init(sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
+                  reliability: $0.brand.reliability, isOpen24Hours: $0.isOpen24Hours,
+                  isDismissed: $0.isDismissed)
+        }
 
-        // Straight-line distance: no routing call, so it works offline.
-        guard let nearest = bathrooms.min(by: {
-            $0.distance(from: origin) < $1.distance(from: origin)
-        }) else {
-            emergencyAlertMsg = "No bathrooms saved yet. Add some so they're ready in an emergency."
+        // Driving times for the closest few; anything that misses the deadline (or has no signal)
+        // falls back to straight-line distance inside the ranker.
+        let nearest = EmergencyRanker.nearest(8, from: userCoord, visited: visited, unvisited: unvisited)
+        isFindingRoute = true
+        let drivingTimes = await DrivingTimeLookup.drivingTimes(from: userCoord, to: nearest)
+        isFindingRoute = false
+
+        let ranked = EmergencyRanker.rank(
+            from: userCoord,
+            at: .now,
+            visited: visited,
+            unvisited: unvisited,
+            drivingTimes: drivingTimes
+        )
+
+        guard let best = ranked.first else {
+            emergencyAlertMsg = "No saved bathrooms or unvisited places to go to. Add a bathroom so one is ready in an emergency."
             showEmergencyAlert = true
             return
         }
-        MapURLHelper.openDirections(toLatitude: nearest.latitude, longitude: nearest.longitude)
+        MapURLHelper.openDirections(toLatitude: best.latitude, longitude: best.longitude, mode: .driving)
     }
 }
 
