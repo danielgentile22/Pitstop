@@ -230,8 +230,13 @@ struct PinLook: Equatable {
             let brand = candidate.brand
             latitude = candidate.latitude
             longitude = candidate.longitude
-            style = .candidate(brand.reliability)
-            accessibilityLabel = "\(candidate.name), unvisited, \(brand.reliability.displayName.lowercased())"
+            if candidate.isDismissed {
+                style = .dismissed
+                accessibilityLabel = "\(candidate.name), dismissed, no public restroom"
+            } else {
+                style = .candidate(brand.reliability)
+                accessibilityLabel = "\(candidate.name), unvisited, \(brand.reliability.displayName.lowercased())"
+            }
         }
     }
 }
@@ -239,12 +244,14 @@ struct PinLook: Equatable {
 enum PinStyle: Hashable {
     case bathroom(rating: Int)
     case candidate(Reliability)
+    /// A Candidate marked "No public restroom here", shown only while "Show dismissed" is on.
+    case dismissed
 
     /// Visited and unvisited pins cluster apart, so a bathroom never disappears into a cluster of guesses.
     var clusteringIdentifier: String {
         switch self {
-        case .bathroom:  return "bathroom"
-        case .candidate: return "candidate"
+        case .bathroom:              return "bathroom"
+        case .candidate, .dismissed: return "candidate"
         }
     }
 }
@@ -326,8 +333,11 @@ final class ClusterPinView: MKAnnotationView {
 
     private static func kind(of styles: [PinStyle]) -> ClusterAnnotation.Kind {
         let levels = styles.compactMap { style -> Reliability? in
-            if case .candidate(let level) = style { return level }
-            return nil
+            switch style {
+            case .bathroom:            return nil
+            case .candidate(let level): return level
+            case .dismissed:           return .uncertain
+            }
         }
         guard !levels.isEmpty else { return .bathrooms }
         let mostReliable = Reliability.allCases.first(where: levels.contains) ?? .uncertain
@@ -358,6 +368,10 @@ private enum PinImages {
             let brand = BrandProfile(key: reliability.rawValue, displayName: reliability.displayName,
                                      reliability: reliability, expectedAccess: .free)
             content = AnyView(CandidateAnnotation(brand: brand, isSelected: selected))
+        case .pin(.dismissed, let selected):
+            let brand = BrandProfile(key: "dismissed", displayName: "Dismissed",
+                                     reliability: .uncertain, expectedAccess: .free)
+            content = AnyView(CandidateAnnotation(brand: brand, isSelected: selected, isDismissed: true))
         case .cluster(let kind, let count):
             content = AnyView(ClusterAnnotation(kind: kind, count: count))
         }

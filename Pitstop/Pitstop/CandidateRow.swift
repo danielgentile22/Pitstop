@@ -22,7 +22,7 @@ struct CandidateRow: View {
         let brand = candidate.brand
 
         HStack(alignment: .top, spacing: 12) {
-            CandidateAnnotation(brand: brand, isSelected: false)
+            CandidateAnnotation(brand: brand, isSelected: false, isDismissed: candidate.isDismissed)
                 .frame(width: thumbSize, height: thumbSize)
                 .background(Color(.secondarySystemFill))
                 .clipShape(RoundedRectangle(cornerRadius: thumbRadius, style: .continuous))
@@ -35,9 +35,10 @@ struct CandidateRow: View {
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
-                    Label("Unvisited", systemImage: "questionmark.circle")
+                    Label(candidate.isDismissed ? "Dismissed" : "Unvisited",
+                          systemImage: candidate.isDismissed ? "xmark.circle" : "questionmark.circle")
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(brand.reliability.tint)
+                        .foregroundStyle(candidate.isDismissed ? .red : brand.reliability.tint)
                         .lineLimit(1)
 
                     Text("·").font(.caption).foregroundStyle(Color(.systemGray3))
