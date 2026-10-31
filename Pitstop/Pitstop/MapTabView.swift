@@ -10,7 +10,9 @@ struct MapTabView: View {
 
     @Binding var cameraPosition: MapCameraPosition
 
-    /// Set after the first fit, so returning from the List tab keeps the camera where the user left it.
+    /// Set once the camera is fitted to a non-empty bathroom list, so returning from the List tab keeps the
+    /// camera where the user left it. ContentView clears it when the list empties, so the next bathroom,
+    /// even one added from the List tab, fits again.
     @Binding var hasFittedCamera: Bool
 
     var filter: BathroomFilter
@@ -76,9 +78,7 @@ struct MapTabView: View {
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: locationManager.isLocationDenied)
 
         .onAppear {
-            guard !hasFittedCamera else { return }
-            hasFittedCamera = true
-            fitCameraToNearbyBathrooms()
+            if !hasFittedCamera { fitCameraToNearbyBathrooms() }
         }
         // Re-fit only when the list goes from empty to non-empty.
         .onChange(of: allBathrooms.isEmpty) { _, isEmpty in
@@ -112,6 +112,7 @@ struct MapTabView: View {
     private func fitCameraToNearbyBathrooms() {
         let candidates = nearbyBathrooms.isEmpty ? filteredBathrooms : nearbyBathrooms
         guard !candidates.isEmpty else { return }
+        hasFittedCamera = true
         let region = MKCoordinateRegion(fittingCoordinates: candidates.map(\.coordinate))
         withAnimation(.easeInOut(duration: 0.6)) {
             cameraPosition = .region(region)

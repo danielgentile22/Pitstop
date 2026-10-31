@@ -132,6 +132,10 @@ struct ContentView: View {
         .onAppear {
             locationManager.requestPermission()
         }
+        // The Map tab fits the camera again once there are bathrooms, even if it was not showing when they came.
+        .onChange(of: bathrooms.isEmpty) { _, isEmpty in
+            if isEmpty { hasFittedMapCamera = false }
+        }
         .fullScreenCover(isPresented: $showAddBathroom) {
             AddBathroomView(userLocation: locationManager.userLocation)
         }
