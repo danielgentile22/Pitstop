@@ -137,7 +137,7 @@ struct ContentView: View {
             if isEmpty { hasFittedMapCamera = false }
         }
         .fullScreenCover(isPresented: $showAddBathroom) {
-            AddBathroomView(userLocation: locationManager.userLocation)
+            AddBathroomView(locationManager: locationManager)
         }
         .sheet(isPresented: $showFilterSheet) {
             FilterSheetView(filter: $filter)

@@ -175,7 +175,7 @@ struct DetailView: View {
             }
         }
         .fullScreenCover(isPresented: $showEditView) {
-            AddBathroomView(userLocation: userLocation, editing: bathroom)
+            AddBathroomView(editing: bathroom)
         }
         .alert("Delete Bathroom?", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) { deleteBathroom() }
