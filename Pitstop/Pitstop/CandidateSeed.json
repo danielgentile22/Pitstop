@@ -1,0 +1,445 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "sourceID": "atp:barnes_and_noble_us:2026",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Lynchburg)",
+      "latitude": 37.342938,
+      "longitude": -79.189245,
+      "address": "4024-C Wards Road, Lynchburg, VA 24502",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2029",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Short Pump)",
+      "latitude": 37.651293,
+      "longitude": -77.610079,
+      "address": "11640 W. Broad Street, Henrico, VA 23233",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2067",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Spradlin Farms)",
+      "latitude": 37.1547,
+      "longitude": -80.4179,
+      "address": "110 Conston Avenue, Christiansburg, VA 24073",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2093",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Bowie)",
+      "latitude": 38.9443,
+      "longitude": -76.7286,
+      "address": "15455 Emerald Way, Bowie, MD 20716",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2131",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Harrisonburg Crossing)",
+      "latitude": 38.43455,
+      "longitude": -78.847,
+      "address": "289 Burgess Rd., Harrisonburg, VA 22801",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2145",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Salisbury)",
+      "latitude": 38.391771,
+      "longitude": -75.575086,
+      "address": "2618 North Salisbury Blvd., Salisbury, MD 21801",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2195",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Virginia Beach/Lynnhaven Mall)",
+      "latitude": 36.818673,
+      "longitude": -76.067171,
+      "address": "701 Lynnhaven Pkwy, Virginia Beach, VA 23452",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2257",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Francis Scott Key Mall)",
+      "latitude": 39.384749,
+      "longitude": -77.409592,
+      "address": "5500 Buckeystown Pike, Frederick, MD 21703",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2265",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (New Town)",
+      "latitude": 37.279301,
+      "longitude": -76.742505,
+      "address": "5101 Main Street, Williamsburg, VA 23188",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2294",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Valley View Mall)",
+      "latitude": 37.302849,
+      "longitude": -79.958177,
+      "address": "4802 Valley View Blvd NW, Roanoke, VA 24012",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2309",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Hampton)",
+      "latitude": 37.070286,
+      "longitude": -76.408394,
+      "address": "5100 Kilgore Ave, Hampton, VA 23666",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2314",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Chesterfield Towne Center)",
+      "latitude": 37.505567,
+      "longitude": -77.609316,
+      "address": "11500 Midlothian Tnpk Space 440, Richmond, VA 23235",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2369",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Fredericksburg)",
+      "latitude": 38.2996,
+      "longitude": -77.511181,
+      "address": "1220 Carl D. Silver Parkway, Fredericksburg, VA 22401",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2559",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Charlottesville)",
+      "latitude": 38.050925,
+      "longitude": -78.501041,
+      "address": "1035 Emmet St Suite A, Charlottesville, VA 22903",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2712",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Seven Corners)",
+      "latitude": 38.869595,
+      "longitude": -77.148396,
+      "address": "6260 Seven Corners Center, Falls Church, VA 22044",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Th 10:00-20:00; Fr-Sa 10:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2735",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Chesapeake)",
+      "latitude": 36.76968,
+      "longitude": -76.227991,
+      "address": "1212 Greenbrier Pkwy, Chesapeake, VA 23320",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2773",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Newport News)",
+      "latitude": 37.10355,
+      "longitude": -76.493352,
+      "address": "12170 Jefferson Avenue, Newport News, VA 23602",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2817",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Bel Air)",
+      "latitude": 39.522871,
+      "longitude": -76.35146,
+      "address": "616 Marketplace Drive, Bel Air, MD 21014",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Th 10:00-20:00; Fr-Sa 10:00-21:00; Su 11:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2831",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Ellicott City)",
+      "latitude": 39.252291,
+      "longitude": -76.815737,
+      "address": "4300 Montgomery Road, Ellicott City, MD 21043",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2866",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Annapolis)",
+      "latitude": 38.973893,
+      "longitude": -76.542583,
+      "address": "2516 Solomons Island Rd., Annapolis, MD 21401",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2867",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Potomac Yard)",
+      "latitude": 38.837931,
+      "longitude": -77.051482,
+      "address": "3651 Richmond Hwy, Alexandria, VA 22305",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2870",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Tanglewood)",
+      "latitude": 37.22444,
+      "longitude": -79.990722,
+      "address": "4478 Electric Road Southwest, Roanoke, VA 24018",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2937",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Fairfax)",
+      "latitude": 38.860176,
+      "longitude": -77.365522,
+      "address": "12193 Fair Lakes Promenade Drive, Fairfax, VA 22033",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2971",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Rio Lakefront)",
+      "latitude": 39.119268,
+      "longitude": -77.203908,
+      "address": "21 Grand Corner Ave., Gaithersburg, MD 20878",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2982",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Springfield VA)",
+      "latitude": 38.773187,
+      "longitude": -77.180164,
+      "address": "6646 Loisdale Road, Springfield, VA 22150",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:2995",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Libbie Place)",
+      "latitude": 37.58749,
+      "longitude": -77.501163,
+      "address": "5501 West Broad Street, Richmond, VA 23230",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3303",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (One Loudoun)",
+      "latitude": 39.0509,
+      "longitude": -77.454078,
+      "address": "20427 Exchange St, Ashburn, VA 20147",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 10:00-21:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3308",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (The Mall In Columbia)",
+      "latitude": 39.21926,
+      "longitude": -76.85891,
+      "address": "10300 Little Patuxent Pkwy, Columbia, MD 21044",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Th 10:00-20:00; Fr-Sa 09:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3314",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Mosaic)",
+      "latitude": 38.87084,
+      "longitude": -77.230007,
+      "address": "2921 District Ave Suite 180, Fairfax, VA 22031",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-20:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3321",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Congressional Plaza)",
+      "latitude": 39.062125,
+      "longitude": -77.126972,
+      "address": "1603 Rockville Pike Space 30, Rockville, MD 20852",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 09:00-21:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3337",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Virginia Beach Town Center)",
+      "latitude": 36.842351,
+      "longitude": -76.12946,
+      "address": "4485 Virginia Beach Blvd, Virginia Beach, VA 23462",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3410",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Woodbridge)",
+      "latitude": 38.628806,
+      "longitude": -77.288279,
+      "address": "15000 Potomac Town Place Suite 160, Woodbridge, VA 22191",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3417",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Pikesville)",
+      "latitude": 39.387508,
+      "longitude": -76.736672,
+      "address": "1809 Reisterstown Rd Suite 103, Pikesville, MD 21208",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 09:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3423",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (The Avenue at White Marsh)",
+      "latitude": 39.370482,
+      "longitude": -76.468559,
+      "address": "8123 Honeygo Blvd Suite E, Baltimore, MD 21236",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3432",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Reston)",
+      "latitude": 38.966099,
+      "longitude": -77.35771,
+      "address": "11816 Spectrum Center Suite K-27, Reston, VA 20190",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3493",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Manassas)",
+      "latitude": 38.788274,
+      "longitude": -77.516852,
+      "address": "10776 Sudley Manor Dr. Suite 1685, Manassas, VA 20109",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3499",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Shops at Stonewall)",
+      "latitude": 38.784554,
+      "longitude": -77.650539,
+      "address": "8139 Stonewall Shops Square Suite 405-B, Gainesville, VA 20155",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3513",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Tysons Corner)",
+      "latitude": 38.917175,
+      "longitude": -77.22273,
+      "address": "1961 Chain Bridge Rd #N001L, McLean, VA 22102",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3534",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Westminster)",
+      "latitude": 39.586342,
+      "longitude": -77.026992,
+      "address": "402 Englar Rd Suite C, Westminster, MD 21157",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3537",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Clarendon)",
+      "latitude": 38.887506,
+      "longitude": -77.092154,
+      "address": "2800 Clarendon Blvd #2000, Arlington, VA 22201",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 10:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3544",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (F Street)",
+      "latitude": 38.897527,
+      "longitude": -77.026556,
+      "address": "1025 F Street Northwest, Washington, DC 20004",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Su 10:00-20:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3552",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Creeks at Virginia)",
+      "latitude": 37.667748,
+      "longitude": -77.462138,
+      "address": "9840 Brook Rd, Glen Allen, VA 23059",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 10:00-18:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3560",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Pasadena Crossroads)",
+      "latitude": 39.125571,
+      "longitude": -76.592053,
+      "address": "8044 Ritchie Highway, Pasadena, MD 21122",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 09:00-21:00; Su 11:00-19:00"
+    },
+    {
+      "sourceID": "atp:barnes_and_noble_us:3989",
+      "brandKey": "barnes_and_noble",
+      "name": "Barnes & Noble (Georgetown)",
+      "latitude": 38.905257,
+      "longitude": -77.060594,
+      "address": "3040 M Street NW, Washington, DC 20007",
+      "isOpen24Hours": false,
+      "openingHours": "Mo-Sa 10:00-21:00; Su 11:00-19:00"
+    }
+  ]
+}

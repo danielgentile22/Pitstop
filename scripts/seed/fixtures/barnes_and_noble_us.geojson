@@ -1,0 +1,167 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id100",
+   "properties": {
+    "ref": "100",
+    "@spider": "barnes_and_noble_us",
+    "name": "Barnes & Noble",
+    "brand": "Barnes & Noble",
+    "addr:street_address": "100 Main St",
+    "addr:city": "Town",
+    "addr:state": "VA",
+    "addr:postcode": "22305-1234",
+    "opening_hours": "Mo-Sa 09:00-21:00; Su 11:00-19:00",
+    "branch": "Potomac Yard"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.051482,
+     38.837931
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id101",
+   "properties": {
+    "ref": "101",
+    "@spider": "barnes_and_noble_us",
+    "name": "Barnes & Noble",
+    "brand": "Barnes & Noble",
+    "addr:street_address": "101 Main St",
+    "addr:city": "Town",
+    "addr:state": "MD",
+    "addr:postcode": "22305-1234",
+    "opening_hours": "24/7"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -76.6122,
+     39.2904
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id102",
+   "properties": {
+    "ref": "102",
+    "@spider": "barnes_and_noble_us",
+    "name": "Barnes & Noble",
+    "brand": "Barnes & Noble",
+    "addr:street_address": "102 Main St",
+    "addr:city": "Town",
+    "addr:state": "DC",
+    "addr:postcode": "22305-1234",
+    "opening_hours": "Mo-Fr 00:00-24:00; Sa-Su 00:00-24:00",
+    "branch": "  Union   Station "
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.0365,
+     38.8977
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id103",
+   "properties": {
+    "ref": "103",
+    "@spider": "barnes_and_noble_us",
+    "name": "Barnes & Noble",
+    "brand": "Barnes & Noble",
+    "addr:street_address": "103 Main St",
+    "addr:city": "Town",
+    "addr:state": "Virginia",
+    "addr:postcode": "22305-1234"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.436,
+     37.5407
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id200",
+   "properties": {
+    "ref": "200",
+    "@spider": "barnes_and_noble_us",
+    "name": "Barnes & Noble",
+    "brand": "Barnes & Noble",
+    "addr:street_address": "200 Main St",
+    "addr:city": "Town",
+    "addr:state": "PA",
+    "addr:postcode": "22305-1234",
+    "opening_hours": "24/7"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1652,
+     39.9526
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id104",
+   "properties": {
+    "ref": "104",
+    "@spider": "barnes_and_noble_us",
+    "name": "Barnes & Noble",
+    "brand": "Barnes & Noble",
+    "addr:street_address": "104 Main St",
+    "addr:city": "Town",
+    "addr:state": "VA",
+    "addr:postcode": "22305-1234"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.051482,
+     38.838111
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id105",
+   "properties": {
+    "ref": "105",
+    "@spider": "barnes_and_noble_us",
+    "name": "Barnes & Noble",
+    "brand": "Barnes & Noble",
+    "addr:street_address": "105 Main St",
+    "addr:city": "Town",
+    "addr:state": "VA",
+    "addr:postcode": "22305-1234"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.051482,
+     38.839281
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "nogeo",
+   "properties": {
+    "ref": "106",
+    "addr:state": "VA"
+   },
+   "geometry": null
+  }
+ ]
+}

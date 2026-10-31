@@ -29,3 +29,7 @@ Pitstop/Config.xcconfig
 
 # Personal notes, not part of the project
 FUTURE_IDEAS.md
+
+# Python
+__pycache__/
+.pytest_cache/
