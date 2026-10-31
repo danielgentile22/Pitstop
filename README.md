@@ -25,7 +25,7 @@ Maps apps know where restaurants are. They don't know whether the bathroom insid
 - **Candidates come from a bundled seed.** On launch, off the main thread, the app imports `CandidateSeed.json` when its version is newer than the last import. The import is idempotent, never changes whether you dismissed a place, and never deletes a dismissed place or one a bathroom was logged from. A bathroom logged from a Candidate keeps its `sourceID`, which hides that Candidate everywhere, so you see the place once.
 - **Photos live on disk** as a JPEG up to 1200px and a 200px thumbnail per image under `Documents/BathroomImages/{id}/`, with in-memory caches. The model stores file names only, since the sandbox path can change across updates.
 - **Network calls.** Three, all to Apple Maps, and each one degrades offline:
-  - Reverse geocoding of the pin in the add form. Offline, the entry saves without an address; the save waits at most 2 seconds for one.
+  - Reverse geocoding of the pin in the add form, only once the pin moves off a known address. The save waits at most 2 seconds for it. Offline, the entry keeps the last address it had, or saves without one.
   - Address search in the add form. Offline, it says the search needs a connection.
   - Driving times for the emergency button, for the 8 closest places, within a 3 second deadline that also covers getting a fresh location. Places with no answer use straight-line distance at 20 mph.
 
