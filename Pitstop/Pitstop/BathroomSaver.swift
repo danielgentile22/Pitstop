@@ -70,7 +70,7 @@ struct BathroomSaver {
         var written: [String] = []
         do {
             for photo in photos.added {
-                written.append(try ImageStorage.saveImage(photo, bathroomID: bathroom.id, root: photoRoot))
+                written.append(try await ImageStorage.saveImageAsync(photo, bathroomID: bathroom.id, root: photoRoot))
             }
         } catch {
             discard(written, of: bathroom)
