@@ -78,6 +78,7 @@ struct AddBathroomView: View {
 
     @State private var showDiscardAlert = false
     @State private var showCamera       = false
+    @State private var showCameraBlockedAlert = false
     @State private var isSaving         = false
     @FocusState private var nameFocused: Bool
 
@@ -292,6 +293,16 @@ struct AddBathroomView: View {
                 Button("Keep Editing", role: .cancel) {}
             } message: {
                 Text("Your changes will be lost.")
+            }
+            .alert("Camera Access Is Off", isPresented: $showCameraBlockedAlert) {
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("To take photos, allow camera access for Pitstop in Settings.")
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPickerView { image in
@@ -621,10 +632,12 @@ struct AddBathroomView: View {
                     }
                     .disabled(totalPhotoCount >= 10)
 
-                    Button { showCamera = true } label: {
-                        photoActionButton(icon: "camera.fill", label: "Camera")
+                    if CameraAccess.isAvailable {
+                        Button { Task { await openCamera() } } label: {
+                            photoActionButton(icon: "camera.fill", label: "Camera")
+                        }
+                        .disabled(totalPhotoCount >= 10)
                     }
-                    .disabled(totalPhotoCount >= 10)
 
                     ForEach(Array(existingFileNames.enumerated()), id: \.offset) { index, fileName in
                         existingPhotoThumbnail(fileName: fileName, index: index)
@@ -635,6 +648,14 @@ struct AddBathroomView: View {
                 }
                 .padding(.vertical, 4)
             }
+        }
+    }
+
+    private func openCamera() async {
+        switch await CameraAccess.request() {
+        case .granted:  showCamera = true
+        case .declined: break
+        case .blocked:  showCameraBlockedAlert = true
         }
     }
 
