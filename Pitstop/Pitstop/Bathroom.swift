@@ -18,7 +18,7 @@ extension SchemaV2 {
         var latitude:  Double
         var longitude: Double
 
-        /// Reverse-geocoded address. Nil if geocoding failed or was never attempted; the UI falls back to coordinates.
+        /// Reverse-geocoded address. Nil if geocoding failed or was never attempted; the UI then shows no address line.
         var address: String?
 
         // MARK: - Dates

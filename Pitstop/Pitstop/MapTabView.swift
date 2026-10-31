@@ -109,10 +109,10 @@ struct MapTabView: View {
 
     /// Fits the camera to nearby bathrooms, or to all filtered ones when none are nearby or location is unknown.
     private func fitCameraToNearbyBathrooms() {
-        let candidates = nearbyBathrooms.isEmpty ? filteredBathrooms : nearbyBathrooms
-        guard !candidates.isEmpty else { return }
+        let fitTargets = nearbyBathrooms.isEmpty ? filteredBathrooms : nearbyBathrooms
+        guard !fitTargets.isEmpty else { return }
         hasFittedCamera = true
-        let region = MKCoordinateRegion(fittingCoordinates: candidates.map(\.coordinate))
+        let region = MKCoordinateRegion(fittingCoordinates: fitTargets.map(\.coordinate))
         withAnimation(.easeInOut(duration: 0.6)) {
             cameraPosition = .region(region)
         }

@@ -19,9 +19,6 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Environment
-
-
     // MARK: - Data
 
     @Query private var bathrooms: [Bathroom]
