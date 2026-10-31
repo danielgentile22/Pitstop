@@ -34,6 +34,18 @@ struct BrandProfile {
         BrandProfile(key: "barnes_and_noble", displayName: "Barnes & Noble", reliability: .reliable, expectedAccess: .free),
         BrandProfile(key: "target",           displayName: "Target",         reliability: .reliable, expectedAccess: .free),
         BrandProfile(key: "walmart",          displayName: "Walmart",        reliability: .reliable, expectedAccess: .free),
+        BrandProfile(key: "wegmans",          displayName: "Wegmans",        reliability: .likely,   expectedAccess: .free),
+        BrandProfile(key: "harris_teeter",    displayName: "Harris Teeter",  reliability: .likely,   expectedAccess: .free),
+        BrandProfile(key: "giant",            displayName: "Giant",          reliability: .likely,   expectedAccess: .free),
+        BrandProfile(key: "safeway",          displayName: "Safeway",        reliability: .likely,   expectedAccess: .free),
+        BrandProfile(key: "whole_foods",      displayName: "Whole Foods",    reliability: .likely,   expectedAccess: .free),
+        BrandProfile(key: "publix",           displayName: "Publix",         reliability: .likely,   expectedAccess: .free),
+        BrandProfile(key: "lidl",             displayName: "Lidl",           reliability: .likely,   expectedAccess: .free),
+        BrandProfile(key: "food_lion",        displayName: "Food Lion",      reliability: .likely,   expectedAccess: .free),
+        BrandProfile(key: "weis",             displayName: "Weis",           reliability: .likely,   expectedAccess: .free),
+        // Restrooms are often staff-only; ask at the register.
+        BrandProfile(key: "trader_joes",      displayName: "Trader Joe's",   reliability: .uncertain, expectedAccess: .keyRequired),
+        BrandProfile(key: "aldi",             displayName: "Aldi",           reliability: .uncertain, expectedAccess: .keyRequired),
     ].map { ($0.key, $0) })
 
     /// Unknown keys (a seed newer than the app's table) fall back to uncertain rather than failing.
