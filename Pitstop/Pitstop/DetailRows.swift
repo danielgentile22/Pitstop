@@ -46,3 +46,18 @@ struct MetaRow: View {
         }
     }
 }
+
+/// Open 24 hours, not open 24 hours, or unknown when `isOpen24Hours` is nil.
+struct HoursRow: View {
+
+    let isOpen24Hours: Bool?
+    let notOpenText: String
+
+    var body: some View {
+        switch isOpen24Hours {
+        case true?:  MetaRow(icon: "clock.fill", color: .blue, text: "Open 24 hours")
+        case false?: MetaRow(icon: "clock", color: Color(.systemGray3), text: notOpenText)
+        case nil:    MetaRow(icon: "questionmark.circle", color: Color(.systemGray3), text: "Hours unknown")
+        }
+    }
+}

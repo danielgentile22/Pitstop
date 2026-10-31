@@ -53,11 +53,19 @@ struct CandidateRow: View {
                 }
 
                 HStack(spacing: 6) {
-                    if candidate.isOpen24Hours {
+                    switch candidate.isOpen24HoursIfKnown {
+                    case true?:
                         Image(systemName: "clock.fill")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.blue)
                             .accessibilityLabel("24 hours")
+                    case false?:
+                        EmptyView()
+                    case nil:
+                        Text("Hours unknown")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize()
                     }
                     if let address = candidate.address, !address.isEmpty {
                         Text(address)

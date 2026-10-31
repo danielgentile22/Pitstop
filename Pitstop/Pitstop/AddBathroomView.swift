@@ -372,11 +372,17 @@ struct AddBathroomView: View {
     }
 
     private var open24HoursField: some View {
-        Toggle(isOn: $form.isOpen24Hours) {
+        // Unknown hours show as off; touching the toggle makes them known.
+        Toggle(isOn: Binding(get: { form.isOpen24Hours ?? false }, set: { form.isOpen24Hours = $0 })) {
             Label {
-                Text("Open 24 Hours").font(.subheadline)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Open 24 Hours").font(.subheadline)
+                    if form.isOpen24Hours == nil {
+                        Text("Hours unknown").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             } icon: {
-                Image(systemName: "clock").foregroundStyle(form.isOpen24Hours ? .blue : .secondary)
+                Image(systemName: "clock").foregroundStyle(form.isOpen24Hours == true ? .blue : .secondary)
             }
         }
         .tint(.blue)

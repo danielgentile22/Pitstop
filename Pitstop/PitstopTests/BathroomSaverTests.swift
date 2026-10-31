@@ -220,6 +220,37 @@ struct BathroomSaverTests {
         #expect(committed.first?.isDismissed == false)
     }
 
+    @Test(arguments: [
+        (openingHours: String?.none, toggle: Bool?.none, expected: Bool?.none),
+        (openingHours: String?.none, toggle: Bool?.some(false), expected: Bool?.some(false)),
+        (openingHours: String?.none, toggle: Bool?.some(true), expected: Bool?.some(true)),
+        (openingHours: String?.some("24/7"), toggle: Bool?.none, expected: Bool?.some(true)),
+    ])
+    func loggingACandidateKeepsItsHoursUntilTheToggleIsSet(openingHours: String?, toggle: Bool?, expected: Bool?) async throws {
+        let candidate = Candidate(sourceID: "atp:a", brandKey: "target", name: "Target", latitude: 38.8, longitude: -77.0,
+                                  isOpen24Hours: openingHours != nil, openingHours: openingHours, seedVersion: 1)
+        context.insert(candidate)
+        try context.save()
+
+        var form = BathroomForm(candidate: candidate)
+        if let toggle { form.isOpen24Hours = toggle }
+        try await saver().save(form, to: .new(from: candidate), photos: .init())
+
+        #expect(try committedBathrooms().first?.isOpen24HoursIfKnown == expected)
+    }
+
+    @Test func editingABathroomWithUnknownHoursKeepsThemUnknown() async throws {
+        let bathroom = try storedBathroom()
+        bathroom.isOpen24HoursKnown = false
+        try context.save()
+
+        var form = BathroomForm(bathroom: bathroom)
+        form.rating = 5
+        try await saver().save(form, to: .edit(bathroom), photos: .init(kept: bathroom.imageFileNames))
+
+        #expect(try committedBathrooms().first?.isOpen24HoursIfKnown == nil)
+    }
+
     // MARK: - Delete
 
     private func linkedCandidate(seedVersion: Int, isDismissed: Bool = false, to bathroom: Bathroom) throws -> Candidate {

@@ -5,7 +5,7 @@ import Foundation
 extension EmergencyRanker.VisitedPlace {
     init(_ bathroom: Bathroom) {
         self.init(id: bathroom.id, sourceID: bathroom.sourceID, latitude: bathroom.latitude,
-                  longitude: bathroom.longitude, rating: bathroom.rating, isOpen24Hours: bathroom.isOpen24Hours)
+                  longitude: bathroom.longitude, rating: bathroom.rating, isOpen24Hours: bathroom.isOpen24HoursIfKnown)
     }
 }
 
