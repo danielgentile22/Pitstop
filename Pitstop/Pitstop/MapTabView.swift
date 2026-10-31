@@ -77,16 +77,7 @@ struct MapTabView: View {
         }
 
         .sheet(item: $selection) { selection in
-            Group {
-                switch selection {
-                case .bathroom(let bathroom):
-                    DetailView(bathroom: bathroom, userLocation: locationManager.userLocation)
-                case .candidate(let candidate):
-                    CandidateDetailView(candidate: candidate, userLocation: locationManager.userLocation)
-                }
-            }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            PlaceDetailSheet(place: selection, userLocation: locationManager.userLocation)
         }
     }
 

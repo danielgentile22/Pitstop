@@ -78,18 +78,8 @@ struct ListTabView: View {
             }
         }
         .searchable(text: $searchText, prompt: "Search places…")
-        // Same sheet as MapTabView.
         .sheet(item: $selectedPlace) { place in
-            Group {
-                switch place {
-                case .bathroom(let bathroom):
-                    DetailView(bathroom: bathroom, userLocation: locationManager.userLocation)
-                case .candidate(let candidate):
-                    CandidateDetailView(candidate: candidate, userLocation: locationManager.userLocation)
-                }
-            }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            PlaceDetailSheet(place: place, userLocation: locationManager.userLocation)
         }
         .alert("Delete Bathroom?", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) {
