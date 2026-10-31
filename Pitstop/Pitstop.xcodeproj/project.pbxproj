@@ -333,7 +333,6 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Pitstop uses your camera to add photos to a saved bathroom.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Pitstop uses your location to pin bathrooms and find the nearest one in an emergency.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Pitstop uses your photo library to attach photos to a saved bathroom.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -371,7 +370,6 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Pitstop uses your camera to add photos to a saved bathroom.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Pitstop uses your location to pin bathrooms and find the nearest one in an emergency.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Pitstop uses your photo library to attach photos to a saved bathroom.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -1,5 +1,22 @@
 {
  "version": 0.6,
  "generator": "Overpass API",
- "elements": []
+ "elements": [
+  {
+   "type": "node",
+   "id": 577000001,
+   "lat": 38.876742,
+   "lon": -76.98947,
+   "tags": {
+    "brand": "Harris Teeter",
+    "brand:wikidata": "Q5665067",
+    "name": "Harris Teeter",
+    "shop": "supermarket",
+    "addr:housenumber": "1350",
+    "addr:street": "Potomac Avenue Southeast",
+    "addr:city": "Washington",
+    "addr:postcode": "20003"
+   }
+  }
+ ]
 }

@@ -16,10 +16,14 @@ xcuserdata/
 .DS_Store
 **/.DS_Store
 
-# Local backend credentials
-*.env
-secrets.plist
-Pitstop/Config.xcconfig
+# Signing and release secrets, and release build artifacts
+.env*
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+*.ipa
+*.xcarchive
 
 # Simulator state
 *.moved-aside
