@@ -9,8 +9,19 @@
 /* Begin PBXBuildFile section */
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		4E36BDC22F62EA9A002100C9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4E36BD9B2F62EA98002100C9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4E36BDA22F62EA98002100C9;
+			remoteInfo = Pitstop;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		4E36BDA32F62EA98002100C9 /* Pitstop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pitstop.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E36BDC12F62EA9A002100C9 /* PitstopTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PitstopTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -19,10 +30,22 @@
 			path = Pitstop;
 			sourceTree = "<group>";
 		};
+		4E36BDC32F62EA9A002100C9 /* PitstopTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PitstopTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		4E36BDA02F62EA98002100C9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4E36BDC42F62EA9A002100C9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -36,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				4E36BDA52F62EA98002100C9 /* Pitstop */,
+				4E36BDC32F62EA9A002100C9 /* PitstopTests */,
 				4E36BDA42F62EA98002100C9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -44,6 +68,7 @@
 			isa = PBXGroup;
 			children = (
 				4E36BDA32F62EA98002100C9 /* Pitstop.app */,
+				4E36BDC12F62EA9A002100C9 /* PitstopTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -71,6 +96,27 @@
 			productReference = 4E36BDA32F62EA98002100C9 /* Pitstop.app */;
 			productType = "com.apple.product-type.application";
 		};
+		4E36BDC52F62EA9A002100C9 /* PitstopTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4E36BDC82F62EA9A002100C9 /* Build configuration list for PBXNativeTarget "PitstopTests" */;
+			buildPhases = (
+				4E36BDC62F62EA9A002100C9 /* Sources */,
+				4E36BDC42F62EA9A002100C9 /* Frameworks */,
+				4E36BDC72F62EA9A002100C9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4E36BDCB2F62EA9A002100C9 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4E36BDC32F62EA9A002100C9 /* PitstopTests */,
+			);
+			name = PitstopTests;
+			productName = PitstopTests;
+			productReference = 4E36BDC12F62EA9A002100C9 /* PitstopTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -83,6 +129,10 @@
 				TargetAttributes = {
 					4E36BDA22F62EA98002100C9 = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					4E36BDC52F62EA9A002100C9 = {
+						CreatedOnToolsVersion = 27.2;
+						TestTargetID = 4E36BDA22F62EA98002100C9;
 					};
 				};
 			};
@@ -101,12 +151,20 @@
 			projectRoot = "";
 			targets = (
 				4E36BDA22F62EA98002100C9 /* Pitstop */,
+				4E36BDC52F62EA9A002100C9 /* PitstopTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		4E36BDA12F62EA98002100C9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4E36BDC72F62EA9A002100C9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -123,7 +181,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4E36BDC62F62EA9A002100C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4E36BDCB2F62EA9A002100C9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4E36BDA22F62EA98002100C9 /* Pitstop */;
+			targetProxy = 4E36BDC22F62EA9A002100C9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4E36BDAC2F62EA9A002100C9 /* Debug */ = {
@@ -321,6 +394,50 @@
 			};
 			name = Release;
 		};
+		4E36BDC92F62EA9A002100C9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 58N856BAX8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.danielgentile.GeoPoop.PitstopTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pitstop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pitstop";
+			};
+			name = Debug;
+		};
+		4E36BDCA2F62EA9A002100C9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 58N856BAX8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.danielgentile.GeoPoop.PitstopTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pitstop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pitstop";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -338,6 +455,15 @@
 			buildConfigurations = (
 				4E36BDAF2F62EA9A002100C9 /* Debug */,
 				4E36BDB02F62EA9A002100C9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4E36BDC82F62EA9A002100C9 /* Build configuration list for PBXNativeTarget "PitstopTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4E36BDC92F62EA9A002100C9 /* Debug */,
+				4E36BDCA2F62EA9A002100C9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
