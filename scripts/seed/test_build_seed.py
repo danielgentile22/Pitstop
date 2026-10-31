@@ -1,6 +1,8 @@
+import io
 import json
 import re
 import shutil
+import urllib.error
 from collections import Counter
 from pathlib import Path
 
@@ -396,3 +398,84 @@ def test_flags_24_hour_gas_stations(seed):
     for source_id in ["atp:wawa:6008", "atp:sheetz:41", "atp:shell:10014751", "atp:seven_eleven_ca_us:40063_SHOP"]:
         assert ids[source_id]["isOpen24Hours"] is True, source_id
     assert ids["atp:exxon_mobil:200310061"]["isOpen24Hours"] is False  # Mo-Sa 05:00-24:00; Su 06:00-24:00
+
+
+def test_run_history_is_fetched_once_per_run(monkeypatch):
+    history = [{"run_id": "2026-10-17", "stats_url": "stats", "output_url": "https://example/runs/x/output.zip"}]
+    fetched = Counter()
+
+    def fake_fetch(url, **_):
+        fetched[url] += 1
+        if url == build_seed.ATP_RUN_HISTORY:
+            return history
+        if url == "stats":
+            return {"results": [{"spider": s.spider, "features": 10**6} for s in build_seed.SOURCES if isinstance(s, build_seed.AtpSource)]}
+        return {"features": []}
+
+    monkeypatch.setattr(build_seed, "fetch_json", fake_fetch)
+    build_seed.run_history.cache_clear()
+    build_seed.run_feature_counts.cache_clear()
+    for source in build_seed.SOURCES[:3]:
+        source.load(None)
+    assert fetched[build_seed.ATP_RUN_HISTORY] == 1
+    build_seed.run_history.cache_clear()
+    build_seed.run_feature_counts.cache_clear()
+
+
+class FakeResponse(io.BytesIO):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
+
+
+def fake_network(monkeypatch, answers: list):
+    """Makes urlopen return or raise each answer in turn, and records sleeps instead of sleeping."""
+    calls, sleeps = [], []
+
+    def urlopen(request, timeout):
+        calls.append(request.full_url)
+        answer = answers[len(calls) - 1]
+        if isinstance(answer, Exception):
+            raise answer
+        return FakeResponse(json.dumps(answer).encode())
+
+    monkeypatch.setattr(build_seed.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(build_seed.time, "sleep", sleeps.append)
+    return calls, sleeps
+
+
+def http_error(code: int) -> urllib.error.HTTPError:
+    return urllib.error.HTTPError("https://example/x", code, "error", {}, None)
+
+
+def test_fetch_retries_transient_failures_with_backoff(monkeypatch):
+    calls, sleeps = fake_network(monkeypatch, [http_error(503), urllib.error.URLError("reset"), http_error(429), {"ok": 1}])
+    assert build_seed.fetch_json("https://example/x") == {"ok": 1}
+    assert len(calls) == 4
+    assert sleeps == sorted(sleeps) and len(sleeps) == 3 and sleeps[0] < sleeps[-1]
+
+
+def test_fetch_retries_an_overpass_remark(monkeypatch):
+    calls, _ = fake_network(monkeypatch, [{"remark": "runtime error: timeout", "elements": []}, {"elements": [1]}])
+    assert build_seed.fetch_json("https://example/x", data=b"q") == {"elements": [1]}
+    assert len(calls) == 2
+
+
+def test_fetch_does_not_sleep_after_the_last_attempt(monkeypatch):
+    calls, sleeps = fake_network(monkeypatch, [http_error(503)] * build_seed.FETCH_ATTEMPTS)
+    with pytest.raises(SystemExit) as exit:
+        build_seed.fetch_json("https://example/x")
+    assert "https://example/x" in str(exit.value.code)
+    assert len(calls) == build_seed.FETCH_ATTEMPTS
+    assert len(sleeps) == build_seed.FETCH_ATTEMPTS - 1
+
+
+@pytest.mark.parametrize("code", [400, 403, 404])
+def test_fetch_does_not_retry_client_errors(monkeypatch, code):
+    calls, sleeps = fake_network(monkeypatch, [http_error(code), {"ok": 1}])
+    with pytest.raises(SystemExit):
+        build_seed.fetch_json("https://example/x")
+    assert len(calls) == 1
+    assert sleeps == []

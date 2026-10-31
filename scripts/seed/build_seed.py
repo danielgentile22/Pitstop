@@ -23,6 +23,7 @@ import math
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -40,6 +41,10 @@ DUPLICATE_RADIUS_METERS = 50
 # A brand losing more than this share of its records since the app's seed usually means its source
 # broke (a partial scrape, an outage), so the script stops unless --allow-drop is passed.
 MAX_BRAND_DROP = 0.3
+# Tries per download. Waits double from FETCH_FIRST_WAIT seconds; few tries, since a spider's GeoJSON
+# can take minutes to download.
+FETCH_ATTEMPTS = 4
+FETCH_FIRST_WAIT = 15
 
 
 @dataclass(frozen=True)
@@ -65,7 +70,7 @@ class AtpSource:
     def load(self, fixtures: Path | None) -> list[dict]:
         if fixtures is not None:
             return json.loads((fixtures / f"{self.spider}.geojson").read_text())["features"]
-        run = newest_complete_run(self, fetch_json(ATP_RUN_HISTORY), lambda r: run_feature_counts(r["stats_url"]))
+        run = newest_complete_run(self, run_history(), lambda r: run_feature_counts(r["stats_url"]))
         print(f"{self.spider}: run {run['run_id']}")
         base = run["output_url"].rsplit("/", 1)[0]
         return fetch_json(f"{base}/output/{self.spider}.geojson")["features"]
@@ -158,10 +163,37 @@ STATES = {
 # MARK: - Sources
 
 
-def fetch_json(url: str):
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return json.load(response)
+def fetch_json(url: str, data: bytes | None = None, timeout: int = 120):
+    """GETs url, or POSTs data to it, and parses the JSON answer.
+
+    Retries connection errors, server errors, rate limiting and unreadable answers with backoff,
+    and exits on other client errors or after FETCH_ATTEMPTS tries.
+    """
+    for attempt in range(1, FETCH_ATTEMPTS + 1):
+        request = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                answer = json.load(response)
+            if isinstance(answer, dict) and "remark" in answer:  # Overpass's timeout or memory error, with a partial answer
+                raise ValueError(answer["remark"])
+            return answer
+        except urllib.error.HTTPError as error:
+            if 400 <= error.code < 500 and error.code != 429:
+                sys.exit(f"{url}: {error}")
+            failure = error
+        except (OSError, ValueError) as error:  # busy servers also answer with an HTML page
+            failure = error
+        if attempt < FETCH_ATTEMPTS:
+            wait = FETCH_FIRST_WAIT * 2 ** (attempt - 1)
+            print(f"{url}: {failure}, retrying in {wait} s")
+            time.sleep(wait)
+    sys.exit(f"{url} failed {FETCH_ATTEMPTS} times, last with: {failure}")
+
+
+@cache
+def run_history() -> list[dict]:
+    """Fetched once, so every source picks from the same list of runs."""
+    return fetch_json(ATP_RUN_HISTORY)
 
 
 def newest_complete_run(source: AtpSource, runs: list[dict], feature_counts) -> dict:
@@ -213,21 +245,9 @@ area["ISO3166-2"="US-{state}"]->.region;
 nwr["brand:wikidata"~"^({wikidata})$"](area.region);
 out center tags;"""
     body = urllib.parse.urlencode({"data": query}).encode()
-    for attempt in range(5):
-        request = urllib.request.Request(OVERPASS_API, data=body, headers={"User-Agent": USER_AGENT})
-        try:
-            with urllib.request.urlopen(request, timeout=180) as response:
-                answer = json.load(response)
-            if "remark" in answer:  # a timeout or memory error, reported with a partial answer
-                raise ValueError(answer["remark"])
-            elements = answer["elements"]
-            print(f"overpass {state}: {len(elements)} elements")
-            return elements
-        except (OSError, ValueError) as error:  # the public server answers 429/504 or an HTML page when busy
-            wait = 15 * 2**attempt
-            print(f"overpass {state}: {error}, retrying in {wait} s")
-            time.sleep(wait)
-    sys.exit(f"Overpass did not answer for {state}.")
+    elements = fetch_json(OVERPASS_API, data=body, timeout=180)["elements"]
+    print(f"overpass {state}: {len(elements)} elements")
+    return elements
 
 
 # MARK: - Normalizing
