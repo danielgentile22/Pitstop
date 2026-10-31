@@ -6,22 +6,33 @@ import os
 struct PitstopApp: App {
 
     // The store is the only copy of the user's data, so a schema change needs a migration, never a wipe.
-    private let container: ModelContainer
+    private let store: Result<ModelContainer, StoreOpenFailure>
 
     init() {
+        let configuration = ModelConfiguration()
         do {
-            container = try ModelContainer(for: Bathroom.self, Candidate.self)
+            let container = try ModelContainer(
+                for: Schema(versionedSchema: SchemaV1.self),
+                migrationPlan: PitstopMigrationPlan.self,
+                configurations: configuration
+            )
+            store = .success(container)
+            Self.importBundledSeed(into: container)
         } catch {
-            fatalError("Could not open the SwiftData store: \(error)")
+            store = .failure(StoreRecovery.recover(storeAt: configuration.url, from: error))
         }
-        Self.importBundledSeed(into: container)
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            switch store {
+            case .success(let container):
+                ContentView()
+                    .modelContainer(container)
+            case .failure(let failure):
+                StoreOpenFailureView(failure: failure)
+            }
         }
-        .modelContainer(container)
     }
 
     /// Once per launch, off the main thread so a large seed never blocks launch.
