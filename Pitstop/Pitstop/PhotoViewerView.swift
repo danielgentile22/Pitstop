@@ -48,25 +48,33 @@ struct PhotoViewerView: View {
                 .opacity(backgroundOpacity)
                 .ignoresSafeArea()
 
-            TabView(selection: $selectedIndex) {
-                ForEach(Array(fileNames.enumerated()), id: \.offset) { index, fileName in
-                    ZoomablePhotoPage(
-                        bathroomID: bathroom.id,
-                        fileName:   fileName,
-                        pageLabel:  "Photo \(index + 1) of \(fileNames.count)",
-                        isZoomed:   $isZoomed,
-                        isPinching: $isPinching
-                    )
-                    .tag(index)
+            // A paging ScrollView rather than a page-style TabView: `scrollDisabled` reliably stops paging here,
+            // which a zoomed photo needs so its pan is not taken as a page swipe.
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 0) {
+                    ForEach(Array(fileNames.enumerated()), id: \.offset) { index, fileName in
+                        ZoomablePhotoPage(
+                            bathroomID: bathroom.id,
+                            fileName:   fileName,
+                            pageLabel:  "Photo \(index + 1) of \(fileNames.count)",
+                            isZoomed:   $isZoomed,
+                            isPinching: $isPinching
+                        )
+                        .containerRelativeFrame([.horizontal, .vertical])
+                        .id(index)
+                    }
                 }
+                .scrollTargetLayout()
             }
-            .tabViewStyle(.page(indexDisplayMode: .always))
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: pagePosition)
             .scrollDisabled(isZoomed)
             .ignoresSafeArea()
             .offset(y: dismissDrag.offset)
             .simultaneousGesture(dismissGesture)
             .opacity(backgroundOpacity)
             .onChange(of: selectedIndex) { isZoomed = false }
+            .overlay(alignment: .bottom) { pageDots(count: fileNames.count) }
 
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
@@ -79,6 +87,26 @@ struct PhotoViewerView: View {
             .padding(.trailing, 20)
         }
         .preferredColorScheme(.dark)
+    }
+
+    private var pagePosition: Binding<Int?> {
+        Binding(get: { selectedIndex }, set: { if let index = $0 { selectedIndex = index } })
+    }
+
+    @ViewBuilder
+    private func pageDots(count: Int) -> some View {
+        if count > 1 {
+            HStack(spacing: 8) {
+                ForEach(0..<count, id: \.self) { index in
+                    Circle()
+                        .fill(.white.opacity(index == selectedIndex ? 1 : 0.35))
+                        .frame(width: 7, height: 7)
+                }
+            }
+            .padding(.bottom, 24)
+            .opacity(backgroundOpacity)
+            .accessibilityHidden(true)
+        }
     }
 
     // MARK: - Dismiss Gesture

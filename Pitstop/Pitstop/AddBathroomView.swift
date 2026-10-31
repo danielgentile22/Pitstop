@@ -653,9 +653,8 @@ struct AddBathroomView: View {
 
     private func openCamera() async {
         switch await CameraAccess.request() {
-        case .granted:  showCamera = true
-        case .declined: break
-        case .blocked:  showCameraBlockedAlert = true
+        case .granted: showCamera = true
+        case .blocked: showCameraBlockedAlert = true
         }
     }
 

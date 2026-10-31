@@ -7,9 +7,7 @@ enum CameraAccess {
 
     enum Outcome {
         case granted
-        /// The user just declined the system prompt; nothing more to show.
-        case declined
-        /// Denied earlier or restricted; only Settings can change it.
+        /// Denied (now or earlier) or restricted; only Settings can change it.
         case blocked
     }
 
@@ -21,7 +19,7 @@ enum CameraAccess {
         case .authorized:
             return .granted
         case .notDetermined:
-            return await AVCaptureDevice.requestAccess(for: .video) ? .granted : .declined
+            return await AVCaptureDevice.requestAccess(for: .video) ? .granted : .blocked
         case .denied, .restricted:
             return .blocked
         @unknown default:
