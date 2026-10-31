@@ -20,7 +20,7 @@ struct MapTabView: View {
     // MARK: - Data
 
     @Query(sort: \Bathroom.dateCreated, order: .reverse) private var allBathrooms: [Bathroom]
-    @Query private var candidates: [Candidate]
+    @Query(sort: \Candidate.sourceID) private var candidates: [Candidate]
 
     // MARK: - State
 
@@ -31,9 +31,11 @@ struct MapTabView: View {
 
     // MARK: - Derived
 
-    /// The same places the list shows, max distance included.
+    /// The same places the list shows, max distance included. Reads the location only when a radius needs it,
+    /// so a GPS fix does not re-render the map otherwise.
     private var visiblePlaces: (bathrooms: [Bathroom], candidates: [Candidate]) {
-        filter.visiblePlaces(bathrooms: allBathrooms, candidates: candidates, userLocation: locationManager.userLocation)
+        let origin = filter.maxDistance == nil ? nil : locationManager.userLocation
+        return filter.visiblePlaces(bathrooms: allBathrooms, candidates: candidates, userLocation: origin)
     }
 
     private var filteredBathrooms: [Bathroom] {
@@ -131,6 +133,27 @@ enum MapSelection: Identifiable {
         case .bathroom(let bathroom):   return .bathroom(bathroom.id)
         case .candidate(let candidate): return .candidate(candidate.sourceID)
         }
+    }
+}
+
+extension MapSelection {
+
+    /// Cheap stand-in for "the places changed": identity, plus the fields an edit, a dismissal or a seed
+    /// update always changes. Equal fingerprints let the map and the list skip re-filtering and re-syncing.
+    static func fingerprint(bathrooms: [Bathroom], candidates: [Candidate]) -> Int {
+        var hasher = Hasher()
+        hasher.combine(bathrooms.count)
+        for bathroom in bathrooms {
+            hasher.combine(bathroom.id)
+            hasher.combine(bathroom.dateModified)
+        }
+        hasher.combine(candidates.count)
+        for candidate in candidates {
+            hasher.combine(candidate.sourceID)
+            hasher.combine(candidate.isDismissed)
+            hasher.combine(candidate.seedVersion)
+        }
+        return hasher.finalize()
     }
 }
 

@@ -79,6 +79,13 @@ struct BathroomFilter: Equatable {
         || maxDistance != nil
     }
 
+    /// What the filter button shows. A radius with no location to measure from filters nothing, so it does not count.
+    func isActive(locationAvailable: Bool) -> Bool {
+        var usable = self
+        if !locationAvailable { usable.maxDistance = nil }
+        return usable.isActive
+    }
+
     /// Any criterion only a visit can answer. Candidates have no data for these, so they never match.
     var requiresVisitDetails: Bool {
         !visitChecks.isEmpty

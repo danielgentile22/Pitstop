@@ -25,6 +25,8 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         manager.delegate = self
         // Ten meters is enough to find a bathroom and much cheaper on battery than Best.
         manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        // The map and the list redo work on every published fix, so standing-still jitter must not publish.
+        manager.distanceFilter = 25
     }
 
     // MARK: - Permission
@@ -40,6 +42,11 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     var hasLocationPermission: Bool {
         authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
+    }
+
+    /// What a distance filter or sort needs: permission and a fix to measure from.
+    var canMeasureDistance: Bool {
+        hasLocationPermission && userLocation != nil
     }
 
     var isLocationDenied: Bool {
@@ -75,11 +82,14 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
         case .denied:
             locationError = "Location access denied. Enable it in Settings to use map features."
+            // A stale fix would keep distance filtering after access is gone.
+            userLocation = nil
             isUpdatingLocation = false
             manager.stopUpdatingLocation()
 
         case .restricted:
             locationError = "Location access is restricted on this device."
+            userLocation = nil
             isUpdatingLocation = false
             manager.stopUpdatingLocation()
 
