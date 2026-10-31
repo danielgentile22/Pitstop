@@ -43,49 +43,13 @@ struct MapTabView: View {
     var body: some View {
         ZStack(alignment: .top) {
 
-            Map(position: $cameraPosition) {
-
-                UserAnnotation()
-
-                // Before bathrooms, so a visited pin draws on top of an unvisited one at the same spot.
-                ForEach(candidates) { candidate in
-                    Annotation(
-                        candidate.name,
-                        coordinate: candidate.coordinate,
-                        anchor: .center
-                    ) {
-                        CandidateAnnotation(
-                            brand: candidate.brand,
-                            isSelected: selection?.id == candidate.persistentModelID
-                        )
-                        .onTapGesture {
-                            toggleSelection(.candidate(candidate))
-                        }
-                    }
-                }
-
-                ForEach(filteredBathrooms) { bathroom in
-                    Annotation(
-                        bathroom.name,
-                        coordinate: bathroom.coordinate,
-                        anchor: .center
-                    ) {
-                        BathroomAnnotation(
-                            rating: bathroom.rating,
-                            isSelected: selection?.id == bathroom.persistentModelID
-                        )
-                        .onTapGesture {
-                            toggleSelection(.bathroom(bathroom))
-                        }
-                    }
-                }
-            }
-            .mapControls {
-                MapUserLocationButton()
-                MapCompass()
-                MapScaleView()
-            }
-            .mapStyle(.standard(pointsOfInterest: .including([.restroom])))
+            ClusteredMapView(
+                cameraPosition: $cameraPosition,
+                bathrooms: filteredBathrooms,
+                candidates: candidates,
+                selection: selection,
+                onSelect: select
+            )
             .ignoresSafeArea(edges: .bottom)
 
             if locationManager.isLocationDenied {
@@ -121,10 +85,8 @@ struct MapTabView: View {
 
     // MARK: - Selection
 
-    private func toggleSelection(_ tapped: MapSelection) {
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-            selection = (selection?.id == tapped.id) ? nil : tapped
-        }
+    private func select(_ tapped: MapSelection) {
+        selection = tapped
     }
 
     // MARK: - Camera Logic
@@ -143,7 +105,7 @@ struct MapTabView: View {
 // MARK: - Map Selection
 
 /// The pin whose detail sheet is open. One sheet for both kinds, so they never fight over presentation.
-private enum MapSelection: Identifiable {
+enum MapSelection: Identifiable {
     case bathroom(Bathroom)
     case candidate(Candidate)
 
