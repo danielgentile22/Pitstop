@@ -5,10 +5,14 @@ Downloads each brand's GeoJSON from the newest All The Places run (CC-0 data) wh
 spider finished its scrape, and brands All The Places lacks from OpenStreetMap through Overpass
 (ODbL, credited in the README). Keeps points in the region, normalizes names and addresses, removes
 duplicates within 50 m of the same brand or parent company, and writes the seed JSON the app
-imports on launch. The seed version goes up only when the records change.
+imports on launch. The seed version goes up only when the records change, counting from the app's
+seed even when writing elsewhere. The script refuses to write when any brand drops by more than
+30 percent or to zero from the app's seed, or when two records share a source ID.
 
     python3 scripts/seed/build_seed.py                     # network, writes the app's seed file
-    python3 scripts/seed/build_seed.py --fixtures DIR      # reads DIR/<spider>.geojson and DIR/osm_<state>.json
+    python3 scripts/seed/build_seed.py --allow-drop        # same, even when a brand drops
+    python3 scripts/seed/build_seed.py --fixtures DIR --output PATH
+                                                           # reads DIR/<spider>.geojson and DIR/osm_<state>.json
 """
 
 from __future__ import annotations
@@ -27,12 +31,15 @@ from functools import cache
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_OUTPUT = REPO_ROOT / "Pitstop" / "Pitstop" / "CandidateSeed.json"
+BUNDLED_SEED = REPO_ROOT / "Pitstop" / "Pitstop" / "CandidateSeed.json"
 ATP_RUN_HISTORY = "https://data.alltheplaces.xyz/runs/history.json"
 OVERPASS_API = "https://overpass-api.de/api/interpreter"
 USER_AGENT = "Pitstop seed builder (github.com/danielgentile22/Pitstop)"
 
 DUPLICATE_RADIUS_METERS = 50
+# A brand losing more than this share of its records since the app's seed usually means its source
+# broke (a partial scrape, an outage), so the script stops unless --allow-drop is passed.
+MAX_BRAND_DROP = 0.3
 
 
 @dataclass(frozen=True)
@@ -180,6 +187,8 @@ def osm_features(state: str, fixtures: Path | None) -> list[dict]:
         elements = json.loads((fixtures / f"osm_{state.lower()}.json").read_text())["elements"]
     else:
         elements = overpass(state)
+    if not elements:  # every state has some of these shops, so none means the source failed
+        sys.exit(f"OpenStreetMap returned no shops for {state}.")
     features = []
     for element in elements:
         tags = element.get("tags") or {}
@@ -364,10 +373,28 @@ def remove_duplicates(records: list[dict], stats: Counter) -> list[dict]:
     return kept
 
 
-def next_version(output: Path, records: list[dict]) -> int:
-    if not output.exists():
+def check_unique_ids(records: list[dict]) -> None:
+    repeated = sorted(id for id, count in Counter(r["sourceID"] for r in records).items() if count > 1)
+    if repeated:
+        sys.exit("Records share a source ID: " + ", ".join(repeated))
+
+
+def dropped_brands(previous: dict | None, records: list[dict]) -> list[str]:
+    """Brands with more than MAX_BRAND_DROP fewer records than the previous seed, or none left."""
+    if previous is None:
+        return []
+    before = Counter(r["brandKey"] for r in previous["records"])
+    after = Counter(r["brandKey"] for r in records)
+    return [
+        f"{brand} {count} -> {after[brand]}"
+        for brand, count in sorted(before.items())
+        if after[brand] == 0 or after[brand] < count * (1 - MAX_BRAND_DROP)
+    ]
+
+
+def next_version(previous: dict | None, records: list[dict]) -> int:
+    if previous is None:
         return 1
-    previous = json.loads(output.read_text())
     if previous.get("records") == records:
         return previous["version"]
     return previous.get("version", 0) + 1
@@ -389,8 +416,15 @@ def print_counts(records: list[dict], stats: Counter) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--fixtures", type=Path, help="read <spider>.geojson files from this folder, no network")
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--output", type=Path, help="where to write the seed (default: the app's seed file)")
+    parser.add_argument("--allow-drop", action="store_true", help="write even when a brand drops")
     args = parser.parse_args(argv)
+    if args.fixtures is not None:
+        if args.output is None:
+            parser.error("--fixtures needs --output, so fixture data never replaces the app's seed")
+        if args.output.resolve() == BUNDLED_SEED.resolve():
+            parser.error("--fixtures cannot write the app's seed file")
+    output = args.output or BUNDLED_SEED
 
     stats: Counter = Counter()
     records = []
@@ -399,12 +433,17 @@ def main(argv: list[str] | None = None) -> int:
     records = remove_duplicates(records, stats)
     print_counts(records, stats)
 
+    check_unique_ids(records)
+
     for record in records:
         del record["_state"], record["_group"]
-    version = next_version(args.output, records)
+    previous = json.loads(BUNDLED_SEED.read_text()) if BUNDLED_SEED.exists() else None
+    if (dropped := dropped_brands(previous, records)) and not args.allow_drop:
+        sys.exit("Brands dropped since the app's seed (pass --allow-drop to write anyway): " + ", ".join(dropped))
+    version = next_version(previous, records)
     seed = {"version": version, "records": records}
-    args.output.write_text(json.dumps(seed, indent=2, ensure_ascii=False) + "\n")
-    print(f"Wrote version {version} to {args.output}")
+    output.write_text(json.dumps(seed, indent=2, ensure_ascii=False) + "\n")
+    print(f"Wrote version {version} to {output}")
     return 0
 
 

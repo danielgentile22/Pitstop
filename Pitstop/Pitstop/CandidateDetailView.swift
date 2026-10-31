@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import MapKit
+import os
 
 /// Detail sheet for an unvisited place. "I went here" logs it as a Bathroom; "No public restroom here"
 /// dismisses it, and a dismissed place offers the undo.
@@ -80,7 +81,7 @@ struct CandidateDetailView: View {
                     .tint(.green)
 
                     if candidate.isDismissed {
-                        Button { candidate.isDismissed = false } label: {
+                        Button { setDismissed(false) } label: {
                             Label("Undo: has a public restroom", systemImage: "arrow.uturn.backward.circle.fill")
                                 .frame(maxWidth: .infinity)
                         }
@@ -89,7 +90,7 @@ struct CandidateDetailView: View {
                     } else {
                         // The pin disappears unless "Show dismissed" is on, so close the sheet with it.
                         Button {
-                            candidate.isDismissed = true
+                            setDismissed(true)
                             dismiss()
                         } label: {
                             Label("No public restroom here", systemImage: "xmark.circle.fill")
@@ -140,6 +141,17 @@ struct CandidateDetailView: View {
         let sourceID = candidate.sourceID
         let linked = FetchDescriptor<Bathroom>(predicate: #Predicate { $0.sourceID == sourceID })
         return ((try? modelContext.fetchCount(linked)) ?? 0) > 0
+    }
+
+    /// Commits right away, so the choice survives a crash and a background seed import sees it.
+    private func setDismissed(_ isDismissed: Bool) {
+        candidate.isDismissed = isDismissed
+        do {
+            try modelContext.save()
+        } catch {
+            Logger(subsystem: "com.danielgentile.GeoPoop", category: "CandidateDetailView")
+                .error("Saving a dismissal failed: \(String(describing: error), privacy: .public)")
+        }
     }
 
     private func openDirections() {
