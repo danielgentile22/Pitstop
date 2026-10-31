@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 
 // MARK: - MaxDistance
@@ -23,6 +24,11 @@ enum MaxDistance: Double, CaseIterable, Equatable {
 struct BathroomFilter: Equatable {
 
     // Empty sets and 0 mean "any".
+
+    // MARK: - Unvisited Places
+
+    /// Shows Candidates. On by default, so only turning it off makes the filter active.
+    var showUnvisited: Bool = true
 
     // MARK: - Rating
 
@@ -56,17 +62,24 @@ struct BathroomFilter: Equatable {
 
     // MARK: - Distance
 
-    /// Not checked by `applies(to:)`; ListTabView applies it because it needs the user's location.
+    /// Not checked by `applies(to:)`; ListTabView applies it with `isWithinMaxDistance` because it needs the user's location.
     var maxDistance: MaxDistance? = nil
 
     // MARK: - Derived
 
     var isActive: Bool {
+        !showUnvisited
+        || requiresVisitDetails
+        || requiresOpen24Hours
+        || maxDistance != nil
+    }
+
+    /// Any criterion only a visit can answer. Candidates have no data for these, so they never match.
+    var requiresVisitDetails: Bool {
         minimumRating > 0
         || !accessTypes.isEmpty
         || !stallTypes.isEmpty
         || !genderTypes.isEmpty
-        || requiresOpen24Hours
         || requiresIndoor
         || requiresWheelchairAccessible
         || requiresChangingTable
@@ -76,7 +89,6 @@ struct BathroomFilter: Equatable {
         || requiresSoap
         || requiresDryingOption
         || !waitTimes.isEmpty
-        || maxDistance != nil
     }
 
     // MARK: - Application
@@ -108,6 +120,21 @@ struct BathroomFilter: Equatable {
         if !waitTimes.isEmpty           { guard waitTimes.contains(bathroom.waitTime) else { return false } }
 
         return true
+    }
+
+    /// Every criterion except `maxDistance`. Open 24 hours uses the seed's hours.
+    func applies(to candidate: Candidate) -> Bool {
+        guard showUnvisited, !requiresVisitDetails else { return false }
+        if requiresOpen24Hours { guard candidate.isOpen24Hours else { return false } }
+        return true
+    }
+
+    /// True when there is no radius or no known location to measure from.
+    func isWithinMaxDistance(_ coordinate: CLLocationCoordinate2D, of userLocation: CLLocationCoordinate2D?) -> Bool {
+        guard let maxDistance, let userLocation else { return true }
+        let origin = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
+        let place  = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        return place.distance(from: origin) <= maxDistance.rawValue
     }
 
     // MARK: - Reset
