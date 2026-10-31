@@ -48,7 +48,7 @@ struct ListTabView: View {
             && filter.applies(to: $0)
             && filter.isWithinMaxDistance($0.coordinate, of: userLocation)
         }
-        let unvisited = candidates.filter {
+        let unvisited = candidates.unlinked(from: bathrooms).filter {
             matchesSearch($0.name)
             && filter.applies(to: $0)
             && filter.isWithinMaxDistance($0.coordinate, of: userLocation)
