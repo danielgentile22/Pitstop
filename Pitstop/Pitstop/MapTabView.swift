@@ -29,6 +29,10 @@ struct MapTabView: View {
         return allBathrooms.filter { filter.applies(to: $0) }
     }
 
+    private var filteredCandidates: [Candidate] {
+        candidates.unlinked(from: allBathrooms).filter { filter.applies(to: $0) }
+    }
+
     /// Within 50 km of the user, so zoom-to-fit ignores pins saved in other cities.
     private var nearbyBathrooms: [Bathroom] {
         guard let userCoord = locationManager.userLocation else {
@@ -46,7 +50,7 @@ struct MapTabView: View {
             ClusteredMapView(
                 cameraPosition: $cameraPosition,
                 bathrooms: filteredBathrooms,
-                candidates: candidates,
+                candidates: filteredCandidates,
                 selection: selection,
                 onSelect: select
             )

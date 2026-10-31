@@ -5,6 +5,7 @@ import SwiftData
 import SwiftUI
 
 /// Full-screen form for adding a bathroom, or editing one when `editing` is non-nil.
+/// Adding from a `candidate` prefills its name, location, address, and hours, and links the new Bathroom to it.
 struct AddBathroomView: View {
 
     // MARK: - Environment
@@ -16,6 +17,7 @@ struct AddBathroomView: View {
 
     let userLocation: CLLocationCoordinate2D?
     let editing: Bathroom?
+    let candidate: Candidate?
 
     // MARK: - Core Fields
 
@@ -110,17 +112,19 @@ struct AddBathroomView: View {
                 || existingFileNames      != b.imageFileNames
                 || !selectedPhotos.isEmpty
         }
-        return !name.isEmpty || rating > 0 || !notes.isEmpty || !selectedPhotos.isEmpty
-            || accessType != .free || isOpen24Hours || !isIndoor || isWheelchairAccessible
+        return name != (candidate?.name ?? "") || rating > 0 || !notes.isEmpty || !selectedPhotos.isEmpty
+            || accessType != .free || isOpen24Hours != (candidate?.isOpen24Hours ?? false)
+            || !isIndoor || isWheelchairAccessible
             || !hasToiletPaper || hasDispenser || hasHeatedSeat || bidetType != .none
             || hasChangingTable || !hasSoap || !hasDryingOption
     }
 
     // MARK: - Init
 
-    init(userLocation: CLLocationCoordinate2D?, editing: Bathroom? = nil) {
+    init(userLocation: CLLocationCoordinate2D?, editing: Bathroom? = nil, candidate: Candidate? = nil) {
         self.userLocation = userLocation
         self.editing      = editing
+        self.candidate    = editing == nil ? candidate : nil
 
         if let b = editing {
             _name                   = State(initialValue: b.name)
@@ -147,6 +151,11 @@ struct AddBathroomView: View {
             _selectedCoordinate     = State(initialValue: b.coordinate)
             _existingFileNames      = State(initialValue: b.imageFileNames)
             _geocodedAddress        = State(initialValue: b.address ?? "")
+        } else if let c = candidate {
+            _name               = State(initialValue: c.name)
+            _isOpen24Hours      = State(initialValue: c.isOpen24Hours)
+            _selectedCoordinate = State(initialValue: c.coordinate)
+            _geocodedAddress    = State(initialValue: c.address ?? "")
         } else {
             let start = userLocation ?? CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855)
             _selectedCoordinate = State(initialValue: start)
@@ -732,6 +741,10 @@ struct AddBathroomView: View {
 
     private func scheduleGeocode(for coordinate: CLLocationCoordinate2D) {
         geocodeTask?.cancel()
+        if let kept = candidateAddress(at: coordinate) {
+            geocodedAddress = kept
+            return
+        }
         geocodeTask = Task {
             try? await Task.sleep(nanoseconds: 800_000_000)
             guard !Task.isCancelled else { return }
@@ -765,6 +778,15 @@ struct AddBathroomView: View {
         return line.isEmpty ? nil : line
     }
 
+    /// The Candidate's own address while the pin still sits on it, which beats a reverse geocode.
+    /// The tolerance absorbs the mini map re-centering itself on first layout.
+    private func candidateAddress(at coordinate: CLLocationCoordinate2D) -> String? {
+        guard let candidate, let address = candidate.address, !address.isEmpty else { return nil }
+        let pin = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let store = CLLocation(latitude: candidate.latitude, longitude: candidate.longitude)
+        return pin.distance(from: store) <= 10 ? address : nil
+    }
+
     // MARK: - Actions
 
     private func handleCancel() {
@@ -775,8 +797,12 @@ struct AddBathroomView: View {
         isSaving = true
         geocodeTask?.cancel()
 
-        let finalAddress         = await reverseGeocode(selectedCoordinate)
-            ?? (isEditMode ? editing?.address : nil)
+        let finalAddress: String?
+        if let kept = candidateAddress(at: selectedCoordinate) {
+            finalAddress = kept
+        } else {
+            finalAddress = await reverseGeocode(selectedCoordinate) ?? (isEditMode ? editing?.address : nil)
+        }
         let savedDispenserRating = hasDispenser ? max(1, dispenserRating) : 0
 
         if let bathroom = editing {
@@ -805,6 +831,7 @@ struct AddBathroomView: View {
                 if let f = ImageStorage.saveImage(photo, bathroomID: bathroom.id) { files.append(f) }
             }
             bathroom.imageFileNames = files
+            bathroom.sourceID       = candidate?.sourceID
             modelContext.insert(bathroom)
         }
 

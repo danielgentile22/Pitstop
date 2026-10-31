@@ -60,3 +60,13 @@ final class Candidate {
         BrandProfile.profile(forKey: brandKey)
     }
 }
+
+extension Sequence<Candidate> {
+
+    /// Drops every Candidate a Bathroom links to: logging a visit hides its Candidate everywhere.
+    /// Pass all Bathrooms, not a filtered subset, so a filtered-out visit still hides its store.
+    func unlinked(from bathrooms: some Sequence<Bathroom>) -> [Candidate] {
+        let linkedIDs = Set(bathrooms.compactMap(\.sourceID))
+        return filter { !linkedIDs.contains($0.sourceID) }
+    }
+}

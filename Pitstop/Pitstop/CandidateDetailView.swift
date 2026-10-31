@@ -2,13 +2,23 @@ import SwiftUI
 import SwiftData
 import MapKit
 
-/// Read-only detail sheet for an unvisited place.
+/// Detail sheet for an unvisited place. "I went here" logs it as a Bathroom; "No public restroom here"
+/// dismisses it, and a dismissed place offers the undo.
 struct CandidateDetailView: View {
+
+    // MARK: - Environment
+
+    @Environment(\.dismiss)      private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     // MARK: - Input
 
     let candidate: Candidate
     let userLocation: CLLocationCoordinate2D?
+
+    // MARK: - State
+
+    @State private var showAddView = false
 
     // MARK: - Body
 
@@ -54,16 +64,49 @@ struct CandidateDetailView: View {
                 }
 
                 Divider()
-                Button { openDirections() } label: {
-                    Label("Directions", systemImage: "car.circle.fill")
-                        .frame(maxWidth: .infinity)
+                VStack(spacing: 12) {
+                    Button { openDirections() } label: {
+                        Label("Directions", systemImage: "car.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.blue)
+
+                    Button { showAddView = true } label: {
+                        Label("I went here", systemImage: "checkmark.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.green)
+
+                    if candidate.isDismissed {
+                        Button { candidate.isDismissed = false } label: {
+                            Label("Undo: has a public restroom", systemImage: "arrow.uturn.backward.circle.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
+                    } else {
+                        // The pin disappears unless "Show dismissed" is on, so close the sheet with it.
+                        Button {
+                            candidate.isDismissed = true
+                            dismiss()
+                        } label: {
+                            Label("No public restroom here", systemImage: "xmark.circle.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
+                    }
                 }
-                .buttonStyle(.bordered)
                 .controlSize(.large)
-                .tint(.blue)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 20)
             }
+        }
+        // Once saved, this place is a Bathroom and its pin is gone, so close the sheet too.
+        .fullScreenCover(isPresented: $showAddView, onDismiss: { if isLinked { dismiss() } }) {
+            AddBathroomView(userLocation: userLocation, candidate: candidate)
         }
     }
 
@@ -78,14 +121,26 @@ struct CandidateDetailView: View {
                 Text(brand.displayName)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Label("Not visited yet", systemImage: "questionmark.circle")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(brand.reliability.tint)
+                if candidate.isDismissed {
+                    Label("No public restroom", systemImage: "xmark.circle")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.red)
+                } else {
+                    Label("Not visited yet", systemImage: "questionmark.circle")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(brand.reliability.tint)
+                }
             }
         }
     }
 
     // MARK: - Helpers
+
+    private var isLinked: Bool {
+        let sourceID = candidate.sourceID
+        let linked = FetchDescriptor<Bathroom>(predicate: #Predicate { $0.sourceID == sourceID })
+        return ((try? modelContext.fetchCount(linked)) ?? 0) > 0
+    }
 
     private func openDirections() {
         MapURLHelper.openDirections(toLatitude: candidate.latitude, longitude: candidate.longitude, mode: .driving)

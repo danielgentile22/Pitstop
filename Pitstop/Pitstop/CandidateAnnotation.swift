@@ -1,11 +1,12 @@
 import SwiftUI
 
 /// Map pin for an unvisited place: dimmed, tinted by brand reliability, with a question mark badge,
-/// so it never reads as a bathroom the user has checked.
+/// so it never reads as a bathroom the user has checked. A dismissed place is gray with a red X badge.
 struct CandidateAnnotation: View {
 
     let brand: BrandProfile
     let isSelected: Bool
+    var isDismissed: Bool = false
 
     private let baseSize: CGFloat     = 30
     private let selectedSize: CGFloat = 40
@@ -13,7 +14,8 @@ struct CandidateAnnotation: View {
 
     var body: some View {
         let size = isSelected ? selectedSize : baseSize
-        let tint = brand.reliability.tint
+        let tint = isDismissed ? Color(.systemGray) : brand.reliability.tint
+        let badgeTint = isDismissed ? Color.red : tint
 
         ZStack(alignment: .topTrailing) {
             Circle()
@@ -26,16 +28,18 @@ struct CandidateAnnotation: View {
                         .foregroundStyle(.white.opacity(0.9))
                 }
 
-            Image(systemName: "questionmark")
+            Image(systemName: isDismissed ? "xmark" : "questionmark")
                 .font(.system(size: badgeSize * 0.6, weight: .heavy))
-                .foregroundStyle(tint)
+                .foregroundStyle(badgeTint)
                 .frame(width: badgeSize, height: badgeSize)
                 .background(Circle().fill(.white))
-                .overlay(Circle().strokeBorder(tint, lineWidth: 1))
+                .overlay(Circle().strokeBorder(badgeTint, lineWidth: 1))
                 .offset(x: badgeSize * 0.3, y: -badgeSize * 0.3)
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.6), value: isSelected)
-        .accessibilityLabel("Unvisited \(brand.displayName), \(brand.reliability.displayName.lowercased())")
+        .accessibilityLabel(isDismissed
+            ? "Dismissed \(brand.displayName), no public restroom"
+            : "Unvisited \(brand.displayName), \(brand.reliability.displayName.lowercased())")
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -66,6 +70,7 @@ extension Reliability {
             VStack(spacing: 16) {
                 CandidateAnnotation(brand: brand, isSelected: false)
                 CandidateAnnotation(brand: brand, isSelected: true)
+                CandidateAnnotation(brand: brand, isSelected: false, isDismissed: true)
                 BathroomAnnotation(rating: 4, isSelected: false)
             }
         }
