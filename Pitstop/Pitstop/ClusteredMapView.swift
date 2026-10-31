@@ -79,6 +79,9 @@ struct ClusteredMapView: UIViewRepresentable {
 
         private var annotations: [PlaceKey: PlaceAnnotation] = [:]
 
+        /// `MapSelection.fingerprint` of the places last synced, so a render with the same places skips the diff.
+        private var syncedFingerprint: Int?
+
         /// The last camera position the map was moved to or reported, so a write-back does not move it again.
         private var appliedPosition: MapCameraPosition?
 
@@ -88,6 +91,10 @@ struct ClusteredMapView: UIViewRepresentable {
 
         /// Adds and removes only what changed, so an update with thousands of pins stays cheap.
         func syncAnnotations(on mapView: MKMapView) {
+            let fingerprint = MapSelection.fingerprint(bathrooms: parent.bathrooms, candidates: parent.candidates)
+            guard fingerprint != syncedFingerprint else { return }
+            syncedFingerprint = fingerprint
+
             var wanted: [PlaceKey: MapSelection] = [:]
             for candidate in parent.candidates { wanted[.candidate(candidate.sourceID)] = .candidate(candidate) }
             for bathroom in parent.bathrooms { wanted[.bathroom(bathroom.id)] = .bathroom(bathroom) }

@@ -99,6 +99,24 @@ struct BathroomSaverTests {
         #expect(try files(of: bathroom).count == 2)   // full size and thumbnail
     }
 
+    @Test func photosAreStoredAtTheirIntendedPixelSize() async throws {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let large = UIGraphicsImageRenderer(size: CGSize(width: 3000, height: 2000), format: format).image { ctx in
+            UIColor.blue.setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 3000, height: 2000))
+        }
+
+        let bathroom = try await saver().save(form(), to: .new(from: nil), photos: .init(added: [large]))
+
+        let dir = photoRoot.appendingPathComponent(bathroom.id.uuidString)
+        let name = try #require(bathroom.imageFileNames.first)
+        let full  = try #require(UIImage(contentsOfFile: dir.appendingPathComponent(name).path)?.cgImage)
+        let thumb = try #require(UIImage(contentsOfFile: dir.appendingPathComponent(name.replacingOccurrences(of: ".jpg", with: "_thumb.jpg")).path)?.cgImage)
+        #expect(full.width == 1200 && full.height == 800)
+        #expect(thumb.width == 200 && thumb.height == 133)
+    }
+
     @Test func editCommitsBeforeDeletingRemovedPhotos() async throws {
         let bathroom = try storedBathroom()
         let kept = bathroom.imageFileNames[0]
@@ -200,6 +218,107 @@ struct BathroomSaverTests {
         #expect(bathroom.address == "2 Store Rd")
         let committed = try ModelContext(container).fetch(FetchDescriptor<Candidate>())
         #expect(committed.first?.isDismissed == false)
+    }
+
+    // MARK: - Delete
+
+    private func linkedCandidate(seedVersion: Int, isDismissed: Bool = false, to bathroom: Bathroom) throws -> Candidate {
+        let candidate = Candidate(sourceID: "atp:a", brandKey: "target", name: "Target", latitude: 38.8, longitude: -77.0,
+                                  isDismissed: isDismissed, seedVersion: seedVersion)
+        context.insert(candidate)
+        bathroom.sourceID = candidate.sourceID
+        try context.save()
+        return candidate
+    }
+
+    private func committedCandidates() throws -> [Candidate] {
+        try ModelContext(container).fetch(FetchDescriptor<Candidate>())
+    }
+
+    @Test func deleteCommitsBeforeRemovingPhotos() throws {
+        let bathroom = try storedBathroom()
+        var photosExistedAtCommit = false
+
+        try BathroomSaver.delete(bathroom, from: context, photoRoot: photoRoot, lastImportedVersion: 1, commit: { context in
+            photosExistedAtCommit = try !files(of: bathroom).isEmpty
+            try context.save()
+        })
+
+        #expect(photosExistedAtCommit)
+        #expect(try committedBathrooms().isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: photoRoot.appendingPathComponent(bathroom.id.uuidString).path))
+    }
+
+    @Test func failedDeleteKeepsBathroomAndPhotos() throws {
+        let bathroom = try storedBathroom()
+        let before = try files(of: bathroom)
+
+        #expect(throws: BathroomSaver.SaveError.deleteFailed) {
+            try BathroomSaver.delete(bathroom, from: context, photoRoot: photoRoot, lastImportedVersion: 1,
+                                     commit: { _ in throw CommitFailed() })
+        }
+
+        #expect(try committedBathrooms().count == 1)
+        #expect(try files(of: bathroom) == before)
+        #expect(!context.hasChanges)
+    }
+
+    @Test func deletingABathroomLinkedToADroppedCandidateDeletesTheCandidate() throws {
+        let bathroom = try storedBathroom()
+        _ = try linkedCandidate(seedVersion: 1, to: bathroom)
+
+        try BathroomSaver.delete(bathroom, from: context, photoRoot: photoRoot, lastImportedVersion: 2)
+
+        #expect(try committedCandidates().isEmpty)
+    }
+
+    @Test func deletingABathroomLinkedToACandidateStillInTheSeedKeepsTheCandidate() throws {
+        let bathroom = try storedBathroom()
+        _ = try linkedCandidate(seedVersion: 2, to: bathroom)
+
+        try BathroomSaver.delete(bathroom, from: context, photoRoot: photoRoot, lastImportedVersion: 2)
+
+        #expect(try committedCandidates().map(\.sourceID) == ["atp:a"])
+        #expect(try committedCandidates().first?.isDismissed == false)
+    }
+
+    @Test func deletingABathroomLinkedToADismissedCandidateKeepsItDismissed() throws {
+        let bathroom = try storedBathroom()
+        _ = try linkedCandidate(seedVersion: 1, isDismissed: true, to: bathroom)
+
+        try BathroomSaver.delete(bathroom, from: context, photoRoot: photoRoot, lastImportedVersion: 2)
+
+        #expect(try committedCandidates().map(\.sourceID) == ["atp:a"])
+        #expect(try committedCandidates().first?.isDismissed == true)
+    }
+
+    // MARK: - Orphan sweep
+
+    @Test func sweepRemovesOrphanedFoldersAndUnlistedFiles() throws {
+        let bathroom = try storedBathroom()
+        let listed = bathroom.imageFileNames[0]
+        let unlisted = bathroom.imageFileNames[1]
+        bathroom.imageFileNames = [listed]
+        try context.save()
+        let orphanID = UUID()
+        _ = try ImageStorage.saveImage(photo(), bathroomID: orphanID, root: photoRoot)
+
+        try BathroomSaver.sweepOrphanedPhotos(in: container, root: photoRoot, writtenBefore: .distantFuture)
+
+        #expect(!FileManager.default.fileExists(atPath: photoRoot.appendingPathComponent(orphanID.uuidString).path))
+        #expect(fileExists(listed, of: bathroom))
+        #expect(fileExists(listed.replacingOccurrences(of: ".jpg", with: "_thumb.jpg"), of: bathroom))
+        #expect(!fileExists(unlisted, of: bathroom))
+        #expect(!fileExists(unlisted.replacingOccurrences(of: ".jpg", with: "_thumb.jpg"), of: bathroom))
+    }
+
+    @Test func sweepLeavesFilesWrittenAfterItStarted() throws {
+        let orphanID = UUID()
+        _ = try ImageStorage.saveImage(photo(), bathroomID: orphanID, root: photoRoot)
+
+        try BathroomSaver.sweepOrphanedPhotos(in: container, root: photoRoot, writtenBefore: .distantPast)
+
+        #expect(FileManager.default.fileExists(atPath: photoRoot.appendingPathComponent(orphanID.uuidString).path))
     }
 
     // MARK: - Address

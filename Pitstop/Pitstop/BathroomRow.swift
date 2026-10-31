@@ -26,7 +26,8 @@ struct BathroomRow: View {
         }
         .padding(.vertical, 10)
         .accessibilityElement(children: .combine)
-        .task(id: bathroom.id) {
+        // Keyed on the first photo too, so the row reloads when that bathroom's photos change.
+        .task(id: "\(bathroom.id)/\(bathroom.imageFileNames.first ?? "")") {
             guard let fileName = bathroom.imageFileNames.first else {
                 thumbnailImage = nil; return
             }
