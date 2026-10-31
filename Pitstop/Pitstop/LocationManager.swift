@@ -25,6 +25,8 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         manager.delegate = self
         // Ten meters is enough to find a bathroom and much cheaper on battery than Best.
         manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        // The map and the list redo work on every published fix, so standing-still jitter must not publish.
+        manager.distanceFilter = 25
     }
 
     // MARK: - Permission
