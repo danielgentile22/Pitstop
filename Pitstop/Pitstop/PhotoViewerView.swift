@@ -111,8 +111,8 @@ struct PhotoViewerView: View {
 
     // MARK: - Dismiss Gesture
 
-    /// Simultaneous so it never takes a swipe from paging. Only a clearly vertical drag counts, and a pinch at any
-    /// point cancels it for the rest of the drag.
+    /// Simultaneous so it never takes a swipe from paging. Only a drag that is clearly vertical both when it starts
+    /// and when it ends counts, and a pinch at any point cancels it for the rest of the drag.
     private var dismissGesture: some Gesture {
         DragGesture(minimumDistance: 10)
             .updating($dismissDrag) { value, state, _ in
@@ -123,7 +123,7 @@ struct PhotoViewerView: View {
                 }
                 let t = value.translation
                 if state.isVertical == nil {
-                    state.isVertical = abs(t.height) > abs(t.width) * 2
+                    state.isVertical = Self.isVertical(t)
                 }
                 state.offset = state.isVertical == true ? t.height : 0
             }
@@ -132,11 +132,15 @@ struct PhotoViewerView: View {
             }
             .onEnded { value in
                 defer { dismissAllowed = false }
-                guard dismissAllowed, !isZoomed, !isPinching else { return }
+                guard dismissAllowed, !isZoomed, !isPinching, Self.isVertical(value.translation) else { return }
                 if abs(value.translation.height) > 100 {
                     dismiss()
                 }
             }
+    }
+
+    private static func isVertical(_ translation: CGSize) -> Bool {
+        abs(translation.height) > abs(translation.width) * 2
     }
 }
 
