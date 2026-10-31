@@ -18,9 +18,10 @@ nonisolated enum ImageStorage {
 
     // MARK: - In-Memory Cache
 
-    private static let thumbnailCache = NSCache<NSString, UIImage>()
+    // NSCache is thread-safe but not marked Sendable.
+    nonisolated(unsafe) private static let thumbnailCache = NSCache<NSString, UIImage>()
 
-    private static let fullImageCache = NSCache<NSString, UIImage>()
+    nonisolated(unsafe) private static let fullImageCache = NSCache<NSString, UIImage>()
 
     // MARK: - Per-Bathroom Key Tracking
 

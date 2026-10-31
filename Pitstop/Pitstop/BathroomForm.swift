@@ -3,7 +3,7 @@ import Foundation
 
 /// Every field of the add and edit form, pin included, as one value.
 /// The form keeps the snapshot it opened with and compares against it to decide whether Cancel must ask.
-struct BathroomForm: Equatable {
+nonisolated struct BathroomForm: Equatable {
 
     /// A pin closer than this to where it started counts as unmoved: it absorbs the mini map
     /// re-centering itself on first layout, and keeps the stored address.
@@ -47,13 +47,13 @@ struct BathroomForm: Equatable {
         longitude = coordinate.longitude
     }
 
-    init(candidate: Candidate) {
+    @MainActor init(candidate: Candidate) {
         self.init(coordinate: candidate.coordinate)
         name          = candidate.name
         isOpen24Hours = candidate.isOpen24HoursIfKnown
     }
 
-    init(bathroom b: Bathroom) {
+    @MainActor init(bathroom b: Bathroom) {
         self.init(coordinate: b.coordinate)
         name                   = b.name
         rating                 = b.rating
@@ -103,7 +103,7 @@ struct BathroomForm: Equatable {
 
     // MARK: - Apply
 
-    func apply(to bathroom: Bathroom) {
+    @MainActor func apply(to bathroom: Bathroom) {
         bathroom.name                   = name.trimmingCharacters(in: .whitespacesAndNewlines)
         bathroom.latitude               = latitude
         bathroom.longitude              = longitude

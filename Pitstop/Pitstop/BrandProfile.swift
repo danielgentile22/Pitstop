@@ -1,7 +1,7 @@
 import Foundation
 
 /// How likely an unvisited location of a brand is to have a usable public bathroom.
-enum Reliability: String, CaseIterable {
+nonisolated enum Reliability: String, CaseIterable {
     case reliable
     case likely
     case uncertain
@@ -24,7 +24,7 @@ enum Reliability: String, CaseIterable {
 }
 
 /// What the app assumes about every location of one chain. Keys match `brandKey` in the seed script.
-struct BrandProfile {
+nonisolated struct BrandProfile {
     let key: String
     let displayName: String
     let reliability: Reliability

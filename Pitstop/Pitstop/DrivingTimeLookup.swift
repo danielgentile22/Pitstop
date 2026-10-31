@@ -20,7 +20,7 @@ enum DrivingTimeLookup {
         let lookups = Task { @MainActor in
             await withTaskGroup(of: Void.self) { group in
                 for destination in destinations {
-                    group.addTask { @MainActor in
+                    group.addTask {
                         if let seconds = await travelTime(from: origin, to: destination) {
                             continuation.yield((destination.id, seconds))
                         }
@@ -55,7 +55,8 @@ enum DrivingTimeLookup {
                                         address: nil)
         request.transportType = .automobile
 
-        let directions = MKDirections(request: request)
+        // Only used on the main actor: onCancel hops back there before cancelling.
+        nonisolated(unsafe) let directions = MKDirections(request: request)
         return await withTaskCancellationHandler {
             try? await directions.calculateETA().expectedTravelTime
         } onCancel: {
