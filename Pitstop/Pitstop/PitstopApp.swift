@@ -10,7 +10,10 @@ struct PitstopApp: App {
 
     init() {
         do {
-            container = try ModelContainer(for: Bathroom.self, Candidate.self)
+            container = try ModelContainer(
+                for: Schema(versionedSchema: SchemaV1.self),
+                migrationPlan: PitstopMigrationPlan.self
+            )
         } catch {
             fatalError("Could not open the SwiftData store: \(error)")
         }
