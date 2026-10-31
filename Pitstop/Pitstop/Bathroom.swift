@@ -71,6 +71,11 @@ final class Bathroom {
     /// so the full path is rebuilt at read time.
     var imageFileNames: [String]
 
+    // MARK: - Source
+
+    /// The `Candidate.sourceID` this bathroom was logged from, if any. Hides that Candidate everywhere.
+    var sourceID: String? = nil
+
     // MARK: - Init
 
     init(
