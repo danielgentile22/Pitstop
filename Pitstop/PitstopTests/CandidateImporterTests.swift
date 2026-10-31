@@ -97,6 +97,34 @@ struct CandidateImporterTests {
         #expect(stored["dismissed"]?.seedVersion == 1)
     }
 
+    @Test func aDismissalSurvivesTheStoreLeavingTheSeedAndComingBack() throws {
+        try apply(version: 1, [record("dismissed"), record("other")])
+        try candidates()["dismissed"]?.isDismissed = true
+        try context.save()
+
+        try apply(version: 2, [record("other")])
+        #expect(try candidates()["dismissed"]?.isDismissed == true)
+
+        try apply(version: 3, [record("dismissed", name: "Barnes & Noble (Reopened)"), record("other")])
+        let dismissed = try #require(try candidates()["dismissed"])
+        #expect(dismissed.isDismissed)
+        #expect(dismissed.name == "Barnes & Noble (Reopened)")
+        #expect(dismissed.seedVersion == 3)
+        #expect(try candidates().count == 2)
+    }
+
+    @Test func undoingADismissalSurvivesARefresh() throws {
+        try apply(version: 1, [record("a")])
+        try candidates()["a"]?.isDismissed = true
+        try context.save()
+        try candidates()["a"]?.isDismissed = false
+        try context.save()
+
+        try apply(version: 2, [record("a")])
+
+        #expect(try candidates()["a"]?.isDismissed == false)
+    }
+
     @Test func aLinkedCandidateStaysHiddenAcrossRefreshes() throws {
         try apply(version: 1, [record("linked"), record("other")])
         let bathroom = Bathroom(name: "B&N", latitude: 38.8, longitude: -77.0)

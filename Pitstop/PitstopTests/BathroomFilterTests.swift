@@ -9,14 +9,15 @@ struct BathroomFilterTests {
 
     private let home = CLLocationCoordinate2D(latitude: 38.8, longitude: -77.0)
 
-    private func candidate(isOpen24Hours: Bool = false, latitude: Double = 38.8) -> Candidate {
+    private func candidate(isOpen24Hours: Bool = false, latitude: Double = 38.8, isDismissed: Bool = false) -> Candidate {
         Candidate(
-            sourceID: "atp:test:\(isOpen24Hours):\(latitude)",
+            sourceID: "atp:test:\(isOpen24Hours):\(latitude):\(isDismissed)",
             brandKey: "target",
             name: "Target",
             latitude: latitude,
             longitude: -77.0,
             isOpen24Hours: isOpen24Hours,
+            isDismissed: isDismissed,
             seedVersion: 1
         )
     }
@@ -69,6 +70,48 @@ struct BathroomFilterTests {
         filter.showUnvisited = false
         filter.reset()
         #expect(filter.showUnvisited)
+    }
+
+    // MARK: - Show Dismissed
+
+    @Test func defaultFilterHidesDismissedCandidates() {
+        let filter = BathroomFilter()
+        #expect(!filter.showDismissed)
+        #expect(!filter.applies(to: candidate(isDismissed: true)))
+    }
+
+    @Test func showingDismissedBringsThemBackAndCountsAsActive() {
+        var filter = BathroomFilter()
+        filter.showDismissed = true
+        #expect(filter.isActive)
+        #expect(filter.applies(to: candidate(isDismissed: true)))
+        #expect(filter.applies(to: candidate()))
+    }
+
+    @Test func showDismissedIsIndependentOfShowUnvisited() {
+        var filter = BathroomFilter()
+        filter.showUnvisited = false
+        filter.showDismissed = true
+        #expect(filter.applies(to: candidate(isDismissed: true)))
+        #expect(!filter.applies(to: candidate()))
+    }
+
+    @Test func dismissedCandidatesStillHonorTheOtherCriteria() {
+        var filter = BathroomFilter()
+        filter.showDismissed = true
+        filter.requiresOpen24Hours = true
+        #expect(!filter.applies(to: candidate(isDismissed: true)))
+        #expect(filter.applies(to: candidate(isOpen24Hours: true, isDismissed: true)))
+        filter.requiresOpen24Hours = false
+        filter.minimumRating = 3
+        #expect(!filter.applies(to: candidate(isDismissed: true)))
+    }
+
+    @Test func resetHidesDismissedAgain() {
+        var filter = BathroomFilter()
+        filter.showDismissed = true
+        filter.reset()
+        #expect(!filter.showDismissed)
     }
 
     // MARK: - Open 24 Hours

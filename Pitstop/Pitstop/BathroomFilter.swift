@@ -30,6 +30,10 @@ struct BathroomFilter: Equatable {
     /// Shows Candidates. On by default, so only turning it off makes the filter active.
     var showUnvisited: Bool = true
 
+    /// Shows Candidates the user marked "No public restroom here", so a dismissal can be undone.
+    /// Off by default, so only turning it on makes the filter active.
+    var showDismissed: Bool = false
+
     // MARK: - Rating
 
     var minimumRating: Int = 0
@@ -69,6 +73,7 @@ struct BathroomFilter: Equatable {
 
     var isActive: Bool {
         !showUnvisited
+        || showDismissed
         || requiresVisitDetails
         || requiresOpen24Hours
         || maxDistance != nil
@@ -123,8 +128,10 @@ struct BathroomFilter: Equatable {
     }
 
     /// Every criterion except `maxDistance`. Open 24 hours uses the seed's hours.
+    /// `showDismissed` alone decides dismissed Candidates; `showUnvisited` decides the rest.
     func applies(to candidate: Candidate) -> Bool {
-        guard showUnvisited, !requiresVisitDetails else { return false }
+        guard candidate.isDismissed ? showDismissed : showUnvisited else { return false }
+        guard !requiresVisitDetails else { return false }
         if requiresOpen24Hours { guard candidate.isOpen24Hours else { return false } }
         return true
     }
