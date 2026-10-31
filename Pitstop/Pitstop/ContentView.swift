@@ -25,6 +25,7 @@ struct ContentView: View {
     // MARK: - Data
 
     @Query private var bathrooms: [Bathroom]
+    @Query private var candidates: [Candidate]
 
     // MARK: - State
 
@@ -136,7 +137,7 @@ struct ContentView: View {
 
     // MARK: - Emergency Logic
 
-    /// Opens walking directions to the nearest saved bathroom.
+    /// Opens driving directions to the place with the fewest effective minutes.
     private func handleEmergencyTap() {
         guard locationManager.hasLocationPermission else {
             emergencyAlertMsg = "Enable location access in Settings to find the nearest bathroom."
@@ -150,17 +151,27 @@ struct ContentView: View {
             return
         }
 
-        let origin = CLLocation(latitude: userCoord.latitude, longitude: userCoord.longitude)
+        // Straight-line distance only: no routing call, so it works offline.
+        let ranked = EmergencyRanker.rank(
+            from: userCoord,
+            at: .now,
+            visited: bathrooms.map {
+                .init(id: $0.id, sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
+                      rating: $0.rating, isOpen24Hours: $0.isOpen24Hours)
+            },
+            unvisited: candidates.map {
+                .init(sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
+                      reliability: $0.brand.reliability, isOpen24Hours: $0.isOpen24Hours,
+                      isDismissed: $0.isDismissed)
+            }
+        )
 
-        // Straight-line distance: no routing call, so it works offline.
-        guard let nearest = bathrooms.min(by: {
-            $0.distance(from: origin) < $1.distance(from: origin)
-        }) else {
-            emergencyAlertMsg = "No bathrooms saved yet. Add some so they're ready in an emergency."
+        guard let best = ranked.first else {
+            emergencyAlertMsg = "No saved bathrooms or unvisited places to go to. Add a bathroom so one is ready in an emergency."
             showEmergencyAlert = true
             return
         }
-        MapURLHelper.openDirections(toLatitude: nearest.latitude, longitude: nearest.longitude)
+        MapURLHelper.openDirections(toLatitude: best.latitude, longitude: best.longitude, mode: .driving)
     }
 }
 
