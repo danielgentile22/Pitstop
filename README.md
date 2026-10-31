@@ -1,33 +1,43 @@
 # Pitstop
 
-An iOS app for logging, rating and finding public bathrooms, with a one-tap route to the nearest one when it can't wait.
+An iOS app for logging, rating and finding public bathrooms, with a one-tap route to the fastest one when it can't wait.
 
-**Status:** on-device only, distributed through TestFlight. Nothing leaves the phone: there is no account, server or sync.
+**Status:** on-device only, distributed through TestFlight. Your data never leaves the phone: there is no account, server or sync. The only network calls are the Apple Maps lookups listed under [How it works](#how-it-works).
 
 ## The problem
 
-Maps apps know where restaurants are. They don't know whether the bathroom inside is free, needs a key, has a changing table or a line out the door. Pitstop is a personal, rated map of the bathrooms you've found, with the details that matter, built to work with no signal and to get you to the closest one in a single tap.
+Maps apps know where restaurants are. They don't know whether the bathroom inside is free, needs a key, has a changing table or a line out the door. Pitstop is a personal, rated map of the bathrooms you've found, with the details that matter, plus the chain stores nearby that usually have one. It works with no signal and gets you to the best bet in a single tap.
 
 ## Features
 
 - **Map and list.** Pins colored by rating, next to Apple's own restroom points of interest. The list is searchable and sorts by distance, rating, date added or name.
-- **Emergency button.** One tap opens walking directions in Apple Maps to the nearest saved bathroom by straight-line distance, with no network needed.
-- **Detailed entries.** Pin placement on a mini map with automatic reverse geocoding, a 1 to 5 star rating, access type (free, paid, purchase required, key required, private property), stall type, gender designation, wheelchair access, changing table, toilet paper (including a dispenser rating), bidet type, heated seat, soap, hand drying, typical wait, notes, and up to 10 photos from the library or camera.
-- **Filters.** Minimum rating, maximum distance, access, stall, gender and wait time, plus nine must-have toggles. Filters apply live to both the map and the list.
+- **Unvisited places.** About 6,000 chain locations in Virginia, Maryland and DC (Target, Walmart, Barnes & Noble, grocery chains, gas stations and convenience stores) show as dimmed pins tinted by how reliably that brand has a public restroom. Pins cluster as you zoom out, and a cluster too tight to split opens a list of its places. "I went here" turns a place into a saved bathroom with its name and address filled in. "No public restroom here" dismisses it, and Show dismissed brings it back to undo.
+- **Emergency button.** One tap ranks your saved bathrooms and the unvisited places by driving time plus penalties: lower ratings, less reliable brands and, from 10 PM to 6 AM, places known not to be open 24 hours. It then opens Apple Maps driving directions to the winner. Places more than 45 effective minutes away are out of range, so the button says nothing is in range instead of sending you on a long drive. Offline, it ranks by straight-line distance at 20 mph.
+- **Detailed entries.** Pin placement on a mini map, by dragging or by address search, with automatic reverse geocoding, a 1 to 5 star rating, access type (free, paid, purchase required, key required, private property), stall type, gender designation, wheelchair access, changing table, toilet paper (including a dispenser rating), bidet type, heated seat, soap, hand drying, typical wait, notes, and up to 10 photos from the library or camera.
+- **Filters.** Minimum rating, maximum distance, access, stall, gender and wait time, nine must-have toggles, and Show unvisited and Show dismissed. Filters apply live, and the same way, to both the map and the list. Criteria only a visit can answer hide unvisited places.
 - **Photos.** A thumbnail carousel on each bathroom and a full-screen viewer with paging, pinch to zoom and swipe to dismiss.
 - **Accessibility.** VoiceOver labels on pins and rows, an adjustable star rating control, and animations that respect Reduce Motion.
 
 ## How it works
 
-- **SwiftData is the only store.** Views read and write `Bathroom` records directly. The store is the only copy of the data, so a schema change needs a migration, never a wipe.
-- **Photos live on disk** as a full-size JPEG and a 200px thumbnail per image under `Documents/BathroomImages/{id}/`, with in-memory caches. The model stores file names only, since the sandbox path can change across updates.
-- **Reverse geocoding** uses MapKit and is the only network call. Without a connection the entry falls back to coordinates.
+- **SwiftData is the only store.** It holds two models: `Bathroom` for places you visited and `Candidate` for unvisited places from the bundled seed. The store is the only copy of the data, so the schema is versioned and a change needs a migration, never a wipe. If the store will not open, the app copies it to `Documents/StoreBackups/` and explains, instead of crashing.
+- **Saves commit before files go.** `BathroomSaver` writes new photos, commits the store, and only then deletes photos you removed, so a failed save keeps the form open and loses nothing.
+- **Candidates come from a bundled seed.** On launch, off the main thread, the app imports `CandidateSeed.json` when its version is newer than the last import. The import is idempotent, never changes whether you dismissed a place, and never deletes a dismissed place or one a bathroom was logged from. A bathroom logged from a Candidate keeps its `sourceID`, which hides that Candidate everywhere, so you see the place once.
+- **Photos live on disk** as a JPEG up to 1200px and a 200px thumbnail per image under `Documents/BathroomImages/{id}/`, with in-memory caches. The model stores file names only, since the sandbox path can change across updates.
+- **Network calls.** Three, all to Apple Maps, and each one degrades offline:
+  - Reverse geocoding of the pin in the add form. Offline, the entry saves without an address; the save waits at most 2 seconds for one.
+  - Address search in the add form. Offline, it says the search needs a connection.
+  - Driving times for the emergency button, for the 8 closest places, within a 3 second deadline that also covers getting a fresh location. Places with no answer use straight-line distance at 20 mph.
 
 ## Worth a look
 
 | File | Why |
 |---|---|
-| [`EmergencyButton.swift`](Pitstop/Pitstop/EmergencyButton.swift), [`MapURLHelper.swift`](Pitstop/Pitstop/MapURLHelper.swift) | The one-tap emergency flow and handoff to Apple Maps walking directions. |
+| [`EmergencyRanker.swift`](Pitstop/Pitstop/EmergencyRanker.swift) | Pure ranking for the emergency button, with every penalty and the range limit in one table. |
+| [`DrivingTimeLookup.swift`](Pitstop/Pitstop/DrivingTimeLookup.swift) | Parallel driving-time lookups that give up at a deadline. |
+| [`ClusteredMapView.swift`](Pitstop/Pitstop/ClusteredMapView.swift) | An `MKMapView` wrapper that clusters thousands of pins, which SwiftUI's `Map` cannot. |
+| [`CandidateImporter.swift`](Pitstop/Pitstop/CandidateImporter.swift) | Version-gated, idempotent seed import that never overrides what you told the app. |
+| [`BathroomSaver.swift`](Pitstop/Pitstop/BathroomSaver.swift) | The save order that keeps the store and the photo files in step. |
 | [`FlowLayout.swift`](Pitstop/Pitstop/FlowLayout.swift) | A custom SwiftUI `Layout` that wraps filter chips onto rows like text. |
 | [`ImageStorage.swift`](Pitstop/Pitstop/ImageStorage.swift) | On-disk photo storage with thumbnails and caches. |
 
@@ -89,13 +99,22 @@ Pitstop/
 ├── ExportOptions.plist         App Store export signing
 ├── Pitstop/
 │   ├── PitstopApp.swift        Entry point and SwiftData container
-│   ├── ContentView.swift       Map/List switcher, toolbar, emergency button
-│   ├── MapTabView.swift        Map with rating-colored pins
+│   ├── ContentView.swift       Map/List switcher, toolbar, emergency flow
+│   ├── MapTabView.swift        Map tab: filtering, camera, selection
+│   ├── ClusteredMapView.swift  MKMapView wrapper that draws and clusters the pins
 │   ├── ListTabView.swift       Searchable, sortable list
 │   ├── DetailView.swift        Bathroom detail sheet
+│   ├── CandidateDetailView.swift  Unvisited place sheet: I went here, dismiss, undo
 │   ├── AddBathroomView.swift   Add and edit form
+│   ├── BathroomSaver.swift     Saves and deletes bathrooms and their photos
 │   ├── FilterSheetView.swift   Live filters
-│   ├── Bathroom.swift          SwiftData model
+│   ├── Bathroom.swift          Visited place model
+│   ├── Candidate.swift         Unvisited place model
+│   ├── Schema.swift            Versioned schema and migration plan
+│   ├── CandidateImporter.swift Imports CandidateSeed.json
+│   ├── BrandProfile.swift      Brand names and reliability levels
+│   ├── EmergencyRanker.swift   Emergency ranking and penalties
+│   ├── DrivingTimeLookup.swift Driving times with a deadline
 │   ├── ImageStorage.swift      On-disk photo storage and caches
 │   └── ...                     Supporting views and helpers
 └── PitstopTests/               Swift Testing unit tests
