@@ -37,15 +37,14 @@ nonisolated enum CandidateImporter {
     @discardableResult
     static func importIfNewer(_ seed: CandidateSeed, into container: ModelContainer, defaults: UserDefaults) throws -> Bool {
         guard seed.version > defaults.integer(forKey: lastImportedVersionKey) else { return false }
-        let context = ModelContext(container)
-        try apply(seed, to: context)
-        try context.save()
+        try apply(seed, to: ModelContext(container)).commit()
         defaults.set(seed.version, forKey: lastImportedVersionKey)
         return true
     }
 
-    /// Inserts new records, updates changed ones, deletes unprotected ones missing from the seed. Does not save.
-    static func apply(_ seed: CandidateSeed, to context: ModelContext) throws {
+    /// Inserts new records and updates changed ones. Unprotected ones missing from the seed are deleted
+    /// only by `PendingImport.commit()`.
+    static func apply(_ seed: CandidateSeed, to context: ModelContext) throws -> PendingImport {
         let linkedIDs = Set(
             try context.fetch(FetchDescriptor<Bathroom>(predicate: #Predicate { $0.sourceID != nil }))
                 .compactMap(\.sourceID)
@@ -73,8 +72,29 @@ nonisolated enum CandidateImporter {
             }
         }
 
-        for candidate in existing.values where !candidate.isDismissed && !linkedIDs.contains(candidate.sourceID) {
-            context.delete(candidate)
+        return PendingImport(
+            context: context,
+            retired: existing.values.filter { !$0.isDismissed && !linkedIDs.contains($0.sourceID) }
+        )
+    }
+
+    /// An applied seed waiting for its deletions and save.
+    struct PendingImport {
+        let context: ModelContext
+        let retired: [Candidate]
+
+        /// Re-reads which Candidates are dismissed straight from the store, so a dismissal the user
+        /// committed while the import ran wins over the seed, then deletes the rest and saves.
+        func commit() throws {
+            let dismissedIDs = Set(
+                try ModelContext(context.container)
+                    .fetch(FetchDescriptor<Candidate>(predicate: #Predicate { $0.isDismissed }))
+                    .map(\.sourceID)
+            )
+            for candidate in retired where !dismissedIDs.contains(candidate.sourceID) {
+                context.delete(candidate)
+            }
+            try context.save()
         }
     }
 
