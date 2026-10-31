@@ -116,7 +116,7 @@ struct BathroomRow: View {
                     .opacity(0.5)
             }
             if !bathroom.hasToiletPaper {
-                amenityIcon("roll", color: .secondary, label: "No TP")
+                amenityIcon("roll", color: .secondary, label: "No toilet paper")
                     .opacity(0.5)
             }
         }
