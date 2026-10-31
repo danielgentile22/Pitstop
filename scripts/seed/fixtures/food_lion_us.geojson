@@ -1,0 +1,51 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-900",
+   "properties": {
+    "ref": "900",
+    "@spider": "food_lion_us",
+    "name": "Food Lion Grocery Store of Shared Pkwy",
+    "addr:street_address": "900 Shared Pkwy",
+    "addr:city": null,
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "shop": "supermarket"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.3,
+     38.5
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id-901",
+   "properties": {
+    "ref": "901",
+    "@spider": "food_lion_us",
+    "name": "Food Lion Grocery Store of Elkton",
+    "addr:street_address": "10 Bridge St",
+    "addr:city": "Elkton",
+    "addr:state": "MD",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "shop": "supermarket"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.83,
+     39.61
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "version": 0.6,
+ "generator": "Overpass API",
+ "elements": [
+  {
+   "type": "node",
+   "id": 577268783,
+   "lat": 38.9495394,
+   "lon": -77.3949311,
+   "tags": {
+    "brand": "Harris Teeter",
+    "brand:wikidata": "Q5665067",
+    "name": "Harris Teeter",
+    "shop": "supermarket",
+    "addr:housenumber": "12960",
+    "addr:street": "Highland Crossing Drive",
+    "addr:city": "Herndon",
+    "addr:state": "VA",
+    "addr:postcode": "20171",
+    "branch": "Woodland Park Crossing",
+    "opening_hours": "Mo-Su 06:00-23:00",
+    "ref": "0970008509"
+   }
+  }
+ ]
+}

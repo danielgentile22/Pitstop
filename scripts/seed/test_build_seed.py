@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -149,3 +150,77 @@ def test_fails_when_no_run_has_a_complete_scrape():
     walmart = next(s for s in build_seed.SOURCES if s.brand_key == "walmart")
     with pytest.raises(SystemExit):
         build_seed.newest_complete_run(walmart, [{"run_id": "2026-10-17"}], lambda r: {walmart.spider: 540})
+
+
+@pytest.mark.parametrize(
+    "source_id, brand_key, name",
+    [
+        ("atp:wegmans_us:148", "wegmans", "Wegmans (Rockville)"),
+        ("atp:giant_food_us:#0778", "giant", "Giant (Oaksprings Plaza)"),
+        ("atp:safeway:1298", "safeway", "Safeway"),
+        ("atp:whole_foods:10185", "whole_foods", "Whole Foods (Old Town)"),
+        ("atp:publix_us:1720", "publix", "Publix (Embrey Mill Town Center)"),
+        ("atp:lidl:US01001", "lidl", "Lidl (Mall Dr)"),
+        ("atp:food_lion_us:901", "food_lion", "Food Lion"),
+        ("atp:trader_joes_us:883", "trader_joes", "Trader Joe's (Baltimore - Anneslie)"),
+        ("atp:aldi_sud_us:FF73", "aldi", "Aldi"),
+        ("osm:node/577268783", "harris_teeter", "Harris Teeter (Woodland Park Crossing)"),
+        ("osm:way/41000001", "weis", "Weis"),
+    ],
+)
+def test_maps_grocery_chains_to_their_brands(seed, source_id, brand_key, name):
+    record = by_id(seed)[source_id]
+    assert record["brandKey"] == brand_key
+    assert record["name"] == name
+
+
+def test_keeps_only_the_supermarket_of_a_grocery_chain(seed):
+    ids = by_id(seed)
+    assert "atp:safeway:1298" in ids
+    assert "atp:safeway:1298-P" not in ids  # pharmacy inside the store
+    assert "atp:safeway:5832-F" not in ids  # fuel station 300 m away
+    assert "atp:publix_us:1720-P" not in ids  # pharmacy listed 1 km away
+
+
+def test_removes_duplicates_between_chains_with_the_same_parent_company(seed):
+    ids = by_id(seed)
+    assert "atp:food_lion_us:900" in ids
+    assert "atp:giant_food_us:#0900" not in ids  # about 20 m from Food Lion 900, both Ahold Delhaize
+
+
+def test_keeps_chains_with_different_parents_at_the_same_spot(seed):
+    ids = by_id(seed)
+    assert "atp:safeway:1298" in ids
+    assert "atp:giant_food_us:#0901" in ids  # about 20 m from Safeway 1298
+
+
+def test_skips_stores_outside_the_united_states(seed):
+    assert "atp:lidl:IT0123" not in by_id(seed)  # Varese, Italy, province code VA
+
+
+def test_reads_openstreetmap_nodes_and_ways(seed):
+    ids = by_id(seed)
+    assert ids["osm:node/577268783"] == {
+        "sourceID": "osm:node/577268783",
+        "brandKey": "harris_teeter",
+        "name": "Harris Teeter (Woodland Park Crossing)",
+        "latitude": 38.949539,
+        "longitude": -77.394931,
+        "address": "12960 Highland Crossing Drive, Herndon, VA 20171",
+        "isOpen24Hours": False,
+        "openingHours": "Mo-Su 06:00-23:00",
+    }
+    weis = ids["osm:way/41000001"]
+    assert (weis["latitude"], weis["longitude"]) == (39.6418, -77.72)  # the way's center
+    assert weis["isOpen24Hours"] is True
+
+
+def test_takes_the_state_from_the_openstreetmap_query_area(seed):
+    # The Weis way has no addr:state tag; it came back from the Maryland query.
+    assert by_id(seed)["osm:way/41000001"]["address"] == "1700 Dual Highway, Hagerstown, MD"
+
+
+def test_every_brand_is_in_the_app_brand_table():
+    table = (build_seed.REPO_ROOT / "Pitstop" / "Pitstop" / "BrandProfile.swift").read_text()
+    app_keys = set(re.findall(r'BrandProfile\(key: "(\w+)"', table))
+    assert {s.brand_key for s in build_seed.SOURCES} <= app_keys

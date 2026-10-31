@@ -1,0 +1,75 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-#0778",
+   "properties": {
+    "ref": "#0778",
+    "@spider": "giant_food_us",
+    "name": "Giant",
+    "addr:street_address": "41 West Lee Hwy",
+    "addr:city": "Warrenton",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "shop": "supermarket",
+    "branch": "Oaksprings Plaza"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.805,
+     38.713
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id-#0900",
+   "properties": {
+    "ref": "#0900",
+    "@spider": "giant_food_us",
+    "name": "Giant",
+    "addr:street_address": "900 Shared Pkwy",
+    "addr:city": "Town",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "shop": "supermarket"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.3,
+     38.50018
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id-#0901",
+   "properties": {
+    "ref": "#0901",
+    "@spider": "giant_food_us",
+    "name": "Giant",
+    "addr:street_address": "4240 Merchant Plaza",
+    "addr:city": "Woodbridge",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "shop": "supermarket"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.293,
+     38.64318
+    ]
+   }
+  }
+ ]
+}

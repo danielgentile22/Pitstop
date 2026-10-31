@@ -1,0 +1,29 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-883",
+   "properties": {
+    "ref": "883",
+    "@spider": "trader_joes_us",
+    "name": "Trader Joe's",
+    "addr:street_address": "6311 York Road",
+    "addr:city": "Baltimore",
+    "addr:state": "MD",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": null,
+    "shop": "supermarket",
+    "branch": "Baltimore - Anneslie"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -76.61,
+     39.37
+    ]
+   }
+  }
+ ]
+}

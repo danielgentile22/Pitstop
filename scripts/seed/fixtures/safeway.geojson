@@ -1,0 +1,74 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-1298",
+   "properties": {
+    "ref": "1298",
+    "@spider": "safeway",
+    "name": "Safeway",
+    "addr:street_address": "4240 Merchant Plaza",
+    "addr:city": "Woodbridge",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "shop": "supermarket"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.293,
+     38.643
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id-1298-P",
+   "properties": {
+    "ref": "1298-P",
+    "@spider": "safeway",
+    "name": "Safeway Pharmacy",
+    "addr:street_address": "4240 Merchant Plaza",
+    "addr:city": "Woodbridge",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "amenity": "pharmacy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.293,
+     38.643
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id-5832-F",
+   "properties": {
+    "ref": "5832-F",
+    "@spider": "safeway",
+    "name": "Safeway Fuel Station",
+    "addr:street_address": "1698 Anderson Rd",
+    "addr:city": "Woodbridge",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 05:00-24:00",
+    "amenity": "fuel"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.2965,
+     38.643
+    ]
+   }
+  }
+ ]
+}

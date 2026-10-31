@@ -2,12 +2,13 @@
 """Builds Pitstop's bundled seed of unvisited chain locations in Virginia, Maryland and DC.
 
 Downloads each brand's GeoJSON from the newest All The Places run (CC-0 data) where that brand's
-spider finished its scrape, keeps points in
-the region, normalizes names and addresses, removes same-brand duplicates within 50 m, and writes
-the seed JSON the app imports on launch. The seed version goes up only when the records change.
+spider finished its scrape, and brands All The Places lacks from OpenStreetMap through Overpass
+(ODbL, credited in the README). Keeps points in the region, normalizes names and addresses, removes
+duplicates within 50 m of the same brand or parent company, and writes the seed JSON the app
+imports on launch. The seed version goes up only when the records change.
 
     python3 scripts/seed/build_seed.py                     # network, writes the app's seed file
-    python3 scripts/seed/build_seed.py --fixtures DIR      # reads DIR/<spider>.geojson instead
+    python3 scripts/seed/build_seed.py --fixtures DIR      # reads DIR/<spider>.geojson and DIR/osm_<state>.json
 """
 
 from __future__ import annotations
@@ -17,6 +18,8 @@ import json
 import math
 import re
 import sys
+import time
+import urllib.parse
 import urllib.request
 from collections import Counter
 from dataclasses import dataclass
@@ -26,6 +29,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "Pitstop" / "Pitstop" / "CandidateSeed.json"
 ATP_RUN_HISTORY = "https://data.alltheplaces.xyz/runs/history.json"
+OVERPASS_API = "https://overpass-api.de/api/interpreter"
 USER_AGENT = "Pitstop seed builder (github.com/danielgentile22/Pitstop)"
 
 DUPLICATE_RADIUS_METERS = 50
@@ -41,13 +45,63 @@ class AtpSource:
     # Nationwide feature count a full scrape reaches. Spiders often stop early (walmart_us returned
     # 540 of about 4,400 stores on 2026-10-17), so runs below this are skipped for that brand.
     min_features: int
+    # Only features with this OpenStreetMap shop tag. Grocery spiders also list in-store pharmacies
+    # and fuel stations (safeway: 107 stores, 95 pharmacies, 16 fuel stations in the region).
+    shop: str | None = None
+    # Stores of brands with the same parent are deduplicated together, so a store a parent lists
+    # under two of its banners shows one pin.
+    parent: str | None = None
 
+    def load(self, fixtures: Path | None) -> list[dict]:
+        if fixtures is not None:
+            return json.loads((fixtures / f"{self.spider}.geojson").read_text())["features"]
+        run = newest_complete_run(self, fetch_json(ATP_RUN_HISTORY), lambda r: run_feature_counts(r["stats_url"]))
+        print(f"{self.spider}: run {run['run_id']}")
+        base = run["output_url"].rsplit("/", 1)[0]
+        return fetch_json(f"{base}/output/{self.spider}.geojson")["features"]
+
+    def source_id(self, feature: dict) -> str | None:
+        ref = clean((feature.get("properties") or {}).get("ref")) or clean(feature.get("id"))
+        return f"atp:{self.spider}:{ref}" if ref else None
+
+
+@dataclass(frozen=True)
+class OsmSource:
+    """A brand All The Places has no spider for, read from OpenStreetMap supermarkets by brand:wikidata."""
+
+    wikidata: str
+    brand_key: str
+    display_name: str
+    shop: str | None = "supermarket"
+    parent: str | None = None
+
+    def load(self, fixtures: Path | None) -> list[dict]:
+        return [f for state in ("VA", "MD", "DC") for f in osm_features(state, fixtures) if f["_wikidata"] == self.wikidata]
+
+    def source_id(self, feature: dict) -> str | None:
+        return f"osm:{feature['id']}"
+
+
+AHOLD_DELHAIZE = "ahold_delhaize"
 
 SOURCES = [
     AtpSource("barnes_and_noble_us", "barnes_and_noble", "Barnes & Noble", min_features=550),
     AtpSource("target_us", "target", "Target", min_features=1_900),
     # One brand for Supercenters and Neighborhood Markets; the branch keeps them apart in the name.
     AtpSource("walmart_us", "walmart", "Walmart", min_features=4_000),
+    AtpSource("wegmans_us", "wegmans", "Wegmans", min_features=110, shop="supermarket"),
+    AtpSource("giant_food_us", "giant", "Giant", min_features=155, shop="supermarket", parent=AHOLD_DELHAIZE),
+    AtpSource("safeway", "safeway", "Safeway", min_features=1_850, shop="supermarket"),
+    AtpSource("whole_foods", "whole_foods", "Whole Foods", min_features=520, shop="supermarket"),
+    AtpSource("publix_us", "publix", "Publix", min_features=3_100, shop="supermarket"),
+    # Worldwide spider; the region and country checks keep the US stores.
+    AtpSource("lidl", "lidl", "Lidl", min_features=12_500, shop="supermarket"),
+    AtpSource("food_lion_us", "food_lion", "Food Lion", min_features=1_100, shop="supermarket", parent=AHOLD_DELHAIZE),
+    AtpSource("trader_joes_us", "trader_joes", "Trader Joe's", min_features=620, shop="supermarket"),
+    AtpSource("aldi_sud_us", "aldi", "Aldi", min_features=2_500, shop="supermarket"),
+    # All The Places has no Harris Teeter or Weis spider (checked 2026-10-31).
+    OsmSource("Q5665067", "harris_teeter", "Harris Teeter"),
+    OsmSource("Q7980370", "weis", "Weis"),
 ]
 
 STATES = {
@@ -85,13 +139,55 @@ def run_feature_counts(stats_url: str) -> dict[str, int]:
     return {r["spider"]: r["features"] for r in fetch_json(stats_url)["results"]}
 
 
-def load_features(source: AtpSource, fixtures: Path | None) -> list[dict]:
+@cache
+def osm_features(state: str, fixtures: Path | None) -> list[dict]:
+    """Every OsmSource brand's shops inside one state, as GeoJSON-like features.
+
+    The state comes from the query area, since many OpenStreetMap shops have no addr:state tag.
+    """
     if fixtures is not None:
-        return json.loads((fixtures / f"{source.spider}.geojson").read_text())["features"]
-    run = newest_complete_run(source, fetch_json(ATP_RUN_HISTORY), lambda r: run_feature_counts(r["stats_url"]))
-    print(f"{source.spider}: run {run['run_id']}")
-    base = run["output_url"].rsplit("/", 1)[0]
-    return fetch_json(f"{base}/output/{source.spider}.geojson")["features"]
+        elements = json.loads((fixtures / f"osm_{state.lower()}.json").read_text())["elements"]
+    else:
+        elements = overpass(state)
+    features = []
+    for element in elements:
+        tags = element.get("tags") or {}
+        center = element.get("center") or element
+        if "lat" not in center:
+            continue
+        features.append(
+            {
+                "id": f"{element['type']}/{element['id']}",
+                "_wikidata": tags.get("brand:wikidata"),
+                "properties": {**tags, "addr:state": state},
+                "geometry": {"type": "Point", "coordinates": [center["lon"], center["lat"]]},
+            }
+        )
+    return features
+
+
+def overpass(state: str) -> list[dict]:
+    wikidata = "|".join(s.wikidata for s in SOURCES if isinstance(s, OsmSource))
+    query = f"""[out:json][timeout:120];
+area["ISO3166-2"="US-{state}"]->.region;
+nwr["brand:wikidata"~"^({wikidata})$"](area.region);
+out center tags;"""
+    body = urllib.parse.urlencode({"data": query}).encode()
+    for attempt in range(5):
+        request = urllib.request.Request(OVERPASS_API, data=body, headers={"User-Agent": USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=180) as response:
+                answer = json.load(response)
+            if "remark" in answer:  # a timeout or memory error, reported with a partial answer
+                raise ValueError(answer["remark"])
+            elements = answer["elements"]
+            print(f"overpass {state}: {len(elements)} elements")
+            return elements
+        except (OSError, ValueError) as error:  # the public server answers 429/504 or an HTML page when busy
+            wait = 15 * 2**attempt
+            print(f"overpass {state}: {error}, retrying in {wait} s")
+            time.sleep(wait)
+    sys.exit(f"Overpass did not answer for {state}.")
 
 
 # MARK: - Normalizing
@@ -176,24 +272,27 @@ def meters_between(a: dict, b: dict) -> float:
     return 2 * 6_371_000 * math.asin(math.sqrt(h))
 
 
-def build_records(source: AtpSource, features: list[dict], stats: Counter) -> list[dict]:
+def build_records(source: AtpSource | OsmSource, features: list[dict], stats: Counter) -> list[dict]:
     records = []
     for feature in features:
         props = feature.get("properties") or {}
         geometry = feature.get("geometry") or {}
-        ref = clean(props.get("ref")) or clean(feature.get("id"))
-        if geometry.get("type") != "Point" or not ref:
+        source_id = source.source_id(feature)
+        if geometry.get("type") != "Point" or not source_id:
             stats["skipped: no point or ID"] += 1
             continue
         state = state_code(props)
-        if state is None:
+        if state is None or clean(props.get("addr:country")) not in (None, "US"):
             stats["skipped: outside VA, MD, DC"] += 1
+            continue
+        if source.shop and props.get("shop") != source.shop:
+            stats[f"skipped: not shop={source.shop}"] += 1
             continue
         lon, lat = geometry["coordinates"][:2]
         hours = clean(props.get("opening_hours"))
         records.append(
             {
-                "sourceID": f"atp:{source.spider}:{ref}",
+                "sourceID": source_id,
                 "brandKey": source.brand_key,
                 "name": format_name(source, props),
                 "latitude": round(lat, 6),
@@ -202,17 +301,18 @@ def build_records(source: AtpSource, features: list[dict], stats: Counter) -> li
                 "isOpen24Hours": is_open_24_hours(hours),
                 "openingHours": hours,
                 "_state": state,
+                "_group": source.parent or source.brand_key,
             }
         )
     return records
 
 
 def remove_duplicates(records: list[dict], stats: Counter) -> list[dict]:
-    """Keeps the lowest source ID of any same-brand group within DUPLICATE_RADIUS_METERS."""
+    """Keeps the lowest source ID of any same-brand or same-parent group within DUPLICATE_RADIUS_METERS."""
     kept: list[dict] = []
     for record in sorted(records, key=lambda r: r["sourceID"]):
         if any(
-            k["brandKey"] == record["brandKey"] and meters_between(k, record) <= DUPLICATE_RADIUS_METERS
+            k["_group"] == record["_group"] and meters_between(k, record) <= DUPLICATE_RADIUS_METERS
             for k in kept
         ):
             stats["skipped: duplicate within 50 m"] += 1
@@ -252,12 +352,12 @@ def main(argv: list[str] | None = None) -> int:
     stats: Counter = Counter()
     records = []
     for source in SOURCES:
-        records.extend(build_records(source, load_features(source, args.fixtures), stats))
+        records.extend(build_records(source, source.load(args.fixtures), stats))
     records = remove_duplicates(records, stats)
     print_counts(records, stats)
 
     for record in records:
-        del record["_state"]
+        del record["_state"], record["_group"]
     version = next_version(args.output, records)
     seed = {"version": version, "records": records}
     args.output.write_text(json.dumps(seed, indent=2, ensure_ascii=False) + "\n")

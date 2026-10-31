@@ -1,0 +1,29 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-148",
+   "properties": {
+    "ref": "148",
+    "@spider": "wegmans_us",
+    "name": "Wegmans",
+    "addr:street_address": "1590 Rockville Pike",
+    "addr:city": "Rockville",
+    "addr:state": "MD",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 06:00-24:00",
+    "shop": "supermarket",
+    "branch": "Rockville"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.1266,
+     39.0618
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,52 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-US01001",
+   "properties": {
+    "ref": "US01001",
+    "@spider": "lidl",
+    "name": "Lidl",
+    "addr:street_address": "1311, Mall Drive",
+    "addr:city": "North Chesterfield",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 08:00-21:00",
+    "shop": "supermarket",
+    "branch": "Mall Dr"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.58,
+     37.5
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id-IT0123",
+   "properties": {
+    "ref": "IT0123",
+    "@spider": "lidl",
+    "name": "Lidl",
+    "addr:street_address": "Via Milano 1",
+    "addr:city": "Varese",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "IT",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "shop": "supermarket"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     8.825,
+     45.82
+    ]
+   }
+  }
+ ]
+}

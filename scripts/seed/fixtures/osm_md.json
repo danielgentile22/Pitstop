@@ -1,0 +1,37 @@
+{
+ "version": 0.6,
+ "generator": "Overpass API",
+ "elements": [
+  {
+   "type": "way",
+   "id": 41000001,
+   "center": {
+    "lat": 39.6418,
+    "lon": -77.72
+   },
+   "tags": {
+    "brand": "Weis",
+    "brand:wikidata": "Q7980370",
+    "name": "Weis Markets",
+    "shop": "supermarket",
+    "addr:housenumber": "1700",
+    "addr:street": "Dual Highway",
+    "addr:city": "Hagerstown",
+    "opening_hours": "24/7"
+   }
+  },
+  {
+   "type": "node",
+   "id": 41000002,
+   "lat": 39.0,
+   "lon": -76.9,
+   "tags": {
+    "brand": "Harris Teeter",
+    "brand:wikidata": "Q5665067",
+    "name": "Harris Teeter",
+    "shop": "supermarket",
+    "addr:state": "MD"
+   }
+  }
+ ]
+}

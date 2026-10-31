@@ -1,0 +1,28 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-FF73",
+   "properties": {
+    "ref": "FF73",
+    "@spider": "aldi_sud_us",
+    "name": "Aldi",
+    "addr:street_address": "429 Solomons Island Rd N",
+    "addr:city": "Prince Frederick",
+    "addr:state": "MD",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 09:00-20:00",
+    "shop": "supermarket"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -76.59,
+     38.55
+    ]
+   }
+  }
+ ]
+}

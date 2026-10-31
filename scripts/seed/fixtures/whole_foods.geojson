@@ -1,0 +1,29 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-10185",
+   "properties": {
+    "ref": "10185",
+    "@spider": "whole_foods",
+    "name": "Whole Foods Market",
+    "addr:street_address": "1700 Duke St",
+    "addr:city": "Alexandria",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": "Mo-Su 07:00-22:00",
+    "shop": "supermarket",
+    "branch": "Old Town"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.061,
+     38.804
+    ]
+   }
+  }
+ ]
+}

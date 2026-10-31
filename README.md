@@ -51,9 +51,9 @@ xcodebuild test -project Pitstop/Pitstop.xcodeproj -scheme Pitstop \
 
 ## Unvisited places data
 
-The app ships with chain locations in Virginia, Maryland and DC that you have not visited yet, in [`CandidateSeed.json`](Pitstop/Pitstop/CandidateSeed.json). [`scripts/seed/build_seed.py`](scripts/seed/build_seed.py) builds it from [All The Places](https://alltheplaces.xyz/), which scrapes each brand's official store locator every week.
+The app ships with chain locations in Virginia, Maryland and DC that you have not visited yet, in [`CandidateSeed.json`](Pitstop/Pitstop/CandidateSeed.json). [`scripts/seed/build_seed.py`](scripts/seed/build_seed.py) builds it from [All The Places](https://alltheplaces.xyz/), which scrapes each brand's official store locator every week. Harris Teeter and Weis have no All The Places scraper, so their stores come from [OpenStreetMap](https://www.openstreetmap.org/) through the Overpass API.
 
-**License.** All The Places releases its output data under the [Creative Commons CC-0 waiver](https://creativecommons.org/publicdomain/zero/1.0/) (stated in the License section of its [README](https://github.com/alltheplaces/alltheplaces#license), checked 2026-10-31). CC-0 puts the data in the public domain, so bundling it in this MIT repo is allowed and needs no attribution. This README credits it anyway.
+**License.** All The Places releases its output data under the [Creative Commons CC-0 waiver](https://creativecommons.org/publicdomain/zero/1.0/) (stated in the License section of its [README](https://github.com/alltheplaces/alltheplaces#license), checked 2026-10-31). CC-0 puts the data in the public domain, so bundling it in this MIT repo is allowed and needs no attribution. This README credits it anyway. The Harris Teeter and Weis locations are © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright).
 
 ```sh
 python3 scripts/seed/build_seed.py                       # download, filter, write the seed

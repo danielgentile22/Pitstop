@@ -1,0 +1,52 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "id-1720",
+   "properties": {
+    "ref": "1720",
+    "@spider": "publix_us",
+    "name": "Publix",
+    "addr:street_address": "1640 Publix Way",
+    "addr:city": "Stafford",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": null,
+    "shop": "supermarket",
+    "branch": "Embrey Mill Town Center"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.417,
+     38.452
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "id-1720-P",
+   "properties": {
+    "ref": "1720-P",
+    "@spider": "publix_us",
+    "name": "Publix Pharmacy",
+    "addr:street_address": "1640 Publix Way",
+    "addr:city": "Stafford",
+    "addr:state": "VA",
+    "addr:postcode": "20000",
+    "addr:country": "US",
+    "opening_hours": null,
+    "amenity": "pharmacy"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.43,
+     38.452
+    ]
+   }
+  }
+ ]
+}
