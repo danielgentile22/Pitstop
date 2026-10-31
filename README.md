@@ -40,6 +40,15 @@ Maps apps know where restaurants are. They don't know whether the bathroom insid
 
 Open `Pitstop/Pitstop.xcodeproj` and run the `Pitstop` scheme. There are no dependencies or config files.
 
+## Tests
+
+Unit tests use Swift Testing and live in `Pitstop/PitstopTests/`. Run them in Xcode with Product > Test, or from the repo root:
+
+```sh
+xcodebuild test -project Pitstop/Pitstop.xcodeproj -scheme Pitstop \
+  -destination 'platform=iOS Simulator,name=iPhone 17'
+```
+
 ## Releasing to TestFlight
 
 ```sh
@@ -62,17 +71,18 @@ _Not yet captured._
 scripts/testflight.sh           Archive, sign and upload to TestFlight
 Pitstop/
 ├── ExportOptions.plist         App Store export signing
-└── Pitstop/
-    ├── PitstopApp.swift        Entry point and SwiftData container
-    ├── ContentView.swift       Map/List switcher, toolbar, emergency button
-    ├── MapTabView.swift        Map with rating-colored pins
-    ├── ListTabView.swift       Searchable, sortable list
-    ├── DetailView.swift        Bathroom detail sheet
-    ├── AddBathroomView.swift   Add and edit form
-    ├── FilterSheetView.swift   Live filters
-    ├── Bathroom.swift          SwiftData model
-    ├── ImageStorage.swift      On-disk photo storage and caches
-    └── ...                     Supporting views and helpers
+├── Pitstop/
+│   ├── PitstopApp.swift        Entry point and SwiftData container
+│   ├── ContentView.swift       Map/List switcher, toolbar, emergency button
+│   ├── MapTabView.swift        Map with rating-colored pins
+│   ├── ListTabView.swift       Searchable, sortable list
+│   ├── DetailView.swift        Bathroom detail sheet
+│   ├── AddBathroomView.swift   Add and edit form
+│   ├── FilterSheetView.swift   Live filters
+│   ├── Bathroom.swift          SwiftData model
+│   ├── ImageStorage.swift      On-disk photo storage and caches
+│   └── ...                     Supporting views and helpers
+└── PitstopTests/               Swift Testing unit tests
 ```
 
 ## License
