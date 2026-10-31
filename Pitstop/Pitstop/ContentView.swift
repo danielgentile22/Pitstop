@@ -163,7 +163,7 @@ struct ContentView: View {
         }
         let unvisited: [EmergencyRanker.UnvisitedPlace] = candidates.map {
             .init(sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
-                  reliability: $0.brand.reliability, isOpen24Hours: $0.isOpen24Hours,
+                  reliability: $0.brand.reliability, isOpen24Hours: $0.isOpen24HoursIfKnown,
                   isDismissed: $0.isDismissed)
         }
 

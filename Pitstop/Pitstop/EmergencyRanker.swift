@@ -25,7 +25,8 @@ enum EmergencyRanker {
             }
         }
 
-        /// Added to places not open 24 hours from `lateNightStartHour` until `lateNightEndHour`, local time.
+        /// Added to places known not to be open 24 hours from `lateNightStartHour` until `lateNightEndHour`,
+        /// local time. Places with unknown hours are not penalized.
         static let closedLateNight: Double = 20
         static let lateNightStartHour = 22
         static let lateNightEndHour   = 6
@@ -59,7 +60,8 @@ enum EmergencyRanker {
         let latitude: Double
         let longitude: Double
         let reliability: Reliability
-        let isOpen24Hours: Bool
+        /// Nil when the source has no hours for this place.
+        let isOpen24Hours: Bool?
         let isDismissed: Bool
     }
 
@@ -101,7 +103,7 @@ enum EmergencyRanker {
             .map { place in
                 let travelMinutes = drivingTimes[place.destination.id].map { $0 / 60 }
                     ?? distance(from: originLocation, to: place.destination) / fallbackMetersPerMinute
-                let lateNight = isLateNight && !place.isOpen24Hours ? Penalty.closedLateNight : 0
+                let lateNight = isLateNight && place.closesAtNight ? Penalty.closedLateNight : 0
                 return RankedPlace(id: place.destination.id,
                                    latitude: place.destination.latitude,
                                    longitude: place.destination.longitude,
@@ -131,7 +133,8 @@ enum EmergencyRanker {
     private struct EligiblePlace {
         let destination: Destination
         let penalty: Double
-        let isOpen24Hours: Bool
+        /// Known not to be open 24 hours.
+        let closesAtNight: Bool
     }
 
     /// Every Bathroom, plus every Candidate that is neither dismissed nor already logged as a Bathroom.
@@ -140,13 +143,13 @@ enum EmergencyRanker {
 
         let visitedPlaces = visited.map {
             EligiblePlace(destination: .init(id: .bathroom($0.id), latitude: $0.latitude, longitude: $0.longitude),
-                          penalty: Penalty.visited(rating: $0.rating), isOpen24Hours: $0.isOpen24Hours)
+                          penalty: Penalty.visited(rating: $0.rating), closesAtNight: !$0.isOpen24Hours)
         }
         let unvisitedPlaces = unvisited
             .filter { !$0.isDismissed && !linkedIDs.contains($0.sourceID) }
             .map {
                 EligiblePlace(destination: .init(id: .candidate($0.sourceID), latitude: $0.latitude, longitude: $0.longitude),
-                              penalty: Penalty.unvisited($0.reliability), isOpen24Hours: $0.isOpen24Hours)
+                              penalty: Penalty.unvisited($0.reliability), closesAtNight: $0.isOpen24Hours == false)
             }
         return visitedPlaces + unvisitedPlaces
     }

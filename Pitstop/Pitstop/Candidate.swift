@@ -19,7 +19,7 @@ final class Candidate {
 
     var isOpen24Hours: Bool
 
-    /// Raw OpenStreetMap opening_hours string. Stored for later use, not shown.
+    /// Raw OpenStreetMap opening_hours string. Stored for later use, not shown. Nil when the source has no hours.
     var openingHours: String?
 
     /// Set by the user, never by the importer.
@@ -50,6 +50,11 @@ final class Candidate {
         self.openingHours  = openingHours
         self.isDismissed   = isDismissed
         self.seedVersion   = seedVersion
+    }
+
+    /// `isOpen24Hours`, or nil when the source has no hours, so it is unknown.
+    var isOpen24HoursIfKnown: Bool? {
+        openingHours == nil ? nil : isOpen24Hours
     }
 
     var coordinate: CLLocationCoordinate2D {

@@ -42,7 +42,7 @@ struct EmergencyRankerTests {
         _ sourceID: String,
         minutesAway: Double,
         reliability: Reliability,
-        isOpen24Hours: Bool = true,
+        isOpen24Hours: Bool? = true,
         isDismissed: Bool = false
     ) -> EmergencyRanker.UnvisitedPlace {
         let c = coordinate(minutesAway: minutesAway)
@@ -102,6 +102,21 @@ struct EmergencyRankerTests {
             ]
         )
         #expect(ids.first == (lateNight ? .bathroom(allNight) : .bathroom(closes)))
+    }
+
+    @Test func lateNightPenaltySkipsCandidatesWithUnknownHours() {
+        let ranked = EmergencyRanker.rank(
+            from: origin, at: time(hour: 2), calendar: Self.calendar,
+            visited: [],
+            unvisited: [
+                unvisited("unknown", minutesAway: 0, reliability: .likely, isOpen24Hours: nil),
+                unvisited("closes", minutesAway: 0, reliability: .likely, isOpen24Hours: false),
+            ],
+            drivingTimes: [.candidate("unknown"): 7 * 60, .candidate("closes"): 7 * 60]
+        )
+        // 7 driving + 5 likely brand, plus 20 only for the place known to close at night.
+        #expect(ranked.map(\.id) == [.candidate("unknown"), .candidate("closes")])
+        #expect(ranked.map(\.effectiveMinutes) == [12, 32])
     }
 
     // MARK: - Exclusion
