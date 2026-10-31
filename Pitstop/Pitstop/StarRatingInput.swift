@@ -29,8 +29,6 @@ struct StarRatingInput: View {
                         )
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(star) \(star == 1 ? "star" : "stars")")
-                .accessibilityAddTraits(star <= rating ? .isSelected : [])
             }
         }
         // VoiceOver sees one adjustable slider instead of five buttons.

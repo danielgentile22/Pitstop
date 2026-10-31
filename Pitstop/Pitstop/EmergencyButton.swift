@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Floating button that triggers the nearest-bathroom flow in ContentView.
+/// Floating button that triggers the fastest-bathroom flow in ContentView.
 struct EmergencyButton: View {
 
     /// True while driving times load. Swaps the icon for a spinner so a tap never looks ignored.
@@ -30,13 +30,23 @@ struct EmergencyButton: View {
                 .background(
                     Circle()
                         .fill(Color.red)
-                        .shadow(color: .red.opacity(0.4), radius: isPulsing ? 12 : 6, y: 4)
+                        .shadow(color: .red.opacity(0.4), radius: isPulsing && !reduceMotion ? 12 : 6, y: 4)
                 )
                 .clipShape(Circle())
         }
-        .accessibilityLabel(isWorking ? "Finding the fastest bathroom" : "Emergency: find nearest bathroom")
-        .onAppear {
-            guard !reduceMotion else { return }
+        .accessibilityLabel(isWorking ? "Finding the fastest bathroom" : "Emergency: find the fastest bathroom")
+        .onAppear(perform: updatePulse)
+        // The button lives as long as the map, so the setting can change under it.
+        .onChange(of: reduceMotion) { updatePulse() }
+    }
+
+    /// Starts the repeating pulse, or stops it at once while Reduce Motion is on.
+    private func updatePulse() {
+        if reduceMotion {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { isPulsing = false }
+        } else {
             withAnimation(
                 .easeInOut(duration: 1.5)
                 .repeatForever(autoreverses: true)
