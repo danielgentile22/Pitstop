@@ -29,8 +29,6 @@ struct BathroomAnnotation: View {
                 .foregroundStyle(.white)
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.6), value: isSelected)
-        .accessibilityLabel(voiceOverLabel)
-        .accessibilityAddTraits(.isButton)
     }
 
     private var pinColor: Color {
@@ -40,11 +38,6 @@ struct BathroomAnnotation: View {
         case 1...2: return .red
         default:    return Color(.systemGray)
         }
-    }
-
-    private var voiceOverLabel: String {
-        let ratingText = rating > 0 ? "\(rating) out of 5 stars" : "unrated"
-        return "Bathroom pin, \(ratingText)"
     }
 }
 

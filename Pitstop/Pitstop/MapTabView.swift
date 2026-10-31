@@ -10,6 +10,11 @@ struct MapTabView: View {
 
     @Binding var cameraPosition: MapCameraPosition
 
+    /// Set once the camera is fitted to a non-empty bathroom list, so returning from the List tab keeps the
+    /// camera where the user left it. ContentView clears it when the list empties, so the next bathroom,
+    /// even one added from the List tab, fits again.
+    @Binding var hasFittedCamera: Bool
+
     var filter: BathroomFilter
 
     // MARK: - Data
@@ -19,7 +24,10 @@ struct MapTabView: View {
 
     // MARK: - State
 
-    @State private var selection: MapSelection?
+    @State private var selection: PlaceKey?
+
+    /// Members of a tapped cluster too tight to split, offered in a chooser.
+    @State private var clusterChoices: [PlaceChoice] = []
 
     // MARK: - Derived
 
@@ -52,7 +60,8 @@ struct MapTabView: View {
                 bathrooms: visible.bathrooms,
                 candidates: visible.candidates,
                 selection: selection,
-                onSelect: select
+                onSelect: select,
+                onChoose: { clusterChoices = $0 }
             )
             .ignoresSafeArea(edges: .bottom)
 
@@ -66,11 +75,21 @@ struct MapTabView: View {
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: locationManager.isLocationDenied)
 
         .onAppear {
-            fitCameraToNearbyBathrooms()
+            if !hasFittedCamera { fitCameraToNearbyBathrooms() }
         }
-        // Re-fit only when the list goes between empty and non-empty.
-        .onChange(of: allBathrooms.isEmpty) {
-            fitCameraToNearbyBathrooms()
+        // Re-fit only when the list goes from empty to non-empty.
+        .onChange(of: allBathrooms.isEmpty) { _, isEmpty in
+            if !isEmpty { fitCameraToNearbyBathrooms() }
+        }
+
+        .confirmationDialog(
+            "\(clusterChoices.count) places here",
+            isPresented: Binding(get: { !clusterChoices.isEmpty }, set: { if !$0 { clusterChoices = [] } }),
+            titleVisibility: .visible
+        ) {
+            ForEach(clusterChoices) { choice in
+                Button(choice.name) { select(choice.key) }
+            }
         }
 
         .sheet(item: $selection) { selection in
@@ -80,7 +99,7 @@ struct MapTabView: View {
 
     // MARK: - Selection
 
-    private func select(_ tapped: MapSelection) {
+    private func select(_ tapped: PlaceKey) {
         selection = tapped
     }
 
@@ -90,6 +109,7 @@ struct MapTabView: View {
     private func fitCameraToNearbyBathrooms() {
         let candidates = nearbyBathrooms.isEmpty ? filteredBathrooms : nearbyBathrooms
         guard !candidates.isEmpty else { return }
+        hasFittedCamera = true
         let region = MKCoordinateRegion(fittingCoordinates: candidates.map(\.coordinate))
         withAnimation(.easeInOut(duration: 0.6)) {
             cameraPosition = .region(region)
@@ -99,16 +119,50 @@ struct MapTabView: View {
 
 // MARK: - Map Selection
 
-/// The pin whose detail sheet is open. One sheet for both kinds, so they never fight over presentation.
+/// A visited or unvisited place, as the List tab shows it.
 enum MapSelection: Identifiable {
     case bathroom(Bathroom)
     case candidate(Candidate)
 
-    var id: PersistentIdentifier {
+    var id: PlaceKey { key }
+
+    var key: PlaceKey {
         switch self {
-        case .bathroom(let bathroom):   return bathroom.persistentModelID
-        case .candidate(let candidate): return candidate.persistentModelID
+        case .bathroom(let bathroom):   return .bathroom(bathroom.id)
+        case .candidate(let candidate): return .candidate(candidate.sourceID)
         }
+    }
+}
+
+/// The place whose detail sheet is open. One sheet for both kinds, so they never fight over presentation.
+/// Keyed on stable values rather than `persistentModelID`, which changes when a new Bathroom is first saved,
+/// and holding no live model, which the background seed import could delete.
+enum PlaceKey: Hashable, Identifiable {
+    case bathroom(UUID)
+    /// The Candidate's `sourceID`.
+    case candidate(String)
+
+    var id: Self { self }
+}
+
+/// One entry in the chooser for a cluster whose places sit too close together to split.
+struct PlaceChoice: Identifiable {
+    let key: PlaceKey
+    let name: String
+
+    var id: PlaceKey { key }
+
+    /// Visited places first, then by name.
+    static func ordered(_ choices: [PlaceChoice]) -> [PlaceChoice] {
+        choices.sorted { a, b in
+            if a.isVisited != b.isVisited { return a.isVisited }
+            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
+    }
+
+    private var isVisited: Bool {
+        if case .bathroom = key { return true }
+        return false
     }
 }
 
@@ -186,6 +240,7 @@ extension MKCoordinateRegion {
     MapTabView(
         locationManager: LocationManager(),
         cameraPosition: .constant(.userLocation(followsHeading: false, fallback: .automatic)),
+        hasFittedCamera: .constant(false),
         filter: BathroomFilter()
     )
     .modelContainer(for: [Bathroom.self, Candidate.self], inMemory: true)

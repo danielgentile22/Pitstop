@@ -35,6 +35,7 @@ struct ContentView: View {
         followsHeading: false,
         fallback: .region(.unitedStates)
     )
+    @State private var hasFittedMapCamera = false
     @State private var showAddBathroom    = false
     @State private var filter             = BathroomFilter()
     @State private var showFilterSheet    = false
@@ -54,6 +55,7 @@ struct ContentView: View {
                         MapTabView(
                             locationManager: locationManager,
                             cameraPosition: $mapCameraPosition,
+                            hasFittedCamera: $hasFittedMapCamera,
                             filter: filter
                         )
                         .transition(.opacity.combined(with: .scale(scale: 0.97)))
@@ -129,6 +131,10 @@ struct ContentView: View {
         }
         .onAppear {
             locationManager.requestPermission()
+        }
+        // The Map tab fits the camera again once there are bathrooms, even if it was not showing when they came.
+        .onChange(of: bathrooms.isEmpty) { _, isEmpty in
+            if isEmpty { hasFittedMapCamera = false }
         }
         .fullScreenCover(isPresented: $showAddBathroom) {
             AddBathroomView(userLocation: locationManager.userLocation)
