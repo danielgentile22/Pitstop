@@ -56,7 +56,8 @@ enum EmergencyRanker {
         let latitude: Double
         let longitude: Double
         let rating: Int
-        let isOpen24Hours: Bool
+        /// Nil when the hours are unknown, as for a visit logged from a Candidate with no hours.
+        let isOpen24Hours: Bool?
     }
 
     struct UnvisitedPlace {
@@ -146,7 +147,7 @@ enum EmergencyRanker {
 
         let visitedPlaces = visited.map {
             EligiblePlace(destination: .init(id: .bathroom($0.id), latitude: $0.latitude, longitude: $0.longitude),
-                          penalty: Penalty.visited(rating: $0.rating), closesAtNight: !$0.isOpen24Hours)
+                          penalty: Penalty.visited(rating: $0.rating), closesAtNight: $0.isOpen24Hours == false)
         }
         let unvisitedPlaces = unvisited
             .filter { !$0.isDismissed && !linkedIDs.contains($0.sourceID) }

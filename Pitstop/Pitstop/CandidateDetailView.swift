@@ -57,11 +57,7 @@ struct CandidateDetailView: View {
                 }
 
                 DetailSection("Hours") {
-                    MetaRow(
-                        icon: candidate.isOpen24Hours ? "clock.fill" : "clock",
-                        color: candidate.isOpen24Hours ? .blue : Color(.systemGray3),
-                        text: candidate.isOpen24Hours ? "Open 24 hours" : "Not open 24 hours"
-                    )
+                    HoursRow(isOpen24Hours: candidate.isOpen24HoursIfKnown, notOpenText: "Not open 24 hours")
                 }
 
                 Divider()

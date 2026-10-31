@@ -16,7 +16,8 @@ struct BathroomForm: Equatable {
 
     var accessType          = BathroomAccess.free
     var requiresReceiptCode = false
-    var isOpen24Hours       = false
+    /// Nil while the hours are unknown; setting the toggle makes them known.
+    var isOpen24Hours: Bool? = false
 
     var stallType              = StallType.single
     var genderType             = GenderType.allGender
@@ -49,7 +50,7 @@ struct BathroomForm: Equatable {
     init(candidate: Candidate) {
         self.init(coordinate: candidate.coordinate)
         name          = candidate.name
-        isOpen24Hours = candidate.isOpen24Hours
+        isOpen24Hours = candidate.isOpen24HoursIfKnown
     }
 
     init(bathroom b: Bathroom) {
@@ -60,7 +61,7 @@ struct BathroomForm: Equatable {
         dateVisited            = b.dateVisited
         accessType             = b.accessType
         requiresReceiptCode    = b.requiresReceiptCode
-        isOpen24Hours          = b.isOpen24Hours
+        isOpen24Hours          = b.isOpen24HoursIfKnown
         stallType              = b.stallType
         genderType             = b.genderType
         isIndoor               = b.isIndoor
@@ -109,7 +110,8 @@ struct BathroomForm: Equatable {
         bathroom.rating                 = rating
         bathroom.accessType             = accessType
         bathroom.requiresReceiptCode    = requiresReceiptCode
-        bathroom.isOpen24Hours          = isOpen24Hours
+        bathroom.isOpen24Hours          = isOpen24Hours ?? false
+        bathroom.isOpen24HoursKnown     = isOpen24Hours != nil
         bathroom.stallType              = stallType
         bathroom.genderType             = genderType
         bathroom.isIndoor               = isIndoor

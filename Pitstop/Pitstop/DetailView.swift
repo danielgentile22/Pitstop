@@ -62,11 +62,7 @@ struct DetailView: View {
                         MetaRow(icon: "doc.text", color: .blue,
                                 text: "Code printed on receipt")
                     }
-                    MetaRow(
-                        icon: bathroom.isOpen24Hours ? "clock.fill" : "clock",
-                        color: bathroom.isOpen24Hours ? .blue : Color(.systemGray3),
-                        text: bathroom.isOpen24Hours ? "Open 24 hours" : "Standard hours"
-                    )
+                    HoursRow(isOpen24Hours: bathroom.isOpen24HoursIfKnown, notOpenText: "Standard hours")
                     if bathroom.waitTime != .unknown {
                         MetaRow(
                             icon: bathroom.waitTime.icon,
