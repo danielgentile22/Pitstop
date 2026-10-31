@@ -247,11 +247,7 @@ struct DetailView: View {
     // MARK: - Helpers
 
     private var formattedDistance: String? {
-        guard let userLocation else { return nil }
-        let origin = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
-        let formatter = MKDistanceFormatter()
-        formatter.unitStyle = .abbreviated
-        return formatter.string(fromDistance: bathroom.distance(from: origin))
+        Distance.formatted(from: userLocation, to: bathroom.coordinate)
     }
 
     private func openInMaps() {
