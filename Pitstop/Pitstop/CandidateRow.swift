@@ -22,7 +22,7 @@ struct CandidateRow: View {
         let brand = candidate.brand
 
         HStack(alignment: .top, spacing: 12) {
-            CandidateAnnotation(brand: brand, isSelected: false, isDismissed: candidate.isDismissed)
+            CandidateAnnotation(reliability: brand.reliability, isSelected: false, isDismissed: candidate.isDismissed)
                 .frame(width: thumbSize, height: thumbSize)
                 .background(Color(.secondarySystemFill))
                 .clipShape(RoundedRectangle(cornerRadius: thumbRadius, style: .continuous))
@@ -77,12 +77,7 @@ struct CandidateRow: View {
     // MARK: - Distance
 
     private var formattedDistance: String? {
-        guard let userLocation else { return nil }
-        let origin = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
-        let place  = CLLocation(latitude: candidate.latitude, longitude: candidate.longitude)
-        let formatter = MKDistanceFormatter()
-        formatter.unitStyle = .abbreviated
-        return formatter.string(fromDistance: place.distance(from: origin))
+        Distance.formatted(from: userLocation, to: candidate.coordinate)
     }
 }
 

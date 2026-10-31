@@ -81,50 +81,39 @@ struct BathroomFilter: Equatable {
 
     /// Any criterion only a visit can answer. Candidates have no data for these, so they never match.
     var requiresVisitDetails: Bool {
-        minimumRating > 0
-        || !accessTypes.isEmpty
-        || !stallTypes.isEmpty
-        || !genderTypes.isEmpty
-        || requiresIndoor
-        || requiresWheelchairAccessible
-        || requiresChangingTable
-        || requiresToiletPaper
-        || requiresHeatedSeat
-        || requiresBidet
-        || requiresSoap
-        || requiresDryingOption
-        || !waitTimes.isEmpty
+        !visitChecks.isEmpty
+    }
+
+    /// One check per visit-only criterion that is set. The single list behind both `requiresVisitDetails`
+    /// and `applies(to: Bathroom)`, so a new criterion cannot be added to one and forgotten in the other.
+    private var visitChecks: [(Bathroom) -> Bool] {
+        var checks: [(Bathroom) -> Bool] = []
+        func check(_ isSet: Bool, _ passes: @escaping (Bathroom) -> Bool) {
+            if isSet { checks.append(passes) }
+        }
+        let filter = self
+        check(minimumRating > 0)         { $0.rating >= filter.minimumRating }
+        check(!accessTypes.isEmpty)      { filter.accessTypes.contains($0.accessType) }
+        check(!stallTypes.isEmpty)       { filter.stallTypes.contains($0.stallType) }
+        check(!genderTypes.isEmpty)      { filter.genderTypes.contains($0.genderType) }
+        check(requiresIndoor)               { $0.isIndoor }
+        check(requiresWheelchairAccessible) { $0.isWheelchairAccessible }
+        check(requiresChangingTable)        { $0.hasChangingTable }
+        check(requiresToiletPaper)          { $0.hasToiletPaper }
+        check(requiresHeatedSeat)           { $0.hasHeatedSeat }
+        check(requiresBidet)                { $0.bidetType != .none }
+        check(requiresSoap)                 { $0.hasSoap }
+        check(requiresDryingOption)         { $0.hasDryingOption }
+        check(!waitTimes.isEmpty)        { filter.waitTimes.contains($0.waitTime) }
+        return checks
     }
 
     // MARK: - Application
 
     /// Every criterion except `maxDistance`.
     func applies(to bathroom: Bathroom) -> Bool {
-
-        if minimumRating > 0 {
-            guard bathroom.rating >= minimumRating else { return false }
-        }
-        if !accessTypes.isEmpty {
-            guard accessTypes.contains(bathroom.accessType) else { return false }
-        }
-        if !stallTypes.isEmpty {
-            guard stallTypes.contains(bathroom.stallType) else { return false }
-        }
-        if !genderTypes.isEmpty {
-            guard genderTypes.contains(bathroom.genderType) else { return false }
-        }
-        if requiresOpen24Hours          { guard bathroom.isOpen24Hours          else { return false } }
-        if requiresIndoor               { guard bathroom.isIndoor               else { return false } }
-        if requiresWheelchairAccessible { guard bathroom.isWheelchairAccessible else { return false } }
-        if requiresChangingTable        { guard bathroom.hasChangingTable        else { return false } }
-        if requiresToiletPaper          { guard bathroom.hasToiletPaper          else { return false } }
-        if requiresHeatedSeat           { guard bathroom.hasHeatedSeat           else { return false } }
-        if requiresBidet                { guard bathroom.bidetType != .none      else { return false } }
-        if requiresSoap                 { guard bathroom.hasSoap                 else { return false } }
-        if requiresDryingOption         { guard bathroom.hasDryingOption         else { return false } }
-        if !waitTimes.isEmpty           { guard waitTimes.contains(bathroom.waitTime) else { return false } }
-
-        return true
+        if requiresOpen24Hours { guard bathroom.isOpen24Hours else { return false } }
+        return visitChecks.allSatisfy { $0(bathroom) }
     }
 
     /// Every criterion except `maxDistance`. Open 24 hours uses the seed's hours.
@@ -139,9 +128,26 @@ struct BathroomFilter: Equatable {
     /// True when there is no radius or no known location to measure from.
     func isWithinMaxDistance(_ coordinate: CLLocationCoordinate2D, of userLocation: CLLocationCoordinate2D?) -> Bool {
         guard let maxDistance, let userLocation else { return true }
-        let origin = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
-        let place  = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        return place.distance(from: origin) <= maxDistance.rawValue
+        return Distance.meters(from: userLocation, to: coordinate) <= maxDistance.rawValue
+    }
+
+    /// The places the map and the list show: every criterion, `maxDistance` included, on both kinds.
+    /// Pass all Bathrooms, not a filtered subset, so a filtered-out visit still hides the Candidate it links to.
+    func visiblePlaces(
+        bathrooms: [Bathroom],
+        candidates: [Candidate],
+        userLocation: CLLocationCoordinate2D?
+    ) -> (bathrooms: [Bathroom], candidates: [Candidate]) {
+        let linkedIDs = bathrooms.linkedSourceIDs
+        let visibleBathrooms = isActive
+            ? bathrooms.filter { applies(to: $0) && isWithinMaxDistance($0.coordinate, of: userLocation) }
+            : bathrooms
+        let visibleCandidates = candidates.filter {
+            !linkedIDs.contains($0.sourceID)
+            && applies(to: $0)
+            && isWithinMaxDistance($0.coordinate, of: userLocation)
+        }
+        return (visibleBathrooms, visibleCandidates)
     }
 
     // MARK: - Reset

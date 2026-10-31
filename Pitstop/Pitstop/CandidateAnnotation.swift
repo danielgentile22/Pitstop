@@ -4,7 +4,7 @@ import SwiftUI
 /// so it never reads as a bathroom the user has checked. A dismissed place is gray with a red X badge.
 struct CandidateAnnotation: View {
 
-    let brand: BrandProfile
+    let reliability: Reliability
     let isSelected: Bool
     var isDismissed: Bool = false
 
@@ -14,7 +14,7 @@ struct CandidateAnnotation: View {
 
     var body: some View {
         let size = isSelected ? selectedSize : baseSize
-        let tint = isDismissed ? Color(.systemGray) : brand.reliability.tint
+        let tint = isDismissed ? Color(.systemGray) : reliability.tint
         let badgeTint = isDismissed ? Color.red : tint
 
         ZStack(alignment: .topTrailing) {
@@ -37,10 +37,6 @@ struct CandidateAnnotation: View {
                 .offset(x: badgeSize * 0.3, y: -badgeSize * 0.3)
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.6), value: isSelected)
-        .accessibilityLabel(isDismissed
-            ? "Dismissed \(brand.displayName), no public restroom"
-            : "Unvisited \(brand.displayName), \(brand.reliability.displayName.lowercased())")
-        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -65,12 +61,10 @@ extension Reliability {
 #Preview("Reliability levels") {
     HStack(spacing: 24) {
         ForEach(Reliability.allCases, id: \.self) { level in
-            let brand = BrandProfile(key: level.rawValue, displayName: level.displayName,
-                                     reliability: level, expectedAccess: .free)
             VStack(spacing: 16) {
-                CandidateAnnotation(brand: brand, isSelected: false)
-                CandidateAnnotation(brand: brand, isSelected: true)
-                CandidateAnnotation(brand: brand, isSelected: false, isDismissed: true)
+                CandidateAnnotation(reliability: level, isSelected: false)
+                CandidateAnnotation(reliability: level, isSelected: true)
+                CandidateAnnotation(reliability: level, isSelected: false, isDismissed: true)
                 BathroomAnnotation(rating: 4, isSelected: false)
             }
         }

@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Raw values are persisted verbatim, locally and in the backend's columns.
+// Raw values are persisted verbatim in the SwiftData store.
 // Don't change them when renaming cases; existing rows would stop decoding.
 
 // MARK: - Access Type

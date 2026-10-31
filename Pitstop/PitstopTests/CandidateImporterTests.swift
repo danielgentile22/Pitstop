@@ -38,8 +38,7 @@ struct CandidateImporterTests {
     }
 
     private func apply(version: Int, _ records: [CandidateSeed.Record]) throws {
-        try CandidateImporter.apply(CandidateSeed(version: version, records: records), to: context)
-        try context.save()
+        try CandidateImporter.apply(CandidateSeed(version: version, records: records), to: context).commit()
     }
 
     private func candidates() throws -> [String: Candidate] {
@@ -133,8 +132,12 @@ struct CandidateImporterTests {
         try context.save()
 
         func visibleIDs() throws -> Set<String> {
-            let all = try context.fetch(FetchDescriptor<Candidate>())
-            return Set(all.unlinked(from: try context.fetch(FetchDescriptor<Bathroom>())).map(\.sourceID))
+            let visible = BathroomFilter().visiblePlaces(
+                bathrooms: try context.fetch(FetchDescriptor<Bathroom>()),
+                candidates: try context.fetch(FetchDescriptor<Candidate>()),
+                userLocation: nil
+            )
+            return Set(visible.candidates.map(\.sourceID))
         }
         #expect(try visibleIDs() == ["other"])
 
@@ -146,12 +149,28 @@ struct CandidateImporterTests {
         #expect(try visibleIDs() == ["other"])
     }
 
-    @Test func applyingTheSameSeedTwiceChangesNothing() throws {
-        let seed = CandidateSeed(version: 1, records: [record("a"), record("b", isOpen24Hours: true)])
-        try CandidateImporter.apply(seed, to: context)
+    @Test func aDismissalCommittedDuringTheImportSurvivesIt() throws {
+        try apply(version: 1, [record("dismissed"), record("other")])
+
+        // The user dismisses the place on the main context after the importer read it, before it commits.
+        let pending = try CandidateImporter.apply(
+            CandidateSeed(version: 2, records: [record("other")]), to: ModelContext(container)
+        )
+        try candidates()["dismissed"]?.isDismissed = true
         try context.save()
 
-        try CandidateImporter.apply(seed, to: context)
+        try pending.commit()
+
+        let stored = try ModelContext(container).fetch(FetchDescriptor<Candidate>())
+        #expect(Set(stored.map(\.sourceID)) == ["dismissed", "other"])
+        #expect(stored.first { $0.sourceID == "dismissed" }?.isDismissed == true)
+    }
+
+    @Test func applyingTheSameSeedTwiceChangesNothing() throws {
+        let seed = CandidateSeed(version: 1, records: [record("a"), record("b", isOpen24Hours: true)])
+        try CandidateImporter.apply(seed, to: context).commit()
+
+        _ = try CandidateImporter.apply(seed, to: context)
 
         #expect(!context.hasChanges)
         #expect(Set(try candidates().keys) == ["a", "b"])
