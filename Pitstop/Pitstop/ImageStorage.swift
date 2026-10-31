@@ -30,31 +30,33 @@ enum ImageStorage {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
+    /// Documents/BathroomImages. Tests pass a temporary folder instead.
+    static var defaultRoot: URL {
+        documentsURL.appendingPathComponent(rootFolderName)
+    }
+
     /// Creates the directory if needed.
-    private static func bathroomDirectory(id: UUID) throws -> URL {
-        let dir = documentsURL
-            .appendingPathComponent(rootFolderName)
-            .appendingPathComponent(id.uuidString)
+    private static func bathroomDirectory(id: UUID, root: URL = defaultRoot) throws -> URL {
+        let dir = root.appendingPathComponent(id.uuidString)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
 
     // MARK: - Save
 
-    /// Writes the full-size image and thumbnail and returns the generated file name.
-    @discardableResult
-    static func saveImage(_ image: UIImage, bathroomID: UUID) -> String? {
-        guard let dir = try? bathroomDirectory(id: bathroomID) else { return nil }
-
-        let token    = UUID().uuidString.prefix(8)
-        let fileName = "img_\(token).jpg"
-        return write(image, bathroomID: bathroomID, fileName: fileName, dir: dir)
+    enum WriteError: Error {
+        case encodingFailed
     }
 
-    // MARK: - Write
-
-    @discardableResult
-    private static func write(_ image: UIImage, bathroomID: UUID, fileName: String, dir: URL) -> String? {
+    /// Writes the full-size image and thumbnail atomically and returns the file name.
+    /// Throws without leaving either file behind.
+    static func saveImage(
+        _ image: UIImage,
+        bathroomID: UUID,
+        root: URL = defaultRoot,
+        fileName: String = "img_\(UUID().uuidString.prefix(8)).jpg"
+    ) throws -> String {
+        let dir      = try bathroomDirectory(id: bathroomID, root: root)
         let fullURL  = dir.appendingPathComponent(fileName)
         let thumbURL = dir.appendingPathComponent(thumbnailName(for: fileName))
 
@@ -63,23 +65,24 @@ enum ImageStorage {
 
         guard let fullData  = fullImage.jpegData(compressionQuality: jpegQuality),
               let thumbData = thumbImage.jpegData(compressionQuality: jpegQuality) else {
-            return nil
+            throw WriteError.encodingFailed
         }
 
+        try fullData.write(to: fullURL, options: .atomic)
         do {
-            try fullData.write(to: fullURL)
-            try thumbData.write(to: thumbURL)
-
-            let thumbKey = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: true)
-            let fullKey  = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: false)
-            thumbnailCache.setObject(thumbImage, forKey: thumbKey)
-            fullImageCache.setObject(fullImage,  forKey: fullKey)
-            registerKey(thumbKey, forBathroom: bathroomID, isThumb: true)
-            registerKey(fullKey,  forBathroom: bathroomID, isThumb: false)
-            return fileName
+            try thumbData.write(to: thumbURL, options: .atomic)
         } catch {
-            return nil
+            try? FileManager.default.removeItem(at: fullURL)
+            throw error
         }
+
+        let thumbKey = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: true)
+        let fullKey  = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: false)
+        thumbnailCache.setObject(thumbImage, forKey: thumbKey)
+        fullImageCache.setObject(fullImage,  forKey: fullKey)
+        registerKey(thumbKey, forBathroom: bathroomID, isThumb: true)
+        registerKey(fullKey,  forBathroom: bathroomID, isThumb: false)
+        return fileName
     }
 
     // MARK: - Load
@@ -120,7 +123,7 @@ enum ImageStorage {
 
     // MARK: - Delete
 
-    static func deleteImage(bathroomID: UUID, fileName: String) {
+    static func deleteImage(bathroomID: UUID, fileName: String, root: URL = defaultRoot) {
         let thumbKey = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: true)
         let fullKey  = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: false)
         thumbnailCache.removeObject(forKey: thumbKey)
@@ -128,7 +131,7 @@ enum ImageStorage {
         thumbKeysByBathroom[bathroomID]?.remove(thumbKey)
         fullKeysByBathroom[bathroomID]?.remove(fullKey)
 
-        guard let dir = try? bathroomDirectory(id: bathroomID) else { return }
+        guard let dir = try? bathroomDirectory(id: bathroomID, root: root) else { return }
         try? FileManager.default.removeItem(at: dir.appendingPathComponent(fileName))
         try? FileManager.default.removeItem(at: dir.appendingPathComponent(thumbnailName(for: fileName)))
     }
@@ -139,10 +142,7 @@ enum ImageStorage {
         thumbKeysByBathroom.removeValue(forKey: bathroomID)
         fullKeysByBathroom.removeValue(forKey: bathroomID)
 
-        let dir = documentsURL
-            .appendingPathComponent(rootFolderName)
-            .appendingPathComponent(bathroomID.uuidString)
-        try? FileManager.default.removeItem(at: dir)
+        try? FileManager.default.removeItem(at: defaultRoot.appendingPathComponent(bathroomID.uuidString))
     }
 
     // MARK: - Private Helpers
