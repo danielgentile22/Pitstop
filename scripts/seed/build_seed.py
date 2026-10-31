@@ -18,6 +18,7 @@ seed even when writing elsewhere. The script refuses to write when any brand dro
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import math
 import re
@@ -181,7 +182,7 @@ def fetch_json(url: str, data: bytes | None = None, timeout: int = 120):
             if 400 <= error.code < 500 and error.code != 429:
                 sys.exit(f"{url}: {error}")
             failure = error
-        except (OSError, ValueError) as error:  # busy servers also answer with an HTML page
+        except (OSError, ValueError, http.client.HTTPException) as error:  # busy servers also answer with an HTML page
             failure = error
         if attempt < FETCH_ATTEMPTS:
             wait = FETCH_FIRST_WAIT * 2 ** (attempt - 1)

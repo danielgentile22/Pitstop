@@ -1,3 +1,4 @@
+import http.client
 import io
 import json
 import re
@@ -571,6 +572,12 @@ def test_fetch_retries_transient_failures_with_backoff(monkeypatch):
     assert build_seed.fetch_json("https://example/x") == {"ok": 1}
     assert len(calls) == 4
     assert sleeps == sorted(sleeps) and len(sleeps) == 3 and sleeps[0] < sleeps[-1]
+
+
+def test_fetch_retries_an_interrupted_download(monkeypatch):
+    calls, _ = fake_network(monkeypatch, [http.client.IncompleteRead(b"{"), {"ok": 1}])
+    assert build_seed.fetch_json("https://example/x") == {"ok": 1}
+    assert len(calls) == 2
 
 
 def test_fetch_retries_an_overpass_remark(monkeypatch):
