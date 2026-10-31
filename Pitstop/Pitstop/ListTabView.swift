@@ -35,6 +35,7 @@ struct ListTabView: View {
     @State private var selectedPlace:    PlaceKey?
     @State private var bathroomToDelete: Bathroom?
     @State private var showDeleteAlert  = false
+    @State private var deleteError:      BathroomSaver.SaveError?
 
     // MARK: - Derived
 
@@ -83,6 +84,11 @@ struct ListTabView: View {
             }
         } message: {
             Text("This will permanently remove \"\(bathroomToDelete?.name ?? "")\" and all its photos.")
+        }
+        .alert("Couldn't Delete", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError?.errorDescription ?? "")
         }
     }
 
@@ -231,8 +237,11 @@ struct ListTabView: View {
     // MARK: - Delete
 
     private func deleteBathroom(_ bathroom: Bathroom) {
-        ImageStorage.deleteAllImages(bathroomID: bathroom.id)
-        modelContext.delete(bathroom)
+        do {
+            try BathroomSaver.delete(bathroom, from: modelContext)
+        } catch {
+            deleteError = error as? BathroomSaver.SaveError ?? .deleteFailed
+        }
         bathroomToDelete = nil
     }
 }

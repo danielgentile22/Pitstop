@@ -136,18 +136,18 @@ enum ImageStorage {
         try? FileManager.default.removeItem(at: dir.appendingPathComponent(thumbnailName(for: fileName)))
     }
 
-    static func deleteAllImages(bathroomID: UUID) {
+    static func deleteAllImages(bathroomID: UUID, root: URL = defaultRoot) {
         for key in thumbKeysByBathroom[bathroomID] ?? [] { thumbnailCache.removeObject(forKey: key) }
         for key in fullKeysByBathroom[bathroomID]  ?? [] { fullImageCache.removeObject(forKey: key) }
         thumbKeysByBathroom.removeValue(forKey: bathroomID)
         fullKeysByBathroom.removeValue(forKey: bathroomID)
 
-        try? FileManager.default.removeItem(at: defaultRoot.appendingPathComponent(bathroomID.uuidString))
+        try? FileManager.default.removeItem(at: root.appendingPathComponent(bathroomID.uuidString))
     }
 
     // MARK: - Private Helpers
 
-    private static func thumbnailName(for fileName: String) -> String {
+    nonisolated static func thumbnailName(for fileName: String) -> String {
         let base = (fileName as NSString).deletingPathExtension
         return "\(base)_thumb.jpg"
     }

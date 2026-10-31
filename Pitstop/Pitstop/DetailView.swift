@@ -19,6 +19,7 @@ struct DetailView: View {
 
     @State private var showDeleteAlert = false
     @State private var showEditView    = false
+    @State private var deleteError: BathroomSaver.SaveError?
 
     // MARK: - Body
 
@@ -183,6 +184,11 @@ struct DetailView: View {
         } message: {
             Text("\"\(bathroom.name)\" and all its photos will be permanently deleted.")
         }
+        .alert("Couldn't Delete", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError?.errorDescription ?? "")
+        }
     }
 
     // MARK: - Header Section
@@ -255,9 +261,12 @@ struct DetailView: View {
     }
 
     private func deleteBathroom() {
-        ImageStorage.deleteAllImages(bathroomID: bathroom.id)
-        modelContext.delete(bathroom)
-        dismiss()
+        do {
+            try BathroomSaver.delete(bathroom, from: modelContext)
+            dismiss()
+        } catch {
+            deleteError = error as? BathroomSaver.SaveError ?? .deleteFailed
+        }
     }
 }
 
