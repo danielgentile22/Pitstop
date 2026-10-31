@@ -55,6 +55,8 @@ The app ships with chain locations in Virginia, Maryland and DC that you have no
 
 **License.** All The Places releases its output data under the [Creative Commons CC-0 waiver](https://creativecommons.org/publicdomain/zero/1.0/) (stated in the License section of its [README](https://github.com/alltheplaces/alltheplaces#license), checked 2026-10-31). CC-0 puts the data in the public domain, so bundling it in this MIT repo is allowed and needs no attribution. This README credits it anyway. The Harris Teeter and Weis locations are © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright).
 
+Because it includes that OpenStreetMap data, [`CandidateSeed.json`](Pitstop/Pitstop/CandidateSeed.json) is licensed under the [Open Database License](https://opendatacommons.org/licenses/odbl/), with credit to OpenStreetMap contributors. The app code stays MIT.
+
 ```sh
 python3 scripts/seed/build_seed.py                       # download, filter, write the seed
 uv run --no-project --with pytest pytest scripts/seed    # tests, offline, on saved fixtures
