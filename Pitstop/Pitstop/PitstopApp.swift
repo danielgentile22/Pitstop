@@ -32,7 +32,7 @@ struct PitstopApp: App {
                 try CandidateImporter.importIfNewer(seed, into: container, defaults: .standard)
             } catch {
                 Logger(subsystem: "com.danielgentile.GeoPoop", category: "CandidateImporter")
-                    .error("Seed import failed: \(error.localizedDescription)")
+                    .error("Seed import failed: \(String(describing: error), privacy: .public)")
             }
         }
     }
