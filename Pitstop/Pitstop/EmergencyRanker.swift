@@ -34,6 +34,10 @@ enum EmergencyRanker {
         // Dismissed Candidates are never chosen: `rank` drops them instead of penalizing them.
     }
 
+    /// Places that cost more effective minutes than this are out of range: `rank` drops them, so the
+    /// button says nothing is in range instead of sending the user on a long drive.
+    static let maxEffectiveMinutes: Double = 45
+
     /// Speed assumed for places without a driving time.
     static let fallbackMilesPerHour: Double = 20
     static let fallbackMetersPerMinute = fallbackMilesPerHour * 1609.344 / 60
@@ -45,14 +49,15 @@ enum EmergencyRanker {
         case candidate(String)   // Candidate.sourceID
     }
 
-    struct VisitedPlace {
+    struct VisitedPlace: LinksCandidate {
         let id: UUID
         /// The Candidate this bathroom was logged from, if any. That Candidate is never returned.
         let sourceID: String?
         let latitude: Double
         let longitude: Double
         let rating: Int
-        let isOpen24Hours: Bool
+        /// Nil when the hours are unknown, as for a visit logged from a Candidate with no hours.
+        let isOpen24Hours: Bool?
     }
 
     struct UnvisitedPlace {
@@ -95,20 +100,20 @@ enum EmergencyRanker {
         unvisited: [UnvisitedPlace],
         drivingTimes: [PlaceID: TimeInterval] = [:]
     ) -> [RankedPlace] {
-        let originLocation = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
         let hour = calendar.component(.hour, from: now)
         let isLateNight = hour >= Penalty.lateNightStartHour || hour < Penalty.lateNightEndHour
 
         return eligible(visited: visited, unvisited: unvisited)
             .map { place in
                 let travelMinutes = drivingTimes[place.destination.id].map { $0 / 60 }
-                    ?? distance(from: originLocation, to: place.destination) / fallbackMetersPerMinute
+                    ?? distance(from: origin, to: place.destination) / fallbackMetersPerMinute
                 let lateNight = isLateNight && place.closesAtNight ? Penalty.closedLateNight : 0
                 return RankedPlace(id: place.destination.id,
                                    latitude: place.destination.latitude,
                                    longitude: place.destination.longitude,
                                    effectiveMinutes: travelMinutes + place.penalty + lateNight)
             }
+            .filter { $0.effectiveMinutes <= maxEffectiveMinutes }
             .sorted { $0.effectiveMinutes < $1.effectiveMinutes }
     }
 
@@ -120,9 +125,8 @@ enum EmergencyRanker {
         visited: [VisitedPlace],
         unvisited: [UnvisitedPlace]
     ) -> [Destination] {
-        let originLocation = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
-        return eligible(visited: visited, unvisited: unvisited)
-            .map { ($0.destination, distance(from: originLocation, to: $0.destination)) }
+        eligible(visited: visited, unvisited: unvisited)
+            .map { ($0.destination, distance(from: origin, to: $0.destination)) }
             .sorted { $0.1 < $1.1 }
             .prefix(limit)
             .map(\.0)
@@ -139,11 +143,11 @@ enum EmergencyRanker {
 
     /// Every Bathroom, plus every Candidate that is neither dismissed nor already logged as a Bathroom.
     private static func eligible(visited: [VisitedPlace], unvisited: [UnvisitedPlace]) -> [EligiblePlace] {
-        let linkedIDs = Set(visited.compactMap(\.sourceID))
+        let linkedIDs = visited.linkedSourceIDs
 
         let visitedPlaces = visited.map {
             EligiblePlace(destination: .init(id: .bathroom($0.id), latitude: $0.latitude, longitude: $0.longitude),
-                          penalty: Penalty.visited(rating: $0.rating), closesAtNight: !$0.isOpen24Hours)
+                          penalty: Penalty.visited(rating: $0.rating), closesAtNight: $0.isOpen24Hours == false)
         }
         let unvisitedPlaces = unvisited
             .filter { !$0.isDismissed && !linkedIDs.contains($0.sourceID) }
@@ -154,7 +158,7 @@ enum EmergencyRanker {
         return visitedPlaces + unvisitedPlaces
     }
 
-    private static func distance(from origin: CLLocation, to destination: Destination) -> CLLocationDistance {
-        CLLocation(latitude: destination.latitude, longitude: destination.longitude).distance(from: origin)
+    private static func distance(from origin: CLLocationCoordinate2D, to destination: Destination) -> CLLocationDistance {
+        Distance.meters(from: origin, to: CLLocationCoordinate2D(latitude: destination.latitude, longitude: destination.longitude))
     }
 }

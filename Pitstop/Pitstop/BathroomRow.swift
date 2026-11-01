@@ -26,7 +26,8 @@ struct BathroomRow: View {
         }
         .padding(.vertical, 10)
         .accessibilityElement(children: .combine)
-        .task(id: bathroom.id) {
+        // Keyed on the first photo too, so the row reloads when that bathroom's photos change.
+        .task(id: "\(bathroom.id)/\(bathroom.imageFileNames.first ?? "")") {
             guard let fileName = bathroom.imageFileNames.first else {
                 thumbnailImage = nil; return
             }
@@ -115,7 +116,7 @@ struct BathroomRow: View {
                     .opacity(0.5)
             }
             if !bathroom.hasToiletPaper {
-                amenityIcon("roll", color: .secondary, label: "No TP")
+                amenityIcon("roll", color: .secondary, label: "No toilet paper")
                     .opacity(0.5)
             }
         }
@@ -131,11 +132,7 @@ struct BathroomRow: View {
     // MARK: - Distance
 
     private var formattedDistance: String? {
-        guard let userLocation else { return nil }
-        let origin = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
-        let formatter = MKDistanceFormatter()
-        formatter.unitStyle = .abbreviated
-        return formatter.string(fromDistance: bathroom.distance(from: origin))
+        Distance.formatted(from: userLocation, to: bathroom.coordinate)
     }
 }
 

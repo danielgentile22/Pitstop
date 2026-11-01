@@ -4,6 +4,9 @@ import SwiftUI
 struct FilterSheetView: View {
 
     @Binding var filter: BathroomFilter
+
+    /// Without it the distance chips are disabled, since there is nothing to measure from.
+    var hasLocationPermission: Bool
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -24,7 +27,9 @@ struct FilterSheetView: View {
                     divider
 
                     sectionHeader("Max Distance")
-                    Text("Requires location access. Only shows places within the selected radius.")
+                    Text(hasLocationPermission
+                         ? "Only shows places within the selected radius."
+                         : "Turn on location access in Settings to filter by distance.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 20)
@@ -136,12 +141,13 @@ struct FilterSheetView: View {
     private var distanceChips: some View {
         FlowLayout(spacing: 8) {
             ForEach(MaxDistance.allCases, id: \.rawValue) { dist in
-                let on = filter.maxDistance == dist
+                let on = hasLocationPermission && filter.maxDistance == dist
                 filterChip(label: dist.displayName, icon: "location.circle", color: .blue, isOn: on) {
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
                         filter.maxDistance = on ? nil : dist
                     }
                 }
+                .disabled(!hasLocationPermission)
             }
         }
     }
@@ -295,5 +301,5 @@ struct FilterSheetView: View {
 // MARK: - Preview
 
 #Preview {
-    FilterSheetView(filter: .constant(BathroomFilter()))
+    FilterSheetView(filter: .constant(BathroomFilter()), hasLocationPermission: true)
 }

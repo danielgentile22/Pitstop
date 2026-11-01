@@ -19,6 +19,7 @@ struct DetailView: View {
 
     @State private var showDeleteAlert = false
     @State private var showEditView    = false
+    @State private var deleteError: BathroomSaver.SaveError?
 
     // MARK: - Body
 
@@ -61,11 +62,7 @@ struct DetailView: View {
                         MetaRow(icon: "doc.text", color: .blue,
                                 text: "Code printed on receipt")
                     }
-                    MetaRow(
-                        icon: bathroom.isOpen24Hours ? "clock.fill" : "clock",
-                        color: bathroom.isOpen24Hours ? .blue : Color(.systemGray3),
-                        text: bathroom.isOpen24Hours ? "Open 24 hours" : "Standard hours"
-                    )
+                    HoursRow(isOpen24Hours: bathroom.isOpen24HoursIfKnown, notOpenText: "Standard hours")
                     if bathroom.waitTime != .unknown {
                         MetaRow(
                             icon: bathroom.waitTime.icon,
@@ -175,13 +172,18 @@ struct DetailView: View {
             }
         }
         .fullScreenCover(isPresented: $showEditView) {
-            AddBathroomView(userLocation: userLocation, editing: bathroom)
+            AddBathroomView(editing: bathroom)
         }
         .alert("Delete Bathroom?", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) { deleteBathroom() }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("\"\(bathroom.name)\" and all its photos will be permanently deleted.")
+        }
+        .alert("Couldn't Delete", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError?.errorDescription ?? "")
         }
     }
 
@@ -247,21 +249,20 @@ struct DetailView: View {
     // MARK: - Helpers
 
     private var formattedDistance: String? {
-        guard let userLocation else { return nil }
-        let origin = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
-        let formatter = MKDistanceFormatter()
-        formatter.unitStyle = .abbreviated
-        return formatter.string(fromDistance: bathroom.distance(from: origin))
+        Distance.formatted(from: userLocation, to: bathroom.coordinate)
     }
 
     private func openInMaps() {
-        MapURLHelper.openDirections(toLatitude: bathroom.latitude, longitude: bathroom.longitude)
+        Task { await MapURLHelper.openDirections(toLatitude: bathroom.latitude, longitude: bathroom.longitude) }
     }
 
     private func deleteBathroom() {
-        ImageStorage.deleteAllImages(bathroomID: bathroom.id)
-        modelContext.delete(bathroom)
-        dismiss()
+        do {
+            try BathroomSaver.delete(bathroom, from: modelContext)
+            dismiss()
+        } catch {
+            deleteError = error as? BathroomSaver.SaveError ?? .deleteFailed
+        }
     }
 }
 

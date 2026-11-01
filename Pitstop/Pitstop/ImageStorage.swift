@@ -1,28 +1,34 @@
+import ImageIO
+import Synchronization
 import UIKit
 
 /// Bathroom photos on disk as JPEG pairs (full size and `_thumb`) under
 /// Documents/BathroomImages/{bathroomID}/, fronted by in-memory caches.
-enum ImageStorage {
+/// Nonisolated so file reads, decoding, resizing and writes can run off the main actor;
+/// the async entry points do that work on the global executor.
+nonisolated enum ImageStorage {
 
     // MARK: - Configuration
 
     private static let rootFolderName        = "BathroomImages"
     private static let jpegQuality: CGFloat  = 0.80
-    private static let fullMaxDimension: CGFloat  = 1200
+    /// Longest edge in pixels.
+    static let fullMaxDimension: CGFloat  = 1200
     private static let thumbMaxDimension: CGFloat = 200
 
     // MARK: - In-Memory Cache
 
-    private static let thumbnailCache = NSCache<NSString, UIImage>()
+    // NSCache is thread-safe but not marked Sendable.
+    nonisolated(unsafe) private static let thumbnailCache = NSCache<NSString, UIImage>()
 
-    private static let fullImageCache = NSCache<NSString, UIImage>()
+    nonisolated(unsafe) private static let fullImageCache = NSCache<NSString, UIImage>()
 
     // MARK: - Per-Bathroom Key Tracking
 
     // NSCache can't enumerate keys, so track them per bathroom to evict just one bathroom's entries.
+    // Both caches' keys share one set; thumbnail keys carry a `_thumb` suffix.
 
-    private static var thumbKeysByBathroom: [UUID: Set<NSString>] = [:]
-    private static var fullKeysByBathroom:  [UUID: Set<NSString>] = [:]
+    private static let keysByBathroom = Mutex<[UUID: Set<String>]>([:])
 
     // MARK: - Directory Helpers
 
@@ -30,157 +36,167 @@ enum ImageStorage {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
-    /// Creates the directory if needed.
-    private static func bathroomDirectory(id: UUID) throws -> URL {
-        let dir = documentsURL
-            .appendingPathComponent(rootFolderName)
-            .appendingPathComponent(id.uuidString)
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir
+    /// Documents/BathroomImages. Tests pass a temporary folder instead.
+    static var defaultRoot: URL {
+        documentsURL.appendingPathComponent(rootFolderName)
+    }
+
+    /// Only computes the path; `saveImage` is the one caller that creates the folder.
+    private static func bathroomDirectory(id: UUID, root: URL = defaultRoot) -> URL {
+        root.appendingPathComponent(id.uuidString)
     }
 
     // MARK: - Save
 
-    /// Writes the full-size image and thumbnail and returns the generated file name.
-    @discardableResult
-    static func saveImage(_ image: UIImage, bathroomID: UUID) -> String? {
-        guard let dir = try? bathroomDirectory(id: bathroomID) else { return nil }
-
-        let token    = UUID().uuidString.prefix(8)
-        let fileName = "img_\(token).jpg"
-        return write(image, bathroomID: bathroomID, fileName: fileName, dir: dir)
+    enum WriteError: Error {
+        case encodingFailed
     }
 
-    // MARK: - Write
-
-    @discardableResult
-    private static func write(_ image: UIImage, bathroomID: UUID, fileName: String, dir: URL) -> String? {
+    /// Writes the full-size image and thumbnail atomically and returns the file name.
+    /// Throws without leaving either file behind.
+    static func saveImage(
+        _ image: UIImage,
+        bathroomID: UUID,
+        root: URL = defaultRoot,
+        fileName: String = "img_\(UUID().uuidString.prefix(8)).jpg"
+    ) throws -> String {
+        let dir      = bathroomDirectory(id: bathroomID, root: root)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let fullURL  = dir.appendingPathComponent(fileName)
         let thumbURL = dir.appendingPathComponent(thumbnailName(for: fileName))
 
-        let fullImage  = image.resized(toMaxDimension: fullMaxDimension)
-        let thumbImage = image.resized(toMaxDimension: thumbMaxDimension)
+        let fullImage  = image.resized(toMaxPixels: fullMaxDimension)
+        let thumbImage = image.resized(toMaxPixels: thumbMaxDimension)
 
         guard let fullData  = fullImage.jpegData(compressionQuality: jpegQuality),
               let thumbData = thumbImage.jpegData(compressionQuality: jpegQuality) else {
-            return nil
+            throw WriteError.encodingFailed
         }
 
+        try fullData.write(to: fullURL, options: .atomic)
         do {
-            try fullData.write(to: fullURL)
-            try thumbData.write(to: thumbURL)
-
-            let thumbKey = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: true)
-            let fullKey  = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: false)
-            thumbnailCache.setObject(thumbImage, forKey: thumbKey)
-            fullImageCache.setObject(fullImage,  forKey: fullKey)
-            registerKey(thumbKey, forBathroom: bathroomID, isThumb: true)
-            registerKey(fullKey,  forBathroom: bathroomID, isThumb: false)
-            return fileName
+            try thumbData.write(to: thumbURL, options: .atomic)
         } catch {
-            return nil
+            try? FileManager.default.removeItem(at: fullURL)
+            throw error
         }
+
+        cache(thumbImage, bathroomID: bathroomID, fileName: fileName, isThumb: true)
+        cache(fullImage,  bathroomID: bathroomID, fileName: fileName, isThumb: false)
+        return fileName
+    }
+
+    /// `saveImage` on the global executor, so resizing and encoding never block the interface.
+    @concurrent
+    static func saveImageAsync(_ image: UIImage, bathroomID: UUID, root: URL = defaultRoot) async throws -> String {
+        try saveImage(image, bathroomID: bathroomID, root: root)
     }
 
     // MARK: - Load
 
-    static func loadThumbnail(bathroomID: UUID, fileName: String) -> UIImage? {
-        let key = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: true)
-        if let cached = thumbnailCache.object(forKey: key) { return cached }
-        guard let dir = try? bathroomDirectory(id: bathroomID) else { return nil }
-        let path = dir.appendingPathComponent(thumbnailName(for: fileName)).path
-        guard let image = UIImage(contentsOfFile: path) else { return nil }
-        thumbnailCache.setObject(image, forKey: key)
-        registerKey(key, forBathroom: bathroomID, isThumb: true)
-        return image
-    }
-
-    static func loadImage(bathroomID: UUID, fileName: String) -> UIImage? {
-        let key = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: false)
-        if let cached = fullImageCache.object(forKey: key) { return cached }
-        guard let dir = try? bathroomDirectory(id: bathroomID) else { return nil }
-        let path = dir.appendingPathComponent(fileName).path
-        guard let image = UIImage(contentsOfFile: path) else { return nil }
-        fullImageCache.setObject(image, forKey: key)
-        registerKey(key, forBathroom: bathroomID, isThumb: false)
-        return image
-    }
-
+    @concurrent
     static func loadThumbnailAsync(bathroomID: UUID, fileName: String) async -> UIImage? {
-        let key = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: true)
-        if let cached = thumbnailCache.object(forKey: key) { return cached }
-        return loadThumbnail(bathroomID: bathroomID, fileName: fileName)
+        load(bathroomID: bathroomID, fileName: fileName, isThumb: true)
     }
 
+    @concurrent
     static func loadImageAsync(bathroomID: UUID, fileName: String) async -> UIImage? {
-        let key = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: false)
-        if let cached = fullImageCache.object(forKey: key) { return cached }
-        return loadImage(bathroomID: bathroomID, fileName: fileName)
+        load(bathroomID: bathroomID, fileName: fileName, isThumb: false)
+    }
+
+    /// Decodes picked image data straight to at most `fullMaxDimension` pixels on the long edge,
+    /// so a large original is never held in memory at full size.
+    @concurrent
+    static func downsampledImage(from data: Data) async -> UIImage? {
+        let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else { return nil }
+        let options = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform:   true,
+            kCGImageSourceShouldCacheImmediately:         true,
+            kCGImageSourceThumbnailMaxPixelSize:          fullMaxDimension,
+        ] as CFDictionary
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else { return nil }
+        return UIImage(cgImage: cgImage)
     }
 
     // MARK: - Delete
 
-    static func deleteImage(bathroomID: UUID, fileName: String) {
+    static func deleteImage(bathroomID: UUID, fileName: String, root: URL = defaultRoot) {
         let thumbKey = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: true)
         let fullKey  = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: false)
-        thumbnailCache.removeObject(forKey: thumbKey)
-        fullImageCache.removeObject(forKey: fullKey)
-        thumbKeysByBathroom[bathroomID]?.remove(thumbKey)
-        fullKeysByBathroom[bathroomID]?.remove(fullKey)
+        thumbnailCache.removeObject(forKey: thumbKey as NSString)
+        fullImageCache.removeObject(forKey: fullKey as NSString)
+        keysByBathroom.withLock {
+            $0[bathroomID]?.remove(thumbKey)
+            $0[bathroomID]?.remove(fullKey)
+        }
 
-        guard let dir = try? bathroomDirectory(id: bathroomID) else { return }
+        let dir = bathroomDirectory(id: bathroomID, root: root)
         try? FileManager.default.removeItem(at: dir.appendingPathComponent(fileName))
         try? FileManager.default.removeItem(at: dir.appendingPathComponent(thumbnailName(for: fileName)))
     }
 
-    static func deleteAllImages(bathroomID: UUID) {
-        for key in thumbKeysByBathroom[bathroomID] ?? [] { thumbnailCache.removeObject(forKey: key) }
-        for key in fullKeysByBathroom[bathroomID]  ?? [] { fullImageCache.removeObject(forKey: key) }
-        thumbKeysByBathroom.removeValue(forKey: bathroomID)
-        fullKeysByBathroom.removeValue(forKey: bathroomID)
+    static func deleteAllImages(bathroomID: UUID, root: URL = defaultRoot) {
+        let keys = keysByBathroom.withLock { $0.removeValue(forKey: bathroomID) } ?? []
+        for key in keys {
+            thumbnailCache.removeObject(forKey: key as NSString)
+            fullImageCache.removeObject(forKey: key as NSString)
+        }
 
-        let dir = documentsURL
-            .appendingPathComponent(rootFolderName)
-            .appendingPathComponent(bathroomID.uuidString)
-        try? FileManager.default.removeItem(at: dir)
+        try? FileManager.default.removeItem(at: bathroomDirectory(id: bathroomID, root: root))
     }
 
     // MARK: - Private Helpers
 
-    private static func thumbnailName(for fileName: String) -> String {
+    static func thumbnailName(for fileName: String) -> String {
         let base = (fileName as NSString).deletingPathExtension
         return "\(base)_thumb.jpg"
     }
 
-    private static func cacheKey(bathroomID: UUID, fileName: String, isThumb: Bool) -> NSString {
-        "\(bathroomID)/\(fileName)\(isThumb ? "_thumb" : "")" as NSString
+    private static func load(bathroomID: UUID, fileName: String, isThumb: Bool) -> UIImage? {
+        let key   = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: isThumb) as NSString
+        let cache = isThumb ? thumbnailCache : fullImageCache
+        if let cached = cache.object(forKey: key) { return cached }
+        let name = isThumb ? thumbnailName(for: fileName) : fileName
+        let path = bathroomDirectory(id: bathroomID).appendingPathComponent(name).path
+        // preparingForDisplay decodes now, on this thread, instead of lazily on the main thread at first draw.
+        guard let image = UIImage(contentsOfFile: path)?.preparingForDisplay() else { return nil }
+        self.cache(image, bathroomID: bathroomID, fileName: fileName, isThumb: isThumb)
+        return image
     }
 
-    private static func registerKey(_ key: NSString, forBathroom id: UUID, isThumb: Bool) {
-        if isThumb {
-            thumbKeysByBathroom[id, default: []].insert(key)
-        } else {
-            fullKeysByBathroom[id, default: []].insert(key)
-        }
+    private static func cache(_ image: UIImage, bathroomID: UUID, fileName: String, isThumb: Bool) {
+        let key = cacheKey(bathroomID: bathroomID, fileName: fileName, isThumb: isThumb)
+        (isThumb ? thumbnailCache : fullImageCache).setObject(image, forKey: key as NSString)
+        keysByBathroom.withLock { _ = $0[bathroomID, default: []].insert(key) }
+    }
+
+    private static func cacheKey(bathroomID: UUID, fileName: String, isThumb: Bool) -> String {
+        "\(bathroomID)/\(fileName)\(isThumb ? "_thumb" : "")"
     }
 }
 
 // MARK: - UIImage Resize Helper
 
-private extension UIImage {
+private nonisolated extension UIImage {
 
-    /// Downscales so the longest edge is at most `maxDimension`; never upscales.
-    func resized(toMaxDimension maxDimension: CGFloat) -> UIImage {
-        let longestEdge = max(size.width, size.height)
-        guard longestEdge > maxDimension else { return self }
+    /// Downscales so the longest edge is at most `maxPixels` pixels; never upscales.
+    /// Renders at a scale of 1, so the output's pixel size is exactly the target size.
+    func resized(toMaxPixels maxPixels: CGFloat) -> UIImage {
+        let pixelSize   = CGSize(width: size.width * scale, height: size.height * scale)
+        let longestEdge = max(pixelSize.width, pixelSize.height)
+        guard longestEdge > maxPixels else { return self }
 
-        let scale   = maxDimension / longestEdge
+        let ratio   = maxPixels / longestEdge
         let newSize = CGSize(
-            width:  (size.width  * scale).rounded(),
-            height: (size.height * scale).rounded()
+            width:  (pixelSize.width  * ratio).rounded(),
+            height: (pixelSize.height * ratio).rounded()
         )
 
-        return UIGraphicsImageRenderer(size: newSize).image { _ in
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: newSize, format: format).image { _ in
             draw(in: CGRect(origin: .zero, size: newSize))
         }
     }

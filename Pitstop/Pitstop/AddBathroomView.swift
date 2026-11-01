@@ -15,69 +15,52 @@ struct AddBathroomView: View {
 
     // MARK: - Input
 
-    let userLocation: CLLocationCoordinate2D?
+    /// Add mode only: the pin starts at, or follows the first fix from, this manager.
+    let locationManager: LocationManager?
     let editing: Bathroom?
     let candidate: Candidate?
 
-    // MARK: - Core Fields
+    // MARK: - Fields
 
-    @State private var name        = ""
-    @State private var rating      = 0
-    @State private var notes       = ""
-    @State private var dateVisited = Date()
-
-    // MARK: - Access & Availability
-
-    @State private var accessType           = BathroomAccess.free
-    @State private var requiresReceiptCode  = false
-    @State private var isOpen24Hours        = false
-
-    // MARK: - Layout
-
-    @State private var stallType             = StallType.single
-    @State private var genderType            = GenderType.allGender
-    @State private var isIndoor              = true
-    @State private var isWheelchairAccessible = false
-
-    // MARK: - Toilet Paper
-
-    @State private var hasToiletPaper      = true
-    @State private var hasExtraToiletPaper = false
-    @State private var hasDispenser        = false   // form-only; persisted as dispenserRating > 0
-    @State private var dispenserRating     = 0       // 1-5 when hasDispenser is true
-
-    // MARK: - Amenities & Fixtures
-
-    @State private var hasHeatedSeat    = false
-    @State private var bidetType        = BidetType.none
-    @State private var hasChangingTable = false
-
-    // MARK: - Hygiene & Wait
-
-    @State private var hasSoap        = true
-    @State private var hasDryingOption = true
-    @State private var waitTime        = WaitTime.unknown
+    /// Every field, pin included. `initialForm` is the snapshot taken when the form opened,
+    /// with its pin moved along when the pin follows the first location fix.
+    @State private var form: BathroomForm
+    @State private var initialForm: BathroomForm
 
     // MARK: - Location
 
-    @State private var selectedCoordinate: CLLocationCoordinate2D
     @State private var geocodedAddress = ""
     @State private var addressQuery = ""
     @State private var mapJump: MiniMapPicker.JumpTarget?
-    @State private var addressNotFound = false
+    @State private var searchProblem: SearchProblem?
     @State private var isGeocoding     = false
     @State private var geocodeTask: Task<Void, Never>?
+    @State private var searchTask: Task<Void, Never>?
+    /// Where the pin was last placed for the user. While it has not been dragged away from here,
+    /// a new bathroom's pin moves to the first location fix.
+    @State private var placedCoordinate: CLLocationCoordinate2D
+    @State private var pinFollowsLocation: Bool
+
+    private enum SearchProblem { case noMatch, needsConnection }
+
+    /// Washington DC, the center of the area the seed covers, for a new pin with no location yet.
+    static let defaultCoordinate = CLLocationCoordinate2D(latitude: 38.8895, longitude: -77.0353)
 
     // MARK: - Photos
 
     @State private var existingFileNames: [String]  = []
     @State private var selectedPhotos: [UIImage]    = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
+    /// Picked items not loaded yet. One loader drains them, so picking again during a load queues instead of racing.
+    @State private var pendingPickerItems: [PhotosPickerItem] = []
+    @State private var pickerLoad: Task<Void, Never>?
 
     // MARK: - UI State
 
     @State private var showDiscardAlert = false
+    @State private var saveError: BathroomSaver.SaveError?
     @State private var showCamera       = false
+    @State private var showCameraBlockedAlert = false
     @State private var isSaving         = false
     @FocusState private var nameFocused: Bool
 
@@ -85,81 +68,36 @@ struct AddBathroomView: View {
 
     private var isEditMode: Bool     { editing != nil }
     private var totalPhotoCount: Int { existingFileNames.count + selectedPhotos.count }
-    private var canSave: Bool        { !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSaving }
+    private var canSave: Bool        { !form.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSaving }
 
     private var isDirty: Bool {
-        if let b = editing {
-            return name                   != b.name
-                || rating                 != b.rating
-                || notes                  != b.notes
-                || dateVisited            != b.dateVisited
-                || accessType             != b.accessType
-                || requiresReceiptCode    != b.requiresReceiptCode
-                || isOpen24Hours          != b.isOpen24Hours
-                || stallType              != b.stallType
-                || genderType             != b.genderType
-                || isIndoor               != b.isIndoor
-                || isWheelchairAccessible != b.isWheelchairAccessible
-                || hasToiletPaper         != b.hasToiletPaper
-                || hasExtraToiletPaper    != b.hasExtraToiletPaper
-                || dispenserRating        != b.dispenserRating
-                || hasHeatedSeat          != b.hasHeatedSeat
-                || bidetType              != b.bidetType
-                || hasChangingTable       != b.hasChangingTable
-                || hasSoap                != b.hasSoap
-                || hasDryingOption        != b.hasDryingOption
-                || waitTime               != b.waitTime
-                || existingFileNames      != b.imageFileNames
-                || !selectedPhotos.isEmpty
-        }
-        return name != (candidate?.name ?? "") || rating > 0 || !notes.isEmpty || !selectedPhotos.isEmpty
-            || accessType != .free || isOpen24Hours != (candidate?.isOpen24Hours ?? false)
-            || !isIndoor || isWheelchairAccessible
-            || !hasToiletPaper || hasDispenser || hasHeatedSeat || bidetType != .none
-            || hasChangingTable || !hasSoap || !hasDryingOption
+        form.hasChanges(from: initialForm)
+            || existingFileNames != (editing?.imageFileNames ?? [])
+            || !selectedPhotos.isEmpty
     }
 
     // MARK: - Init
 
-    init(userLocation: CLLocationCoordinate2D?, editing: Bathroom? = nil, candidate: Candidate? = nil) {
-        self.userLocation = userLocation
+    init(locationManager: LocationManager? = nil, editing: Bathroom? = nil, candidate: Candidate? = nil) {
+        self.locationManager = editing == nil && candidate == nil ? locationManager : nil
         self.editing      = editing
         self.candidate    = editing == nil ? candidate : nil
 
+        let form: BathroomForm
         if let b = editing {
-            _name                   = State(initialValue: b.name)
-            _rating                 = State(initialValue: b.rating)
-            _notes                  = State(initialValue: b.notes)
-            _dateVisited            = State(initialValue: b.dateVisited)
-            _accessType             = State(initialValue: b.accessType)
-            _requiresReceiptCode    = State(initialValue: b.requiresReceiptCode)
-            _isOpen24Hours          = State(initialValue: b.isOpen24Hours)
-            _stallType              = State(initialValue: b.stallType)
-            _genderType             = State(initialValue: b.genderType)
-            _isIndoor               = State(initialValue: b.isIndoor)
-            _isWheelchairAccessible = State(initialValue: b.isWheelchairAccessible)
-            _hasToiletPaper         = State(initialValue: b.hasToiletPaper)
-            _hasExtraToiletPaper    = State(initialValue: b.hasExtraToiletPaper)
-            _hasDispenser           = State(initialValue: b.dispenserRating > 0)
-            _dispenserRating        = State(initialValue: b.dispenserRating)
-            _hasHeatedSeat          = State(initialValue: b.hasHeatedSeat)
-            _bidetType              = State(initialValue: b.bidetType)
-            _hasChangingTable       = State(initialValue: b.hasChangingTable)
-            _hasSoap                = State(initialValue: b.hasSoap)
-            _hasDryingOption        = State(initialValue: b.hasDryingOption)
-            _waitTime               = State(initialValue: b.waitTime)
-            _selectedCoordinate     = State(initialValue: b.coordinate)
-            _existingFileNames      = State(initialValue: b.imageFileNames)
-            _geocodedAddress        = State(initialValue: b.address ?? "")
-        } else if let c = candidate {
-            _name               = State(initialValue: c.name)
-            _isOpen24Hours      = State(initialValue: c.isOpen24Hours)
-            _selectedCoordinate = State(initialValue: c.coordinate)
+            form                = BathroomForm(bathroom: b)
+            _existingFileNames  = State(initialValue: b.imageFileNames)
+            _geocodedAddress    = State(initialValue: b.address ?? "")
+        } else if let c = self.candidate {
+            form                = BathroomForm(candidate: c)
             _geocodedAddress    = State(initialValue: c.address ?? "")
         } else {
-            let start = userLocation ?? CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855)
-            _selectedCoordinate = State(initialValue: start)
+            form = BathroomForm(coordinate: locationManager?.userLocation ?? Self.defaultCoordinate)
         }
+        _form       = State(initialValue: form)
+        _initialForm = State(initialValue: form)
+        _placedCoordinate   = State(initialValue: form.coordinate)
+        _pinFollowsLocation = State(initialValue: self.locationManager != nil && self.locationManager?.userLocation == nil)
     }
 
     // MARK: - Body
@@ -169,10 +107,12 @@ struct AddBathroomView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
 
-                    MiniMapPicker(selectedCoordinate: $selectedCoordinate, jumpTo: $mapJump)
+                    MiniMapPicker(selectedCoordinate: $form.coordinate, jumpTo: $mapJump)
                         .frame(height: 220)
-                        .onChange(of: selectedCoordinate.latitude)  { scheduleGeocode(for: selectedCoordinate) }
-                        .onChange(of: selectedCoordinate.longitude) { scheduleGeocode(for: selectedCoordinate) }
+                        .onChange(of: form.coordinate.latitude)  { pinChanged() }
+                        .onChange(of: form.coordinate.longitude) { pinChanged() }
+                        .onChange(of: locationManager?.userLocation?.latitude)  { followFirstFix() }
+                        .onChange(of: locationManager?.userLocation?.longitude) { followFirstFix() }
 
                     addressRow
                         .padding(.horizontal, 16)
@@ -190,14 +130,14 @@ struct AddBathroomView: View {
                         formDivider
 
                         formSection("Overall Rating") {
-                            StarRatingInput(rating: $rating)
+                            StarRatingInput(rating: $form.rating)
                         }
 
                         formDivider
 
                         formSection("Access & Hours") {
                             accessField
-                            if accessType == .purchaseRequired {
+                            if form.accessType == .purchaseRequired {
                                 receiptCodeField
                             }
                             open24HoursField
@@ -218,11 +158,11 @@ struct AddBathroomView: View {
 
                                 formSection("Toilet Paper") {
                                     toiletPaperField
-                                    if hasToiletPaper {
+                                    if form.hasToiletPaper {
                                         extraTpField
                                     }
                                     dispenserToggleField
-                                    if hasDispenser {
+                                    if form.hasDispenser {
                                         dispenserRatingField
                                     }
                                 }
@@ -276,6 +216,7 @@ struct AddBathroomView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { handleCancel() }
+                        .disabled(isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { Task { await save() } }
@@ -293,6 +234,21 @@ struct AddBathroomView: View {
             } message: {
                 Text("Your changes will be lost.")
             }
+            .alert("Camera Access Is Off", isPresented: $showCameraBlockedAlert) {
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("To take photos, allow camera access for Pitstop in Settings.")
+            }
+            .alert("Couldn't Save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(saveError?.errorDescription ?? "")
+            }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPickerView { image in
                     showCamera = false
@@ -302,7 +258,12 @@ struct AddBathroomView: View {
             }
         }
         .onAppear {
-            if !isEditMode { scheduleGeocode(for: selectedCoordinate) }
+            if !isEditMode { scheduleGeocode(for: form.coordinate) }
+        }
+        .onDisappear {
+            geocodeTask?.cancel()
+            searchTask?.cancel()
+            pickerLoad?.cancel()
         }
         .onChange(of: photoPickerItems) { _, newItems in
             loadPickerItems(newItems)
@@ -340,13 +301,15 @@ struct AddBathroomView: View {
                     .font(.subheadline)
                     .textContentType(.fullStreetAddress)
                     .submitLabel(.search)
-                    .onSubmit { Task { await searchAddress() } }
-                    .onChange(of: addressQuery) { addressNotFound = false }
+                    .onSubmit { searchAddress() }
+                    .onChange(of: addressQuery) { searchProblem = nil }
             }
             HStack(spacing: 8) {
                 Image(systemName: "location.fill").font(.caption).foregroundStyle(.blue)
-                if addressNotFound {
+                if searchProblem == .noMatch {
                     Text("No match for that address").font(.caption).foregroundStyle(.red)
+                } else if searchProblem == .needsConnection {
+                    Text("Address search needs a connection").font(.caption).foregroundStyle(.red)
                 } else if isGeocoding {
                     Text("Locating…").font(.caption).foregroundStyle(.secondary)
                 } else if geocodedAddress.isEmpty {
@@ -363,7 +326,7 @@ struct AddBathroomView: View {
     private var nameField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Name", required: true)
-            TextField("e.g. Starbucks on Main", text: $name)
+            TextField("e.g. Starbucks on Main", text: $form.name)
                 .textFieldStyle(.roundedBorder)
                 .focused($nameFocused)
                 .submitLabel(.done)
@@ -374,7 +337,7 @@ struct AddBathroomView: View {
     private var dateField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Date Visited")
-            DatePicker("", selection: $dateVisited, in: ...Date(), displayedComponents: .date)
+            DatePicker("", selection: $form.dateVisited, in: ...Date(), displayedComponents: .date)
                 .labelsHidden()
         }
     }
@@ -384,18 +347,18 @@ struct AddBathroomView: View {
     private var accessField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("How do you get in?")
-            Picker("Access", selection: $accessType) {
+            Picker("Access", selection: $form.accessType) {
                 ForEach(BathroomAccess.allCases) { access in
                     Label(access.displayName, systemImage: access.icon).tag(access)
                 }
             }
             .pickerStyle(.menu)
-            .tint(accessType.color)
+            .tint(form.accessType.color)
         }
     }
 
     private var receiptCodeField: some View {
-        Toggle(isOn: $requiresReceiptCode) {
+        Toggle(isOn: $form.requiresReceiptCode) {
             Label {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Code on Receipt").font(.subheadline)
@@ -410,11 +373,17 @@ struct AddBathroomView: View {
     }
 
     private var open24HoursField: some View {
-        Toggle(isOn: $isOpen24Hours) {
+        // Unknown hours show as off; touching the toggle makes them known.
+        Toggle(isOn: Binding(get: { form.isOpen24Hours ?? false }, set: { form.isOpen24Hours = $0 })) {
             Label {
-                Text("Open 24 Hours").font(.subheadline)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Open 24 Hours").font(.subheadline)
+                    if form.isOpen24Hours == nil {
+                        Text("Hours unknown").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             } icon: {
-                Image(systemName: "clock").foregroundStyle(isOpen24Hours ? .blue : .secondary)
+                Image(systemName: "clock").foregroundStyle(form.isOpen24Hours == true ? .blue : .secondary)
             }
         }
         .tint(.blue)
@@ -425,7 +394,7 @@ struct AddBathroomView: View {
     private var stallTypeField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Stall Type")
-            Picker("Stall type", selection: $stallType) {
+            Picker("Stall type", selection: $form.stallType) {
                 ForEach(StallType.allCases, id: \.rawValue) { s in
                     Label(s.displayName, systemImage: s.icon).tag(s)
                 }
@@ -437,7 +406,7 @@ struct AddBathroomView: View {
     private var genderTypeField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Gender")
-            Picker("Gender", selection: $genderType) {
+            Picker("Gender", selection: $form.genderType) {
                 ForEach(GenderType.allCases, id: \.rawValue) { g in
                     Label(g.displayName, systemImage: g.icon).tag(g)
                 }
@@ -447,24 +416,24 @@ struct AddBathroomView: View {
     }
 
     private var indoorField: some View {
-        Toggle(isOn: $isIndoor) {
+        Toggle(isOn: $form.isIndoor) {
             Label {
-                Text(isIndoor ? "Indoor" : "Outdoor").font(.subheadline)
+                Text(form.isIndoor ? "Indoor" : "Outdoor").font(.subheadline)
             } icon: {
-                Image(systemName: isIndoor ? "building.2" : "tree")
-                    .foregroundStyle(isIndoor ? .blue : .green)
+                Image(systemName: form.isIndoor ? "building.2" : "tree")
+                    .foregroundStyle(form.isIndoor ? .blue : .green)
             }
         }
         .tint(.blue)
     }
 
     private var wheelchairField: some View {
-        Toggle(isOn: $isWheelchairAccessible) {
+        Toggle(isOn: $form.isWheelchairAccessible) {
             Label {
                 Text("Wheelchair Accessible").font(.subheadline)
             } icon: {
                 Image(systemName: "figure.roll")
-                    .foregroundStyle(isWheelchairAccessible ? .blue : .secondary)
+                    .foregroundStyle(form.isWheelchairAccessible ? .blue : .secondary)
             }
         }
         .tint(.blue)
@@ -473,18 +442,18 @@ struct AddBathroomView: View {
     // MARK: - Toilet Paper
 
     private var toiletPaperField: some View {
-        Toggle(isOn: $hasToiletPaper.animation(.easeInOut(duration: 0.2))) {
+        Toggle(isOn: $form.hasToiletPaper.animation(.easeInOut(duration: 0.2))) {
             Label {
                 Text("Toilet Paper Available").font(.subheadline)
             } icon: {
-                Image(systemName: "roll").foregroundStyle(hasToiletPaper ? .brown : .secondary)
+                Image(systemName: "roll").foregroundStyle(form.hasToiletPaper ? .brown : .secondary)
             }
         }
         .tint(.brown)
     }
 
     private var extraTpField: some View {
-        Toggle(isOn: $hasExtraToiletPaper) {
+        Toggle(isOn: $form.hasExtraToiletPaper) {
             Label {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Extra Rolls Available").font(.subheadline)
@@ -492,18 +461,18 @@ struct AddBathroomView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             } icon: {
-                Image(systemName: "plus.circle").foregroundStyle(hasExtraToiletPaper ? .brown : .secondary)
+                Image(systemName: "plus.circle").foregroundStyle(form.hasExtraToiletPaper ? .brown : .secondary)
             }
         }
         .tint(.brown)
     }
 
     private var dispenserToggleField: some View {
-        Toggle(isOn: $hasDispenser.animation(.easeInOut(duration: 0.2))) {
+        Toggle(isOn: $form.hasDispenser.animation(.easeInOut(duration: 0.2))) {
             Label {
                 Text("Has Dedicated Dispenser").font(.subheadline)
             } icon: {
-                Image(systemName: "cylinder").foregroundStyle(hasDispenser ? .brown : .secondary)
+                Image(systemName: "cylinder").foregroundStyle(form.hasDispenser ? .brown : .secondary)
             }
         }
         .tint(.brown)
@@ -513,9 +482,9 @@ struct AddBathroomView: View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Dispenser Quality")
             HStack(spacing: 4) {
-                StarRatingInput(rating: $dispenserRating)
+                StarRatingInput(rating: $form.dispenserRating)
                 Spacer()
-                Text(dispenserRating == 0 ? "Unrated" : "\(dispenserRating)/5")
+                Text(form.dispenserRating == 0 ? "Unrated" : "\(form.dispenserRating)/5")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -524,12 +493,12 @@ struct AddBathroomView: View {
     // MARK: - Amenities & Fixtures
 
     private var heatedSeatField: some View {
-        Toggle(isOn: $hasHeatedSeat) {
+        Toggle(isOn: $form.hasHeatedSeat) {
             Label {
                 Text("Heated Seat").font(.subheadline)
             } icon: {
                 Image(systemName: "thermometer.medium")
-                    .foregroundStyle(hasHeatedSeat ? .orange : .secondary)
+                    .foregroundStyle(form.hasHeatedSeat ? .orange : .secondary)
             }
         }
         .tint(.orange)
@@ -538,7 +507,7 @@ struct AddBathroomView: View {
     private var bidetField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Bidet")
-            Picker("Bidet", selection: $bidetType) {
+            Picker("Bidet", selection: $form.bidetType) {
                 ForEach(BidetType.allCases, id: \.rawValue) { b in
                     Label(b.displayName, systemImage: b.icon).tag(b)
                 }
@@ -548,12 +517,12 @@ struct AddBathroomView: View {
     }
 
     private var changingTableField: some View {
-        Toggle(isOn: $hasChangingTable) {
+        Toggle(isOn: $form.hasChangingTable) {
             Label {
                 Text("Changing Table Available").font(.subheadline)
             } icon: {
                 Image(systemName: "figure.and.child.holdinghands")
-                    .foregroundStyle(hasChangingTable ? .green : .secondary)
+                    .foregroundStyle(form.hasChangingTable ? .green : .secondary)
             }
         }
         .tint(.green)
@@ -562,19 +531,19 @@ struct AddBathroomView: View {
     // MARK: - Hygiene & Wait Time
 
     private var soapField: some View {
-        Toggle(isOn: $hasSoap) {
+        Toggle(isOn: $form.hasSoap) {
             Label {
                 Text("Soap Available").font(.subheadline)
             } icon: {
                 Image(systemName: "hands.sparkles")
-                    .foregroundStyle(hasSoap ? .teal : .secondary)
+                    .foregroundStyle(form.hasSoap ? .teal : .secondary)
             }
         }
         .tint(.teal)
     }
 
     private var dryingField: some View {
-        Toggle(isOn: $hasDryingOption) {
+        Toggle(isOn: $form.hasDryingOption) {
             Label {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Hand Drying Available").font(.subheadline)
@@ -583,7 +552,7 @@ struct AddBathroomView: View {
                 }
             } icon: {
                 Image(systemName: "wind")
-                    .foregroundStyle(hasDryingOption ? .teal : .secondary)
+                    .foregroundStyle(form.hasDryingOption ? .teal : .secondary)
             }
         }
         .tint(.teal)
@@ -592,7 +561,7 @@ struct AddBathroomView: View {
     private var waitTimeField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Typical Wait Time")
-            Picker("Wait time", selection: $waitTime) {
+            Picker("Wait time", selection: $form.waitTime) {
                 ForEach(WaitTime.allCases, id: \.rawValue) { w in
                     Label(w.displayName, systemImage: w.icon).tag(w)
                 }
@@ -617,14 +586,16 @@ struct AddBathroomView: View {
                         maxSelectionCount: max(0, 10 - totalPhotoCount),
                         matching: .images
                     ) {
-                        photoActionButton(icon: "photo.on.rectangle.angled", label: "Library")
+                        Self.photoActionButton(icon: "photo.on.rectangle.angled", label: "Library")
                     }
                     .disabled(totalPhotoCount >= 10)
 
-                    Button { showCamera = true } label: {
-                        photoActionButton(icon: "camera.fill", label: "Camera")
+                    if CameraAccess.isAvailable {
+                        Button { Task { await openCamera() } } label: {
+                            Self.photoActionButton(icon: "camera.fill", label: "Camera")
+                        }
+                        .disabled(totalPhotoCount >= 10)
                     }
-                    .disabled(totalPhotoCount >= 10)
 
                     ForEach(Array(existingFileNames.enumerated()), id: \.offset) { index, fileName in
                         existingPhotoThumbnail(fileName: fileName, index: index)
@@ -638,12 +609,19 @@ struct AddBathroomView: View {
         }
     }
 
+    private func openCamera() async {
+        switch await CameraAccess.request() {
+        case .granted: showCamera = true
+        case .blocked: showCameraBlockedAlert = true
+        }
+    }
+
     // MARK: - Notes
 
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldLabel("Notes")
-            TextEditor(text: $notes)
+            TextEditor(text: $form.notes)
                 .frame(minHeight: 90, maxHeight: 160)
                 .padding(8)
                 .background(Color(.secondarySystemFill))
@@ -654,7 +632,7 @@ struct AddBathroomView: View {
 
     // MARK: - Photo Subviews
 
-    private func photoActionButton(icon: String, label: String) -> some View {
+    nonisolated private static func photoActionButton(icon: String, label: String) -> some View {
         VStack(spacing: 6) {
             Image(systemName: icon).font(.system(size: 22)).foregroundStyle(.blue)
             Text(label).font(.caption2.weight(.medium)).foregroundStyle(.blue)
@@ -665,26 +643,18 @@ struct AddBathroomView: View {
     }
 
     private func existingPhotoThumbnail(fileName: String, index: Int) -> some View {
-        let image = editing.flatMap { ImageStorage.loadThumbnail(bathroomID: $0.id, fileName: fileName) }
-        return Group {
-            if let image {
-                Image(uiImage: image).resizable().scaledToFill()
-            } else {
-                Rectangle().fill(Color(.systemGray5))
-                    .overlay(Image(systemName: "photo").foregroundStyle(.secondary))
-            }
-        }
-        .frame(width: 72, height: 72)
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(alignment: .topTrailing) {
-            removeButton {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    existingFileNames = existingFileNames.enumerated()
-                        .filter { $0.offset != index }.map { $0.element }
+        StoredPhotoTile(bathroomID: editing?.id, fileName: fileName)
+            .frame(width: 72, height: 72)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(alignment: .topTrailing) {
+                removeButton {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        existingFileNames = existingFileNames.enumerated()
+                            .filter { $0.offset != index }.map { $0.element }
+                    }
                 }
+                .accessibilityLabel("Remove photo \(index + 1)")
             }
-            .accessibilityLabel("Remove photo \(index + 1)")
-        }
     }
 
     private func newPhotoThumbnail(image: UIImage, index: Int) -> some View {
@@ -725,48 +695,93 @@ struct AddBathroomView: View {
 
     private func loadPickerItems(_ items: [PhotosPickerItem]) {
         guard !items.isEmpty else { return }
-        Task {
-            for item in items {
-                guard totalPhotoCount < 10 else { break }
-                if let data  = try? await item.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
-                    selectedPhotos.append(image)
-                }
+        pendingPickerItems += items
+        photoPickerItems = []
+        guard pickerLoad == nil else { return }
+        pickerLoad = Task {
+            while !pendingPickerItems.isEmpty, !Task.isCancelled {
+                let item = pendingPickerItems.removeFirst()
+                guard let data  = try? await item.loadTransferable(type: Data.self),
+                      let image = await ImageStorage.downsampledImage(from: data) else { continue }
+                // Checked again after the awaits: a camera photo may have been added meanwhile.
+                guard !Task.isCancelled, totalPhotoCount < 10 else { break }
+                selectedPhotos.append(image)
             }
-            photoPickerItems = []
+            pendingPickerItems = []
+            pickerLoad = nil
         }
     }
 
     // MARK: - Geocoding
 
+    private func pinChanged() {
+        if form.pinMoved(from: placedCoordinate) { pinFollowsLocation = false }
+        scheduleGeocode(for: form.coordinate)
+    }
+
+    /// Moves a new bathroom's untouched pin to the first fix that arrives after the form opened.
+    private func followFirstFix() {
+        guard pinFollowsLocation, let location = locationManager?.userLocation else { return }
+        pinFollowsLocation = false
+        // The app moved the pin, not the user, so Cancel has nothing to discard.
+        initialForm.coordinate = location
+        placePin(at: location)
+    }
+
+    private func placePin(at coordinate: CLLocationCoordinate2D) {
+        placedCoordinate = coordinate
+        form.coordinate  = coordinate
+        mapJump = .init(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    }
+
     private func scheduleGeocode(for coordinate: CLLocationCoordinate2D) {
         geocodeTask?.cancel()
-        if let kept = candidateAddress(at: coordinate) {
+        if let kept = keptAddress(at: coordinate) {
             geocodedAddress = kept
+            isGeocoding = false
             return
         }
         geocodeTask = Task {
             try? await Task.sleep(nanoseconds: 800_000_000)
             guard !Task.isCancelled else { return }
             isGeocoding = true
-            geocodedAddress = await reverseGeocode(coordinate) ?? geocodedAddress
+            let address = await reverseGeocode(coordinate)
+            // A newer pin position owns the address row now.
+            guard !Task.isCancelled else { return }
+            geocodedAddress = address ?? geocodedAddress
             isGeocoding = false
         }
     }
 
-    private func searchAddress() async {
+    /// Only the latest search may move the pin: starting one cancels the one before it.
+    private func searchAddress() {
+        searchTask?.cancel()
+        searchProblem = nil
         let query = addressQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return }
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
-        request.region = MKCoordinateRegion(center: selectedCoordinate, latitudinalMeters: 50_000, longitudinalMeters: 50_000)
-        guard let item = try? await MKLocalSearch(request: request).start().mapItems.first else {
-            addressNotFound = true
-            return
+        request.region = MKCoordinateRegion(center: form.coordinate, latitudinalMeters: 50_000, longitudinalMeters: 50_000)
+        searchTask = Task {
+            let item: MKMapItem?
+            do {
+                item = try await MKLocalSearch(request: request).start().mapItems.first
+            } catch let error as MKError where error.code == .placemarkNotFound {
+                item = nil
+            } catch {
+                guard !Task.isCancelled else { return }
+                searchProblem = .needsConnection
+                return
+            }
+            guard !Task.isCancelled else { return }
+            guard let item else {
+                searchProblem = .noMatch
+                return
+            }
+            pinFollowsLocation = false
+            placePin(at: item.location.coordinate)
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
-        let coordinate = item.location.coordinate
-        mapJump = .init(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func reverseGeocode(_ coordinate: CLLocationCoordinate2D) async -> String? {
@@ -778,13 +793,13 @@ struct AddBathroomView: View {
         return line.isEmpty ? nil : line
     }
 
-    /// The Candidate's own address while the pin still sits on it, which beats a reverse geocode.
-    /// The tolerance absorbs the mini map re-centering itself on first layout.
-    private func candidateAddress(at coordinate: CLLocationCoordinate2D) -> String? {
-        guard let candidate, let address = candidate.address, !address.isEmpty else { return nil }
-        let pin = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        let store = CLLocation(latitude: candidate.latitude, longitude: candidate.longitude)
-        return pin.distance(from: store) <= 10 ? address : nil
+    /// The stored address of the Bathroom or Candidate while the pin still sits on it, which beats a reverse geocode.
+    private func keptAddress(at coordinate: CLLocationCoordinate2D) -> String? {
+        let address = editing?.address ?? candidate?.address
+        guard let address, !address.isEmpty else { return nil }
+        var pin = initialForm
+        pin.coordinate = coordinate
+        return pin.pinMoved(from: initialForm.coordinate) ? nil : address
     }
 
     // MARK: - Actions
@@ -794,82 +809,60 @@ struct AddBathroomView: View {
     }
 
     private func save() async {
+        // A second tap can land before the disabled Save button redraws.
+        guard !isSaving else { return }
         isSaving = true
         geocodeTask?.cancel()
+        searchTask?.cancel()
 
-        let finalAddress: String?
-        if let kept = candidateAddress(at: selectedCoordinate) {
-            finalAddress = kept
-        } else {
-            finalAddress = await reverseGeocode(selectedCoordinate) ?? (isEditMode ? editing?.address : nil)
-        }
-        let savedDispenserRating = hasDispenser ? max(1, dispenserRating) : 0
-
-        if let bathroom = editing {
-            let removed = Set(bathroom.imageFileNames).subtracting(existingFileNames)
-            removed.forEach { ImageStorage.deleteImage(bathroomID: bathroom.id, fileName: $0) }
-            var newFiles: [String] = []
-            for photo in selectedPhotos {
-                if let f = ImageStorage.saveImage(photo, bathroomID: bathroom.id) { newFiles.append(f) }
-            }
-            applyFormState(to: bathroom,
-                           address: finalAddress ?? bathroom.address,
-                           savedDispenserRating: savedDispenserRating)
-            bathroom.imageFileNames = existingFileNames + newFiles
-
-        } else {
-            let bathroom = Bathroom(
-                name:      name.trimmingCharacters(in: .whitespacesAndNewlines),
-                latitude:  selectedCoordinate.latitude,
-                longitude: selectedCoordinate.longitude
+        let target: BathroomSaver.Target = editing.map { .edit($0) } ?? .new(from: candidate)
+        let saver = BathroomSaver(context: modelContext, geocode: reverseGeocode)
+        do {
+            try await saver.save(
+                form,
+                to: target,
+                photos: .init(kept: existingFileNames, added: selectedPhotos),
+                fallbackAddress: geocodedAddress.isEmpty ? nil : geocodedAddress
             )
-            applyFormState(to: bathroom,
-                           address: finalAddress,
-                           savedDispenserRating: savedDispenserRating)
-            var files: [String] = []
-            for photo in selectedPhotos {
-                if let f = ImageStorage.saveImage(photo, bathroomID: bathroom.id) { files.append(f) }
-            }
-            bathroom.imageFileNames = files
-            bathroom.sourceID       = candidate?.sourceID
-            modelContext.insert(bathroom)
+            dismiss()
+        } catch {
+            saveError = error as? BathroomSaver.SaveError ?? .commitFailed
+            isSaving = false
         }
-
-        dismiss()
-    }
-
-    private func applyFormState(to bathroom: Bathroom, address: String?, savedDispenserRating: Int) {
-        bathroom.name                   = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        bathroom.latitude               = selectedCoordinate.latitude
-        bathroom.longitude              = selectedCoordinate.longitude
-        bathroom.address                = address
-        bathroom.rating                 = rating
-        bathroom.accessType             = accessType
-        bathroom.requiresReceiptCode    = requiresReceiptCode
-        bathroom.isOpen24Hours          = isOpen24Hours
-        bathroom.stallType              = stallType
-        bathroom.genderType             = genderType
-        bathroom.isIndoor               = isIndoor
-        bathroom.isWheelchairAccessible = isWheelchairAccessible
-        bathroom.hasToiletPaper         = hasToiletPaper
-        bathroom.hasExtraToiletPaper    = hasExtraToiletPaper
-        bathroom.dispenserRating        = savedDispenserRating
-        bathroom.hasHeatedSeat          = hasHeatedSeat
-        bathroom.bidetType              = bidetType
-        bathroom.hasChangingTable       = hasChangingTable
-        bathroom.hasSoap                = hasSoap
-        bathroom.hasDryingOption        = hasDryingOption
-        bathroom.waitTime               = waitTime
-        bathroom.notes                  = notes
-        bathroom.dateVisited            = dateVisited
-        bathroom.dateModified           = Date()
     }
 }
+
+// MARK: - StoredPhotoTile
+
+/// An existing photo's thumbnail, loaded off the main actor like the carousel's.
+private struct StoredPhotoTile: View {
+
+    let bathroomID: UUID?
+    let fileName:   String
+
+    @State private var image: UIImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
+                Rectangle().fill(Color(.systemGray5))
+                    .overlay(Image(systemName: "photo").foregroundStyle(.secondary))
+            }
+        }
+        .task(id: fileName) {
+            guard let bathroomID else { return }
+            image = await ImageStorage.loadThumbnailAsync(bathroomID: bathroomID, fileName: fileName)
+        }
+    }
+}
+
 
 // MARK: - Previews
 
 #Preview("Add mode") {
-    AddBathroomView(userLocation: CLLocationCoordinate2D(latitude: 40.7580, longitude: -73.9855))
+    AddBathroomView(locationManager: LocationManager())
         .modelContainer(for: Bathroom.self, inMemory: true)
 }
 
@@ -879,6 +872,6 @@ struct AddBathroomView: View {
         address: "123 Main St", rating: 4, accessType: .purchaseRequired,
         requiresReceiptCode: true, bidetType: .electronic, hasChangingTable: true
     )
-    return AddBathroomView(userLocation: nil, editing: b)
+    return AddBathroomView(editing: b)
         .modelContainer(for: Bathroom.self, inMemory: true)
 }

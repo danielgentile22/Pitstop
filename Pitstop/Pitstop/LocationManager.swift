@@ -6,17 +6,27 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     // MARK: - State
 
-    var userLocation: CLLocationCoordinate2D?
+    /// The latest fix, with its timestamp and accuracy.
+    private(set) var latestFix: CLLocation?
+
+    var userLocation: CLLocationCoordinate2D? { latestFix?.coordinate }
 
     var authorizationStatus: CLAuthorizationStatus = .notDetermined
 
-    var locationError: String?
+    /// True when the user allowed only approximate location, which can be kilometers off.
+    private(set) var isApproximateOnly = false
 
     // MARK: - Private
 
     private let manager = CLLocationManager()
 
     private var isUpdatingLocation = false
+
+    /// Wakes `freshFix(timeout:)` when a fresh fix arrives.
+    private var freshFixWaiter: AsyncStream<Void>.Continuation?
+
+    /// Key in NSLocationTemporaryUsageDescriptionDictionary.
+    private static let emergencyPurposeKey = "Emergency"
 
     // MARK: - Init
 
@@ -25,6 +35,8 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         manager.delegate = self
         // Ten meters is enough to find a bathroom and much cheaper on battery than Best.
         manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        // The map and the list redo work on every published fix, so standing-still jitter must not publish.
+        manager.distanceFilter = 25
     }
 
     // MARK: - Permission
@@ -42,24 +54,71 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
     }
 
+    /// What a distance filter or sort needs: permission and a fix to measure from.
+    var canMeasureDistance: Bool {
+        hasLocationPermission && userLocation != nil
+    }
+
     var isLocationDenied: Bool {
         authorizationStatus == .denied || authorizationStatus == .restricted
+    }
+
+    /// Asks for one-time precise location when only approximate location is allowed.
+    func requestTemporaryFullAccuracy() async {
+        guard isApproximateOnly else { return }
+        _ = try? await manager.requestTemporaryFullAccuracyAuthorization(withPurposeKey: Self.emergencyPurposeKey)
+        isApproximateOnly = manager.accuracyAuthorization == .reducedAccuracy
+    }
+
+    // MARK: - Fresh Fix
+
+    /// Returns a fix taken in the last minute, waiting up to `timeout` for one.
+    /// Falls back to the latest fix, however old, so callers always get an answer if one exists.
+    func freshFix(timeout: Duration) async -> CLLocation? {
+        if let fix = latestFix, isFresh(fix) { return fix }
+        guard isUpdatingLocation else { return latestFix }
+
+        let (arrivals, continuation) = AsyncStream.makeStream(of: Void.self)
+        freshFixWaiter?.finish()
+        freshFixWaiter = continuation
+        // Restarting delivers a new fix even when standing still, where updates otherwise pause.
+        manager.stopUpdatingLocation()
+        manager.startUpdatingLocation()
+
+        let timer = Task {
+            try? await Task.sleep(for: timeout)
+            continuation.finish()
+        }
+        for await _ in arrivals { break }
+        timer.cancel()
+        continuation.finish()
+        return latestFix
+    }
+
+    /// Under a minute old and within 100 meters. Approximate location never gets that precise,
+    /// so it only has to be recent.
+    private func isFresh(_ fix: CLLocation) -> Bool {
+        guard -fix.timestamp.timeIntervalSinceNow <= 60 else { return false }
+        if isApproximateOnly { return true }
+        return fix.horizontalAccuracy >= 0 && fix.horizontalAccuracy <= 100
     }
 
     // MARK: - CLLocationManagerDelegate
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
+        isApproximateOnly = manager.accuracyAuthorization == .reducedAccuracy
         evaluateAuthorization(manager.authorizationStatus)
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        userLocation = location.coordinate
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        locationError = error.localizedDescription
+        latestFix = location
+        if isFresh(location) {
+            freshFixWaiter?.yield()
+            freshFixWaiter?.finish()
+            freshFixWaiter = nil
+        }
     }
 
     // MARK: - Private Helpers
@@ -67,19 +126,14 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     private func evaluateAuthorization(_ status: CLAuthorizationStatus) {
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
-            locationError = nil
             // requestPermission() runs on every ContentView appearance.
             guard !isUpdatingLocation else { return }
             isUpdatingLocation = true
             manager.startUpdatingLocation()
 
-        case .denied:
-            locationError = "Location access denied. Enable it in Settings to use map features."
-            isUpdatingLocation = false
-            manager.stopUpdatingLocation()
-
-        case .restricted:
-            locationError = "Location access is restricted on this device."
+        case .denied, .restricted:
+            // A stale fix would keep distance filtering after access is gone.
+            latestFix = nil
             isUpdatingLocation = false
             manager.stopUpdatingLocation()
 

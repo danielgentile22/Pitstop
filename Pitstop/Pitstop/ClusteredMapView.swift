@@ -12,8 +12,10 @@ struct ClusteredMapView: UIViewRepresentable {
     let candidates: [Candidate]
 
     /// Pins deselect when this goes nil (the detail sheet closed).
-    let selection: MapSelection?
-    let onSelect: (MapSelection) -> Void
+    let selection: PlaceKey?
+    let onSelect: (PlaceKey) -> Void
+    /// A tapped cluster whose places sit too close together to ever split, in chooser order.
+    let onChoose: ([PlaceChoice]) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -75,7 +77,10 @@ struct ClusteredMapView: UIViewRepresentable {
 
         var parent: ClusteredMapView
 
-        private var annotations: [PersistentIdentifier: PlaceAnnotation] = [:]
+        private var annotations: [PlaceKey: PlaceAnnotation] = [:]
+
+        /// `MapSelection.fingerprint` of the places last synced, so a render with the same places skips the diff.
+        private var syncedFingerprint: Int?
 
         /// The last camera position the map was moved to or reported, so a write-back does not move it again.
         private var appliedPosition: MapCameraPosition?
@@ -86,9 +91,13 @@ struct ClusteredMapView: UIViewRepresentable {
 
         /// Adds and removes only what changed, so an update with thousands of pins stays cheap.
         func syncAnnotations(on mapView: MKMapView) {
-            var wanted: [PersistentIdentifier: MapSelection] = [:]
-            for candidate in parent.candidates { wanted[candidate.persistentModelID] = .candidate(candidate) }
-            for bathroom in parent.bathrooms { wanted[bathroom.persistentModelID] = .bathroom(bathroom) }
+            let fingerprint = MapSelection.fingerprint(bathrooms: parent.bathrooms, candidates: parent.candidates)
+            guard fingerprint != syncedFingerprint else { return }
+            syncedFingerprint = fingerprint
+
+            var wanted: [PlaceKey: MapSelection] = [:]
+            for candidate in parent.candidates { wanted[.candidate(candidate.sourceID)] = .candidate(candidate) }
+            for bathroom in parent.bathrooms { wanted[.bathroom(bathroom.id)] = .bathroom(bathroom) }
 
             var stale: [PlaceAnnotation] = []
             var fresh: [PlaceAnnotation] = []
@@ -103,7 +112,7 @@ struct ClusteredMapView: UIViewRepresentable {
                     guard existing.look != look else { continue }
                     stale.append(existing)
                 }
-                let annotation = PlaceAnnotation(place: place, look: look)
+                let annotation = PlaceAnnotation(key: id, look: look)
                 annotations[id] = annotation
                 fresh.append(annotation)
             }
@@ -155,7 +164,7 @@ struct ClusteredMapView: UIViewRepresentable {
                 mapView.deselectAnnotation(cluster, animated: false)
                 open(cluster, on: mapView)
             } else if let place = annotation as? PlaceAnnotation {
-                parent.onSelect(place.place)
+                parent.onSelect(place.key)
             }
         }
 
@@ -176,20 +185,18 @@ struct ClusteredMapView: UIViewRepresentable {
             }
         }
 
-        /// Zooms in until the cluster splits. Members too close together to ever split open the first one.
+        /// Zooms in until the cluster splits. Members too close together to ever split open a chooser.
         private func open(_ cluster: MKClusterAnnotation, on mapView: MKMapView) {
             let members = cluster.memberAnnotations
-            let rect = members.reduce(MKMapRect.null) { rect, member in
-                rect.union(MKMapRect(origin: MKMapPoint(member.coordinate), size: MKMapSize(width: 0, height: 0)))
-            }
-            let pointsPerMeter = MKMapPointsPerMeterAtLatitude(cluster.coordinate.latitude)
-            if max(rect.size.width, rect.size.height) / pointsPerMeter < 30 {
-                if let first = members.first as? PlaceAnnotation {
-                    parent.onSelect(first.place)
+            if cluster.isTooTightToSplit {
+                let choices = members.compactMap { member -> PlaceChoice? in
+                    guard let place = member as? PlaceAnnotation else { return nil }
+                    return PlaceChoice(key: place.key, name: place.look.name)
                 }
+                parent.onChoose(PlaceChoice.ordered(choices))
                 return
             }
-            mapView.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 80, left: 60, bottom: 80, right: 60), animated: true)
+            mapView.setVisibleMapRect(cluster.memberRect, edgePadding: UIEdgeInsets(top: 80, left: 60, bottom: 80, right: 60), animated: true)
         }
     }
 }
@@ -211,10 +218,27 @@ final class PlaceMapView: MKMapView {
 
 // MARK: - Annotations
 
+private extension MKClusterAnnotation {
+
+    var memberRect: MKMapRect {
+        memberAnnotations.reduce(MKMapRect.null) { rect, member in
+            rect.union(MKMapRect(origin: MKMapPoint(member.coordinate), size: MKMapSize(width: 0, height: 0)))
+        }
+    }
+
+    /// Members within 30 m of each other. Pins that close collide at every zoom, so zooming never splits them.
+    var isTooTightToSplit: Bool {
+        let rect = memberRect
+        let pointsPerMeter = MKMapPointsPerMeterAtLatitude(coordinate.latitude)
+        return max(rect.size.width, rect.size.height) / pointsPerMeter < 30
+    }
+}
+
 /// Everything a pin's appearance depends on. An annotation is replaced only when this changes.
 struct PinLook: Equatable {
     let latitude: Double
     let longitude: Double
+    let name: String
     let style: PinStyle
     let accessibilityLabel: String
 
@@ -223,6 +247,7 @@ struct PinLook: Equatable {
         case .bathroom(let bathroom):
             latitude = bathroom.latitude
             longitude = bathroom.longitude
+            name = bathroom.name
             style = .bathroom(rating: bathroom.rating)
             let ratingText = bathroom.rating > 0 ? "\(bathroom.rating) out of 5 stars" : "unrated"
             accessibilityLabel = "\(bathroom.name), \(ratingText)"
@@ -230,6 +255,7 @@ struct PinLook: Equatable {
             let brand = candidate.brand
             latitude = candidate.latitude
             longitude = candidate.longitude
+            name = candidate.name
             if candidate.isDismissed {
                 style = .dismissed
                 accessibilityLabel = "\(candidate.name), dismissed, no public restroom"
@@ -247,23 +273,25 @@ enum PinStyle: Hashable {
     /// A Candidate marked "No public restroom here", shown only while "Show dismissed" is on.
     case dismissed
 
-    /// Visited and unvisited pins cluster apart, so a bathroom never disappears into a cluster of guesses.
+    /// Visited, unvisited and dismissed pins cluster apart, so a bathroom never disappears into a cluster
+    /// of guesses and a cluster of dead ends is never counted as places to try.
     var clusteringIdentifier: String {
         switch self {
-        case .bathroom:              return "bathroom"
-        case .candidate, .dismissed: return "candidate"
+        case .bathroom:  return "bathroom"
+        case .candidate: return "candidate"
+        case .dismissed: return "dismissed"
         }
     }
 }
 
 final class PlaceAnnotation: NSObject, MKAnnotation {
 
-    let place: MapSelection
+    let key: PlaceKey
     let look: PinLook
     let coordinate: CLLocationCoordinate2D
 
-    init(place: MapSelection, look: PinLook) {
-        self.place = place
+    init(key: PlaceKey, look: PinLook) {
+        self.key = key
         self.look = look
         self.coordinate = CLLocationCoordinate2D(latitude: look.latitude, longitude: look.longitude)
     }
@@ -278,13 +306,22 @@ final class PlacePinView: MKAnnotationView {
     private var normalImage: UIImage?
     private var selectedImage: UIImage?
 
+    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (view: PlacePinView, _) in
+            view.renderImages()
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func prepareForDisplay() {
         super.prepareForDisplay()
         guard let look = (annotation as? PlaceAnnotation)?.look else { return }
 
-        normalImage = PinImages.image(for: .pin(look.style, selected: false), scale: traitCollection.displayScale)
-        selectedImage = PinImages.image(for: .pin(look.style, selected: true), scale: traitCollection.displayScale)
-        image = isSelected ? selectedImage : normalImage
+        renderImages()
 
         clusteringIdentifier = look.style.clusteringIdentifier
         collisionMode = .circle
@@ -304,11 +341,29 @@ final class PlacePinView: MKAnnotationView {
         super.setSelected(selected, animated: animated)
         image = selected ? selectedImage : normalImage
     }
+
+    private func renderImages() {
+        guard let look = (annotation as? PlaceAnnotation)?.look else { return }
+        normalImage = PinImages.image(for: .pin(look.style, selected: false), traits: traitCollection)
+        selectedImage = PinImages.image(for: .pin(look.style, selected: true), traits: traitCollection)
+        image = isSelected ? selectedImage : normalImage
+    }
 }
 
 final class ClusterPinView: MKAnnotationView {
 
     static let reuseID = "cluster"
+
+    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (view: ClusterPinView, _) in
+            view.renderImage()
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func prepareForDisplay() {
         super.prepareForDisplay()
@@ -316,7 +371,7 @@ final class ClusterPinView: MKAnnotationView {
 
         let styles = cluster.memberAnnotations.compactMap { ($0 as? PlaceAnnotation)?.look.style }
         let kind = Self.kind(of: styles)
-        image = PinImages.image(for: .cluster(kind, count: styles.count), scale: traitCollection.displayScale)
+        renderImage()
         collisionMode = .circle
         if kind == .bathrooms {
             zPriority = MKAnnotationViewZPriority(rawValue: MKAnnotationViewZPriority.defaultUnselected.rawValue + 1)
@@ -324,22 +379,35 @@ final class ClusterPinView: MKAnnotationView {
             zPriority = .defaultUnselected
         }
 
+        let places: String
+        switch kind {
+        case .bathrooms:  places = "bathrooms"
+        case .candidates: places = "unvisited places"
+        case .dismissed:  places = "dismissed places"
+        }
+        let action = cluster.isTooTightToSplit ? "choose one" : "zoom in"
         isAccessibilityElement = true
-        accessibilityLabel = kind == .bathrooms
-            ? "\(styles.count) bathrooms, zoom in"
-            : "\(styles.count) unvisited places, zoom in"
+        accessibilityLabel = "\(styles.count) \(places), \(action)"
         accessibilityTraits = .button
     }
 
+    private func renderImage() {
+        guard let cluster = annotation as? MKClusterAnnotation else { return }
+        let styles = cluster.memberAnnotations.compactMap { ($0 as? PlaceAnnotation)?.look.style }
+        let bucket = ClusterAnnotation.countBucket(for: styles.count)
+        image = PinImages.image(for: .cluster(Self.kind(of: styles), countBucket: bucket), traits: traitCollection)
+    }
+
+    /// Members share one clustering identifier, so a cluster holds one kind of pin.
     private static func kind(of styles: [PinStyle]) -> ClusterAnnotation.Kind {
-        let levels = styles.compactMap { style -> Reliability? in
+        var levels: [Reliability] = []
+        for style in styles {
             switch style {
-            case .bathroom:            return nil
-            case .candidate(let level): return level
-            case .dismissed:           return .uncertain
+            case .bathroom:             return .bathrooms
+            case .dismissed:            return .dismissed
+            case .candidate(let level): levels.append(level)
             }
         }
-        guard !levels.isEmpty else { return .bathrooms }
         let mostReliable = Reliability.allCases.first(where: levels.contains) ?? .uncertain
         return .candidates(mostReliable)
     }
@@ -347,40 +415,54 @@ final class ClusterPinView: MKAnnotationView {
 
 // MARK: - Pin Images
 
-/// SwiftUI pin views rendered to images once per look and reused by every pin that shares it.
+/// SwiftUI pin views rendered to images once per look and appearance, and reused by every pin that shares it.
+/// Cluster images are keyed by count bucket, so the cache stays a small fixed size.
+@MainActor
 private enum PinImages {
 
     enum Key: Hashable {
         case pin(PinStyle, selected: Bool)
-        case cluster(ClusterAnnotation.Kind, count: Int)
+        case cluster(ClusterAnnotation.Kind, countBucket: Int)
     }
 
-    private static var cache: [Key: UIImage] = [:]
+    private struct CacheKey: Hashable {
+        let key: Key
+        let isDark: Bool
+    }
 
-    static func image(for key: Key, scale: CGFloat) -> UIImage {
-        if let cached = cache[key] { return cached }
+    private static var cache: [CacheKey: UIImage] = [:]
+
+    /// The appearance the cache holds images for. A change clears it, so it never holds both.
+    private static var cachedIsDark: Bool?
+
+    static func image(for key: Key, traits: UITraitCollection) -> UIImage {
+        let isDark = traits.userInterfaceStyle == .dark
+        if cachedIsDark != isDark {
+            cache.removeAll()
+            cachedIsDark = isDark
+        }
+        let cacheKey = CacheKey(key: key, isDark: isDark)
+        if let cached = cache[cacheKey] { return cached }
 
         let content: AnyView
         switch key {
         case .pin(.bathroom(let rating), let selected):
             content = AnyView(BathroomAnnotation(rating: rating, isSelected: selected))
         case .pin(.candidate(let reliability), let selected):
-            let brand = BrandProfile(key: reliability.rawValue, displayName: reliability.displayName,
-                                     reliability: reliability, expectedAccess: .free)
-            content = AnyView(CandidateAnnotation(brand: brand, isSelected: selected))
+            content = AnyView(CandidateAnnotation(reliability: reliability, isSelected: selected))
         case .pin(.dismissed, let selected):
-            let brand = BrandProfile(key: "dismissed", displayName: "Dismissed",
-                                     reliability: .uncertain, expectedAccess: .free)
-            content = AnyView(CandidateAnnotation(brand: brand, isSelected: selected, isDismissed: true))
-        case .cluster(let kind, let count):
-            content = AnyView(ClusterAnnotation(kind: kind, count: count))
+            content = AnyView(CandidateAnnotation(reliability: .uncertain, isSelected: selected, isDismissed: true))
+        case .cluster(let kind, let countBucket):
+            content = AnyView(ClusterAnnotation(kind: kind, count: countBucket))
         }
 
         // Padding keeps shadows and the question mark badge from being clipped.
-        let renderer = ImageRenderer(content: content.padding(8))
-        renderer.scale = scale >= 1 ? scale : 3
+        let renderer = ImageRenderer(content: content
+            .padding(8)
+            .environment(\.colorScheme, isDark ? .dark : .light))
+        renderer.scale = traits.displayScale >= 1 ? traits.displayScale : 3
         let image = renderer.uiImage ?? UIImage()
-        cache[key] = image
+        cache[cacheKey] = image
         return image
     }
 }

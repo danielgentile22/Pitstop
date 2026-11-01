@@ -1,5 +1,32 @@
+import AVFoundation
 import SwiftUI
 import UIKit
+
+/// Camera availability and permission, checked before presenting `CameraPickerView`.
+enum CameraAccess {
+
+    enum Outcome {
+        case granted
+        /// Denied (now or earlier) or restricted; only Settings can change it.
+        case blocked
+    }
+
+    static var isAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
+
+    /// Asks for access when it has not been decided yet.
+    static func request() async -> Outcome {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            return .granted
+        case .notDetermined:
+            return await AVCaptureDevice.requestAccess(for: .video) ? .granted : .blocked
+        case .denied, .restricted:
+            return .blocked
+        @unknown default:
+            return .blocked
+        }
+    }
+}
 
 /// Camera capture via `UIImagePickerController` (SwiftUI has no camera API). The caller dismisses it.
 struct CameraPickerView: UIViewControllerRepresentable {

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import MapKit
+import os
 
 /// Detail sheet for an unvisited place. "I went here" logs it as a Bathroom; "No public restroom here"
 /// dismisses it, and a dismissed place offers the undo.
@@ -56,11 +57,7 @@ struct CandidateDetailView: View {
                 }
 
                 DetailSection("Hours") {
-                    MetaRow(
-                        icon: candidate.isOpen24Hours ? "clock.fill" : "clock",
-                        color: candidate.isOpen24Hours ? .blue : Color(.systemGray3),
-                        text: candidate.isOpen24Hours ? "Open 24 hours" : "Not open 24 hours"
-                    )
+                    HoursRow(isOpen24Hours: candidate.isOpen24HoursIfKnown, notOpenText: "Not open 24 hours")
                 }
 
                 Divider()
@@ -80,7 +77,7 @@ struct CandidateDetailView: View {
                     .tint(.green)
 
                     if candidate.isDismissed {
-                        Button { candidate.isDismissed = false } label: {
+                        Button { setDismissed(false) } label: {
                             Label("Undo: has a public restroom", systemImage: "arrow.uturn.backward.circle.fill")
                                 .frame(maxWidth: .infinity)
                         }
@@ -89,7 +86,7 @@ struct CandidateDetailView: View {
                     } else {
                         // The pin disappears unless "Show dismissed" is on, so close the sheet with it.
                         Button {
-                            candidate.isDismissed = true
+                            setDismissed(true)
                             dismiss()
                         } label: {
                             Label("No public restroom here", systemImage: "xmark.circle.fill")
@@ -106,7 +103,7 @@ struct CandidateDetailView: View {
         }
         // Once saved, this place is a Bathroom and its pin is gone, so close the sheet too.
         .fullScreenCover(isPresented: $showAddView, onDismiss: { if isLinked { dismiss() } }) {
-            AddBathroomView(userLocation: userLocation, candidate: candidate)
+            AddBathroomView(candidate: candidate)
         }
     }
 
@@ -142,18 +139,24 @@ struct CandidateDetailView: View {
         return ((try? modelContext.fetchCount(linked)) ?? 0) > 0
     }
 
+    /// Commits right away, so the choice survives a crash and a background seed import sees it.
+    private func setDismissed(_ isDismissed: Bool) {
+        candidate.isDismissed = isDismissed
+        do {
+            try modelContext.save()
+        } catch {
+            Logger(subsystem: "com.danielgentile.GeoPoop", category: "CandidateDetailView")
+                .error("Saving a dismissal failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
     private func openDirections() {
-        MapURLHelper.openDirections(toLatitude: candidate.latitude, longitude: candidate.longitude, mode: .driving)
+        Task { await MapURLHelper.openDirections(toLatitude: candidate.latitude, longitude: candidate.longitude, mode: .driving) }
     }
 
     /// Straight-line distance, as a rough guide before driving there.
     private var formattedDistance: String? {
-        guard let userLocation else { return nil }
-        let origin = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
-        let place = CLLocation(latitude: candidate.latitude, longitude: candidate.longitude)
-        let formatter = MKDistanceFormatter()
-        formatter.unitStyle = .abbreviated
-        return "\(formatter.string(fromDistance: place.distance(from: origin))) away"
+        Distance.formatted(from: userLocation, to: candidate.coordinate).map { "\($0) away" }
     }
 }
 

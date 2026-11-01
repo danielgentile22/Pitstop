@@ -10,30 +10,36 @@ struct MapTabView: View {
 
     @Binding var cameraPosition: MapCameraPosition
 
+    /// Set once the camera is fitted to a non-empty bathroom list, so returning from the List tab keeps the
+    /// camera where the user left it. ContentView clears it when the list empties, so the next bathroom,
+    /// even one added from the List tab, fits again.
+    @Binding var hasFittedCamera: Bool
+
     var filter: BathroomFilter
 
     // MARK: - Data
 
     @Query(sort: \Bathroom.dateCreated, order: .reverse) private var allBathrooms: [Bathroom]
-    @Query private var candidates: [Candidate]
+    @Query(sort: \Candidate.sourceID) private var candidates: [Candidate]
 
     // MARK: - State
 
-    @State private var selection: MapSelection?
+    @State private var selection: PlaceKey?
+
+    /// Members of a tapped cluster too tight to split, offered in a chooser.
+    @State private var clusterChoices: [PlaceChoice] = []
 
     // MARK: - Derived
 
-    /// Skips the max-distance filter: pins appearing and disappearing as the user moves is confusing on a map.
-    /// Candidates still honor it (see `filteredCandidates`), since the spec applies it to unvisited places.
-    private var filteredBathrooms: [Bathroom] {
-        guard filter.isActive else { return allBathrooms }
-        return allBathrooms.filter { filter.applies(to: $0) }
+    /// The same places the list shows, max distance included. Reads the location only when a radius needs it,
+    /// so a GPS fix does not re-render the map otherwise.
+    private var visiblePlaces: (bathrooms: [Bathroom], candidates: [Candidate]) {
+        let origin = filter.maxDistance == nil ? nil : locationManager.userLocation
+        return filter.visiblePlaces(bathrooms: allBathrooms, candidates: candidates, userLocation: origin)
     }
 
-    private var filteredCandidates: [Candidate] {
-        candidates.unlinked(from: allBathrooms).filter {
-            filter.applies(to: $0) && filter.isWithinMaxDistance($0.coordinate, of: locationManager.userLocation)
-        }
+    private var filteredBathrooms: [Bathroom] {
+        visiblePlaces.bathrooms
     }
 
     /// Within 50 km of the user, so zoom-to-fit ignores pins saved in other cities.
@@ -41,21 +47,23 @@ struct MapTabView: View {
         guard let userCoord = locationManager.userLocation else {
             return filteredBathrooms
         }
-        let origin = CLLocation(latitude: userCoord.latitude, longitude: userCoord.longitude)
-        return filteredBathrooms.filter { $0.distance(from: origin) <= 50_000 }
+        return filteredBathrooms.filter { Distance.meters(from: userCoord, to: $0.coordinate) <= 50_000 }
     }
 
     // MARK: - Body
 
     var body: some View {
+        let visible = visiblePlaces
+
         ZStack(alignment: .top) {
 
             ClusteredMapView(
                 cameraPosition: $cameraPosition,
-                bathrooms: filteredBathrooms,
-                candidates: filteredCandidates,
+                bathrooms: visible.bathrooms,
+                candidates: visible.candidates,
                 selection: selection,
-                onSelect: select
+                onSelect: select,
+                onChoose: { clusterChoices = $0 }
             )
             .ignoresSafeArea(edges: .bottom)
 
@@ -69,11 +77,21 @@ struct MapTabView: View {
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: locationManager.isLocationDenied)
 
         .onAppear {
-            fitCameraToNearbyBathrooms()
+            if !hasFittedCamera { fitCameraToNearbyBathrooms() }
         }
-        // Re-fit only when the list goes between empty and non-empty.
-        .onChange(of: allBathrooms.isEmpty) {
-            fitCameraToNearbyBathrooms()
+        // Re-fit only when the list goes from empty to non-empty.
+        .onChange(of: allBathrooms.isEmpty) { _, isEmpty in
+            if !isEmpty { fitCameraToNearbyBathrooms() }
+        }
+
+        .confirmationDialog(
+            "\(clusterChoices.count) places here",
+            isPresented: Binding(get: { !clusterChoices.isEmpty }, set: { if !$0 { clusterChoices = [] } }),
+            titleVisibility: .visible
+        ) {
+            ForEach(clusterChoices) { choice in
+                Button(choice.name) { select(choice.key) }
+            }
         }
 
         .sheet(item: $selection) { selection in
@@ -83,7 +101,7 @@ struct MapTabView: View {
 
     // MARK: - Selection
 
-    private func select(_ tapped: MapSelection) {
+    private func select(_ tapped: PlaceKey) {
         selection = tapped
     }
 
@@ -91,9 +109,10 @@ struct MapTabView: View {
 
     /// Fits the camera to nearby bathrooms, or to all filtered ones when none are nearby or location is unknown.
     private func fitCameraToNearbyBathrooms() {
-        let candidates = nearbyBathrooms.isEmpty ? filteredBathrooms : nearbyBathrooms
-        guard !candidates.isEmpty else { return }
-        let region = MKCoordinateRegion(fittingCoordinates: candidates.map(\.coordinate))
+        let fitTargets = nearbyBathrooms.isEmpty ? filteredBathrooms : nearbyBathrooms
+        guard !fitTargets.isEmpty else { return }
+        hasFittedCamera = true
+        let region = MKCoordinateRegion(fittingCoordinates: fitTargets.map(\.coordinate))
         withAnimation(.easeInOut(duration: 0.6)) {
             cameraPosition = .region(region)
         }
@@ -102,16 +121,71 @@ struct MapTabView: View {
 
 // MARK: - Map Selection
 
-/// The pin whose detail sheet is open. One sheet for both kinds, so they never fight over presentation.
+/// A visited or unvisited place, as the List tab shows it.
 enum MapSelection: Identifiable {
     case bathroom(Bathroom)
     case candidate(Candidate)
 
-    var id: PersistentIdentifier {
+    var id: PlaceKey { key }
+
+    var key: PlaceKey {
         switch self {
-        case .bathroom(let bathroom):   return bathroom.persistentModelID
-        case .candidate(let candidate): return candidate.persistentModelID
+        case .bathroom(let bathroom):   return .bathroom(bathroom.id)
+        case .candidate(let candidate): return .candidate(candidate.sourceID)
         }
+    }
+}
+
+extension MapSelection {
+
+    /// Cheap stand-in for "the places changed": identity, plus the fields an edit, a dismissal or a seed
+    /// update always changes. Equal fingerprints let the map and the list skip re-filtering and re-syncing.
+    static func fingerprint(bathrooms: [Bathroom], candidates: [Candidate]) -> Int {
+        var hasher = Hasher()
+        hasher.combine(bathrooms.count)
+        for bathroom in bathrooms {
+            hasher.combine(bathroom.id)
+            hasher.combine(bathroom.dateModified)
+        }
+        hasher.combine(candidates.count)
+        for candidate in candidates {
+            hasher.combine(candidate.sourceID)
+            hasher.combine(candidate.isDismissed)
+            hasher.combine(candidate.seedVersion)
+        }
+        return hasher.finalize()
+    }
+}
+
+/// The place whose detail sheet is open. One sheet for both kinds, so they never fight over presentation.
+/// Keyed on stable values rather than `persistentModelID`, which changes when a new Bathroom is first saved,
+/// and holding no live model, which the background seed import could delete.
+enum PlaceKey: Hashable, Identifiable {
+    case bathroom(UUID)
+    /// The Candidate's `sourceID`.
+    case candidate(String)
+
+    var id: Self { self }
+}
+
+/// One entry in the chooser for a cluster whose places sit too close together to split.
+struct PlaceChoice: Identifiable {
+    let key: PlaceKey
+    let name: String
+
+    var id: PlaceKey { key }
+
+    /// Visited places first, then by name.
+    static func ordered(_ choices: [PlaceChoice]) -> [PlaceChoice] {
+        choices.sorted { a, b in
+            if a.isVisited != b.isVisited { return a.isVisited }
+            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
+    }
+
+    private var isVisited: Bool {
+        if case .bathroom = key { return true }
+        return false
     }
 }
 
@@ -189,6 +263,7 @@ extension MKCoordinateRegion {
     MapTabView(
         locationManager: LocationManager(),
         cameraPosition: .constant(.userLocation(followsHeading: false, fallback: .automatic)),
+        hasFittedCamera: .constant(false),
         filter: BathroomFilter()
     )
     .modelContainer(for: [Bathroom.self, Candidate.self], inMemory: true)

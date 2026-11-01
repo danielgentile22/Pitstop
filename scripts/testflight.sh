@@ -4,8 +4,10 @@
 # Export signs with the distribution certificate named in Pitstop/ExportOptions.plist and the
 # "Pitstop App Store" profile, which must be installed once. The
 # distribution certificate lives in the shared tvhome-signing keychain, unlocked here with
-# SIGNING_KEYCHAIN_PASSWORD so signing never stops on a password prompt. Each build is numbered
-# by the date and time, so every upload is new.
+# SIGNING_KEYCHAIN_PASSWORD (sent to `security -i` on stdin, so it never shows in the process list
+# and no terminal prompt swallows it) so signing
+# never stops on a password prompt, and locked again on every exit. Each build is numbered by
+# the UTC date and time to the second, so every upload is new.
 #
 #   scripts/testflight.sh              # archive, export, upload
 #   scripts/testflight.sh --no-upload  # archive and export only (build/export/Pitstop.ipa)
@@ -18,21 +20,30 @@ for arg in "$@"; do
     *) echo "usage: $0 [--no-upload]" >&2; exit 2 ;;
   esac
 done
+[ -f .env ] || { echo "error: $PWD/.env not found" >&2; exit 1; }
 env_value() { sed -n "s/^$1=//p" .env | tr -d '\r'; }
+for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_PATH SIGNING_KEYCHAIN_PASSWORD; do
+  [ -n "$(env_value "$name")" ] || { echo "error: $name is missing from .env" >&2; exit 1; }
+done
 key_id=$(env_value ASC_KEY_ID)
 issuer=$(env_value ASC_ISSUER_ID)
 key_path=$(env_value ASC_KEY_PATH)
 key_path=${key_path/#\~/$HOME}
+[ -f "$key_path" ] || { echo "error: ASC_KEY_PATH file not found: $key_path" >&2; exit 1; }
 auth=(-allowProvisioningUpdates -authenticationKeyPath "$key_path" -authenticationKeyID "$key_id" -authenticationKeyIssuerID "$issuer")
 archive=build/Pitstop.xcarchive
 export_dir=build/export
 keychain=$HOME/Library/Keychains/tvhome-signing.keychain-db
 
-security unlock-keychain -p "$(env_value SIGNING_KEYCHAIN_PASSWORD)" "$keychain"
+# Quotes a word for `security -i`, which reads backslash escapes inside double quotes.
+security_quote() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; printf '"%s"' "$s"; }
+trap 'security lock-keychain "$keychain"' EXIT
+printf 'unlock-keychain -p %s %s\n' "$(security_quote "$(env_value SIGNING_KEYCHAIN_PASSWORD)")" \
+  "$(security_quote "$keychain")" | security -i
 
 xcodebuild archive -project Pitstop/Pitstop.xcodeproj -scheme Pitstop -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$archive" "${auth[@]}" \
-  CURRENT_PROJECT_VERSION="$(date +%Y%m%d%H%M)" -quiet
+  CURRENT_PROJECT_VERSION="$(date -u +%Y%m%d%H%M%S)" -quiet
 rm -rf "$export_dir"
 # Apple's openrsync runs `rsync` from PATH, and Homebrew's rejects its options.
 PATH=/usr/bin:/bin:/usr/sbin:/sbin xcodebuild -exportArchive -archivePath "$archive" \
@@ -42,5 +53,5 @@ if [ "$upload" = 0 ]; then
   echo "Exported $PWD/$ipa (not uploaded)"
   exit 0
 fi
-# altool finds the key by its ID in ~/.appstoreconnect/private_keys.
-xcrun altool --upload-app -t ios -f "$ipa" --apiKey "$key_id" --apiIssuer "$issuer"
+xcrun altool --upload-app -t ios -f "$ipa" --apiKey "$key_id" --apiIssuer "$issuer" \
+  --p8-file-path "$key_path"

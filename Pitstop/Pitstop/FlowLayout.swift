@@ -13,6 +13,7 @@ struct FlowLayout: Layout {
 
     /// Filled by `sizeThatFits` so `placeSubviews` can reuse the measurements.
     struct Cache {
+        var width: CGFloat?                // the container width the rows were broken for
         var sizes: [CGSize] = []           // parallel to `subviews`
         var rowAssignments: [Int] = []     // row index per subview
         var rowHeights: [CGFloat] = []
@@ -38,7 +39,8 @@ struct FlowLayout: Layout {
         subviews: Subviews,
         cache: inout Cache
     ) {
-        if cache.sizes.count != subviews.count {
+        // `sizeThatFits` may have run last for another proposal, such as the ideal size.
+        if cache.width != bounds.width || cache.sizes.count != subviews.count {
             compute(in: bounds.width, subviews: subviews, cache: &cache)
         }
 
@@ -53,7 +55,7 @@ struct FlowLayout: Layout {
                 currentRow = row
                 x = bounds.minX
             }
-            subview.place(at: CGPoint(x: x, y: rowOriginY), proposal: .unspecified)
+            subview.place(at: CGPoint(x: x, y: rowOriginY), proposal: ProposedViewSize(cache.sizes[i]))
             x += cache.sizes[i].width + spacing
         }
     }
@@ -61,7 +63,15 @@ struct FlowLayout: Layout {
     // MARK: - Private
 
     private func compute(in maxWidth: CGFloat, subviews: Subviews, cache: inout Cache) {
-        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        // A subview wider than the container is offered the container width, so it wraps or truncates
+        // instead of running past the edge.
+        let sizes = subviews.map { subview in
+            let ideal = subview.sizeThatFits(.unspecified)
+            guard ideal.width > maxWidth else { return ideal }
+            let fitted = subview.sizeThatFits(ProposedViewSize(width: maxWidth, height: nil))
+            return CGSize(width: min(fitted.width, maxWidth), height: fitted.height)
+        }
+        cache.width = maxWidth
         cache.sizes = sizes
 
         var rowAssignments = [Int](repeating: 0, count: sizes.count)

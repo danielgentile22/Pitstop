@@ -19,9 +19,6 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Environment
-
-
     // MARK: - Data
 
     @Query private var bathrooms: [Bathroom]
@@ -35,6 +32,7 @@ struct ContentView: View {
         followsHeading: false,
         fallback: .region(.unitedStates)
     )
+    @State private var hasFittedMapCamera = false
     @State private var showAddBathroom    = false
     @State private var filter             = BathroomFilter()
     @State private var showFilterSheet    = false
@@ -54,6 +52,7 @@ struct ContentView: View {
                         MapTabView(
                             locationManager: locationManager,
                             cameraPosition: $mapCameraPosition,
+                            hasFittedCamera: $hasFittedMapCamera,
                             filter: filter
                         )
                         .transition(.opacity.combined(with: .scale(scale: 0.97)))
@@ -94,15 +93,16 @@ struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .topBarLeading) {
+                    let isFiltering = filter.isActive(locationAvailable: locationManager.canMeasureDistance)
                     Button {
                         showFilterSheet = true
                     } label: {
-                        Image(systemName: filter.isActive
+                        Image(systemName: isFiltering
                               ? "line.3.horizontal.decrease.circle.fill"
                               : "line.3.horizontal.decrease.circle")
-                            .foregroundStyle(filter.isActive ? .blue : .primary)
+                            .foregroundStyle(isFiltering ? .blue : .primary)
                     }
-                    .accessibilityLabel(filter.isActive ? "Filters active" : "Filter bathrooms")
+                    .accessibilityLabel(isFiltering ? "Filters active" : "Filter bathrooms")
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -130,15 +130,22 @@ struct ContentView: View {
         .onAppear {
             locationManager.requestPermission()
         }
+        // The Map tab fits the camera again once there are bathrooms, even if it was not showing when they came.
+        .onChange(of: bathrooms.isEmpty) { _, isEmpty in
+            if isEmpty { hasFittedMapCamera = false }
+        }
         .fullScreenCover(isPresented: $showAddBathroom) {
-            AddBathroomView(userLocation: locationManager.userLocation)
+            AddBathroomView(locationManager: locationManager)
         }
         .sheet(isPresented: $showFilterSheet) {
-            FilterSheetView(filter: $filter)
+            FilterSheetView(filter: $filter, hasLocationPermission: locationManager.hasLocationPermission)
         }
     }
 
     // MARK: - Emergency Logic
+
+    /// Fresh fix plus driving times, from tap to answer.
+    private static let emergencyDeadline: Duration = .seconds(3)
 
     /// Opens driving directions to the place with the fewest effective minutes.
     private func handleEmergencyTap() async {
@@ -151,28 +158,30 @@ struct ContentView: View {
             return
         }
 
-        guard let userCoord = locationManager.userLocation else {
+        isFindingRoute = true
+        defer { isFindingRoute = false }
+
+        // The prompt waits on the user, so the deadline starts after it.
+        await locationManager.requestTemporaryFullAccuracy()
+        let deadline = ContinuousClock.now + Self.emergencyDeadline
+
+        guard let userCoord = await locationManager.freshFix(timeout: .seconds(2))?.coordinate else {
             emergencyAlertMsg = "Waiting for your location. Please try again in a moment."
             showEmergencyAlert = true
             return
         }
 
-        let visited: [EmergencyRanker.VisitedPlace] = bathrooms.map {
-            .init(id: $0.id, sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
-                  rating: $0.rating, isOpen24Hours: $0.isOpen24Hours)
-        }
-        let unvisited: [EmergencyRanker.UnvisitedPlace] = candidates.map {
-            .init(sourceID: $0.sourceID, latitude: $0.latitude, longitude: $0.longitude,
-                  reliability: $0.brand.reliability, isOpen24Hours: $0.isOpen24HoursIfKnown,
-                  isDismissed: $0.isDismissed)
-        }
+        let visited = bathrooms.map(EmergencyRanker.VisitedPlace.init)
+        let unvisited = candidates.map(EmergencyRanker.UnvisitedPlace.init)
 
         // Driving times for the closest few; anything that misses the deadline (or has no signal)
         // falls back to straight-line distance inside the ranker.
         let nearest = EmergencyRanker.nearest(8, from: userCoord, visited: visited, unvisited: unvisited)
-        isFindingRoute = true
-        let drivingTimes = await DrivingTimeLookup.drivingTimes(from: userCoord, to: nearest)
-        isFindingRoute = false
+        let drivingTimes = await DrivingTimeLookup.drivingTimes(
+            from: userCoord,
+            to: nearest,
+            deadline: ContinuousClock.now.duration(to: deadline)
+        )
 
         let ranked = EmergencyRanker.rank(
             from: userCoord,
@@ -183,11 +192,15 @@ struct ContentView: View {
         )
 
         guard let best = ranked.first else {
-            emergencyAlertMsg = "No saved bathrooms or unvisited places to go to. Add a bathroom so one is ready in an emergency."
+            emergencyAlertMsg = "Nothing is in range. No saved bathroom or unvisited place is close enough to send you to."
             showEmergencyAlert = true
             return
         }
-        MapURLHelper.openDirections(toLatitude: best.latitude, longitude: best.longitude, mode: .driving)
+        guard await MapURLHelper.openDirections(toLatitude: best.latitude, longitude: best.longitude, mode: .driving) else {
+            emergencyAlertMsg = "Apple Maps could not be opened. Try again, or open Maps yourself."
+            showEmergencyAlert = true
+            return
+        }
     }
 }
 
