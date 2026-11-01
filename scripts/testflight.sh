@@ -7,7 +7,8 @@
 # SIGNING_KEYCHAIN_PASSWORD (sent to `security -i` on stdin, so it never shows in the process list
 # and no terminal prompt swallows it) so signing
 # never stops on a password prompt, and locked again on every exit. Each build is numbered by
-# the UTC date and time to the second, so every upload is new.
+# the UTC date and time to the second, so every upload is new. It runs scripts/check.sh first
+# and refuses to archive when the check fails, so no build reaches testers untested.
 #
 #   scripts/testflight.sh              # archive, export, upload
 #   scripts/testflight.sh --no-upload  # archive and export only (build/export/Pitstop.ipa)
@@ -30,6 +31,7 @@ issuer=$(env_value ASC_ISSUER_ID)
 key_path=$(env_value ASC_KEY_PATH)
 key_path=${key_path/#\~/$HOME}
 [ -f "$key_path" ] || { echo "error: ASC_KEY_PATH file not found: $key_path" >&2; exit 1; }
+scripts/check.sh || { echo "error: scripts/check.sh failed, not archiving" >&2; exit 1; }
 auth=(-allowProvisioningUpdates -authenticationKeyPath "$key_path" -authenticationKeyID "$key_id" -authenticationKeyIssuerID "$issuer")
 archive=build/Pitstop.xcarchive
 export_dir=build/export
