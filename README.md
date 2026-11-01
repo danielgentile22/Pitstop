@@ -52,12 +52,13 @@ Open `Pitstop/Pitstop.xcodeproj` and run the `Pitstop` scheme. There are no depe
 
 ## Tests
 
-Unit tests use Swift Testing and live in `Pitstop/PitstopTests/`. Run them in Xcode with Product > Test, or from the repo root:
+Unit tests use Swift Testing and live in `Pitstop/PitstopTests/`. Run them in Xcode with Product > Test, or run everything from the repo root:
 
 ```sh
-xcodebuild test -project Pitstop/Pitstop.xcodeproj -scheme Pitstop \
-  -destination 'platform=iOS Simulator,name=iPhone 17'
+scripts/check.sh    # seed tests, iOS preflight, Swift tests on a simulator
 ```
+
+CI runs the same script on every push and pull request. `scripts/ios-preflight.sh` alone checks in about 20 seconds that Xcode and the simulators are usable, and prints the command that fixes them when they are not.
 
 ## Unvisited places data
 
@@ -81,7 +82,7 @@ scripts/testflight.sh              # archive, export, upload
 scripts/testflight.sh --no-upload  # stop after build/export/Pitstop.ipa
 ```
 
-The script reads `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` and `SIGNING_KEYCHAIN_PASSWORD` from a gitignored `.env` at the repo root. It signs with the distribution certificate and the "Pitstop App Store" profile named in `Pitstop/ExportOptions.plist`, numbers each build by date and time, and uploads with the App Store Connect API key. Testers in the internal "Me" group get every build automatically.
+The script reads `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` and `SIGNING_KEYCHAIN_PASSWORD` from a gitignored `.env` at the repo root. It runs `scripts/check.sh` first and stops if the check fails. It signs with the distribution certificate and the "Pitstop App Store" profile named in `Pitstop/ExportOptions.plist`, numbers each build by date and time, and uploads with the App Store Connect API key. Testers in the internal "Me" group get every build automatically.
 
 The bundle ID is `com.danielgentile.GeoPoop`, the app's earlier name, because the App Store Connect record was created under it. The store name is "Pitstop: Bathroom Map"; the home screen shows "Pitstop".
 
@@ -93,7 +94,9 @@ _Not yet captured._
 ## Project layout
 
 ```
-scripts/testflight.sh           Archive, sign and upload to TestFlight
+scripts/check.sh                Seed tests, iOS preflight and Swift tests (CI runs it too)
+scripts/ios-preflight.sh        Checks Xcode and the simulators before a build
+scripts/testflight.sh           Check, archive, sign and upload to TestFlight
 scripts/seed/                   Builds the bundled unvisited-places seed, with tests
 Pitstop/
 ├── ExportOptions.plist         App Store export signing
