@@ -35,4 +35,5 @@ jobs:
           path: |
             build/check-build.log
             build/check-test.log
+            build/check.xcresult
           if-no-files-found: ignore

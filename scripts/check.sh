@@ -27,7 +27,14 @@ mkdir -p build
 # Keep the full logs; on failure show the errors and failed expectations, not just the tail.
 xcodebuild build-for-testing "${flags[@]}" > "$log" 2>&1 \
   || { grep -E 'error:' "$log" | sort -u | head -40 || true; tail -20 "$log"; exit 1; }
-tests=build/check-test.log
-xcodebuild test-without-building "${flags[@]}" > "$tests" 2>&1 \
-  || { grep -E 'failed|error:|Expectation' "$tests" | head -40; exit 1; }
+tests=build/check-test.log results=build/check.xcresult
+rm -rf "$results"
+# Swift Testing's failure messages are only in the result bundle, not the log.
+xcodebuild test-without-building "${flags[@]}" -resultBundlePath "$results" > "$tests" 2>&1 \
+  || { grep -E 'failed on|error:' "$tests" | head -20 || true
+       xcrun xcresulttool get test-results summary --path "$results" 2>/dev/null | python3 -c '
+import json, sys
+for f in json.load(sys.stdin).get("testFailures", []):
+    print("FAILED", f.get("testIdentifierString") or f.get("testName"), "|", f.get("failureText", ""))' || true
+       exit 1; }
 grep -E '^Test run with|\*\* TEST' "$tests" | tail -2
