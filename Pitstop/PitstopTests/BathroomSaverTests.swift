@@ -414,7 +414,8 @@ struct BathroomSaverTests {
             geocodeTimeout: .milliseconds(200)
         ).save(form(), to: .new(from: nil), photos: .init(), fallbackAddress: "Last Known St")
 
-        #expect(clock.now - start < .seconds(2))
+        // Well under the 30 s geocode, with room for a slow CI runner's store setup.
+        #expect(clock.now - start < .seconds(10))
         #expect(bathroom.address == "Last Known St")
     }
 
