@@ -406,15 +406,15 @@ struct BathroomSaverTests {
     }
 
     @Test func slowGeocodeFallsBackAfterTheTimeout() async throws {
-        let clock = ContinuousClock()
-        let start = clock.now
-
-        let bathroom = try await saver(
+        let slow = saver(
             geocode: { _ in try? await Task.sleep(for: .seconds(30)); return "Too Late St" },
             geocodeTimeout: .milliseconds(200)
-        ).save(form(), to: .new(from: nil), photos: .init(), fallbackAddress: "Last Known St")
+        )
+        let clock = ContinuousClock()
+        let start = clock.now
+        let bathroom = try await slow.save(form(), to: .new(from: nil), photos: .init(), fallbackAddress: "Last Known St")
 
-        // Well under the 30 s geocode, with room for a slow CI runner's store setup.
+        // Well under the 30 s geocode, with room for a slow CI runner.
         #expect(clock.now - start < .seconds(10))
         #expect(bathroom.address == "Last Known St")
     }

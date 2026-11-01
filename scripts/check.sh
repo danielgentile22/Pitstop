@@ -21,7 +21,9 @@ ios = sorted((r for r in devices if ".iOS-" in r), key=lambda r: [int(n) for n i
 print(next((d["udid"] for r in ios for d in devices[r] if d["name"].startswith("iPhone")), ""))')
 [ -n "$udid" ] || { echo "error: no available iPhone simulator" >&2; exit 1; }
 flags=(-project Pitstop/Pitstop.xcodeproj -scheme Pitstop -destination "id=$udid"
-       -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO)
+       -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO
+       # Parallel simulator clones overload a hosted runner (13 s per test); serial is fast enough.
+       -parallel-testing-enabled NO)
 log=build/check-build.log
 mkdir -p build
 # Keep the full logs; on failure show the errors and failed expectations, not just the tail.
