@@ -87,6 +87,8 @@ struct BathroomSaver {
             }
         }
 
+        // iOS 26's rollback can leave edits on the in-memory model (#33), so keep what a failed edit must restore.
+        let restore = if case .edit = target { bathroom.savedFieldsRestorer() } else { {} }
         form.apply(to: bathroom)
         bathroom.address        = address
         bathroom.imageFileNames = photos.kept + written
@@ -100,6 +102,7 @@ struct BathroomSaver {
         do {
             try commit(context)
         } catch {
+            restore()
             context.rollback()
             discard(written, of: bathroom)
             throw SaveError.commitFailed
@@ -211,6 +214,25 @@ struct BathroomSaver {
             }
             race.onFinish = { lookup.cancel(); timer.cancel() }
         }
+    }
+}
+
+private extension Bathroom {
+    /// Captures every field `save` writes on an edit and returns a closure that writes them back.
+    func savedFieldsRestorer() -> () -> Void {
+        func keep<Value>(_ field: ReferenceWritableKeyPath<Bathroom, Value>) -> () -> Void {
+            let value = self[keyPath: field]
+            return { self[keyPath: field] = value }
+        }
+        let restores = [
+            keep(\.name), keep(\.latitude), keep(\.longitude), keep(\.address), keep(\.rating),
+            keep(\.accessType), keep(\.requiresReceiptCode), keep(\.isOpen24Hours), keep(\.isOpen24HoursKnown),
+            keep(\.stallType), keep(\.genderType), keep(\.isIndoor), keep(\.isWheelchairAccessible),
+            keep(\.hasToiletPaper), keep(\.hasExtraToiletPaper), keep(\.dispenserRating), keep(\.hasHeatedSeat),
+            keep(\.bidetType), keep(\.hasChangingTable), keep(\.hasSoap), keep(\.hasDryingOption),
+            keep(\.waitTime), keep(\.notes), keep(\.dateVisited), keep(\.dateModified), keep(\.imageFileNames),
+        ]
+        return { restores.forEach { $0() } }
     }
 }
 

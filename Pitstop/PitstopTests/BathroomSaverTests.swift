@@ -148,14 +148,9 @@ struct BathroomSaverTests {
 
         #expect(try files(of: bathroom) == before)
         #expect(try committedBathrooms().first?.rating == 3)
-        // iOS 26's rollback can leave the edit on the in-memory model (issue #33).
-        withKnownIssue("iOS 26 rollback keeps in-memory edits (#33)", isIntermittent: true) {
-            #expect(bathroom.rating == 3)
-            #expect(bathroom.imageFileNames.count == 2)
-            #expect(!context.hasChanges)
-        } when: {
-            ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 27
-        }
+        #expect(bathroom.rating == 3)
+        #expect(bathroom.imageFileNames.count == 2)
+        #expect(!context.hasChanges)
     }
 
     @Test func failedNewBathroomCommitInsertsNothing() async throws {
