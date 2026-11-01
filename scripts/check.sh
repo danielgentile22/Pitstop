@@ -24,7 +24,10 @@ flags=(-project Pitstop/Pitstop.xcodeproj -scheme Pitstop -destination "id=$udid
        -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO)
 log=build/check-build.log
 mkdir -p build
-# Keep the full log; on failure show the compiler errors, not just the tail.
+# Keep the full logs; on failure show the errors and failed expectations, not just the tail.
 xcodebuild build-for-testing "${flags[@]}" > "$log" 2>&1 \
   || { grep -E 'error:' "$log" | sort -u | head -40 || true; tail -20 "$log"; exit 1; }
-xcodebuild test-without-building "${flags[@]}" 2>&1 | tail -30
+tests=build/check-test.log
+xcodebuild test-without-building "${flags[@]}" > "$tests" 2>&1 \
+  || { grep -E 'failed|error:|Expectation' "$tests" | head -40; exit 1; }
+grep -E '^Test run with|\*\* TEST' "$tests" | tail -2

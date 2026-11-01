@@ -27,10 +27,12 @@ jobs:
 
       - run: scripts/check.sh
 
-      - name: Upload the build log
+      - name: Upload the build and test logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build-log
-          path: build/check-build.log
+          name: ios-logs
+          path: |
+            build/check-build.log
+            build/check-test.log
           if-no-files-found: ignore
