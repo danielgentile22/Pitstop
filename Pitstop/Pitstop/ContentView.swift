@@ -149,7 +149,7 @@ struct ContentView: View {
 
     /// Opens driving directions to the place with the fewest effective minutes.
     private func handleEmergencyTap() async {
-        // A second tap during the lookup would open Maps twice.
+        // A second tap during the lookup would open directions twice.
         guard !isFindingRoute else { return }
 
         guard locationManager.hasLocationPermission else {
@@ -196,8 +196,8 @@ struct ContentView: View {
             showEmergencyAlert = true
             return
         }
-        guard await MapURLHelper.openDirections(toLatitude: best.latitude, longitude: best.longitude, mode: .driving) else {
-            emergencyAlertMsg = "Apple Maps could not be opened. Try again, or open Maps yourself."
+        guard await MapURLHelper.openDirectionsPreferringGoogleMaps(toLatitude: best.latitude, longitude: best.longitude, mode: .driving) else {
+            emergencyAlertMsg = "Google Maps and Apple Maps could not be opened. Try again, or open a maps app yourself."
             showEmergencyAlert = true
             return
         }
